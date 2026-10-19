@@ -1,0 +1,84 @@
+# XcodeGen definition. Regenerate the project with `xcodegen generate`
+# (the generated AudioPencil.xcodeproj is not committed).
+name: AudioPencil
+
+options:
+  bundleIdPrefix: com.weshopkins
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+
+packages:
+  AudioPencilKit:
+    path: Packages/AudioPencilKit
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  AudioPencil:
+    type: application
+    platform: macOS
+    sources:
+      - App/macOS/Sources
+      - App/macOS/Resources
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    info:
+      path: App/macOS/Info.plist
+      properties:
+        CFBundleDisplayName: Audio Pencil
+        CFBundleName: Audio Pencil
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSMicrophoneUsageDescription: Audio Pencil listens while you dictate and transcribes on this Mac. Audio never leaves the device.
+        NSHumanReadableCopyright: ""
+    entitlements:
+      path: App/macOS/AudioPencil.entitlements
+      properties:
+        com.apple.security.device.audio-input: true
+    settings:
+      base:
+        PRODUCT_NAME: Audio Pencil
+        PRODUCT_MODULE_NAME: AudioPencil
+        PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_APP_SANDBOX: NO
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES
+    dependencies:
+      - package: AudioPencilKit
+        product: APCore
+      - package: AudioPencilKit
+        product: APAudio
+      - package: AudioPencilKit
+        product: APModels
+      - package: AudioPencilKit
+        product: APTranscription
+
+schemes:
+  AudioPencil:
+    build:
+      targets:
+        AudioPencil: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - package: AudioPencilKit/APCoreTests
+        - package: AudioPencilKit/APTranscriptionTests
+    profile:
+      config: Release
+    archive:
+      config: Release
