@@ -43,6 +43,7 @@ struct StatusView: View {
                     )
                     .foregroundStyle(app.hotkeyActive ? .green : .orange)
                 }
+                LabeledContent("Microphone", value: app.currentMicrophoneName)
                 LabeledContent("Start", value: "Double-tap Fn")
                 LabeledContent("Stop", value: stopDescription)
                 LabeledContent("Cancel", value: "Esc")

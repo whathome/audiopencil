@@ -79,6 +79,11 @@ struct TranscriptCleanerTests {
         #expect(TranscriptCleaner.clean(" [BLANK_AUDIO]  Hello there , world. (music) *sigh*") == "Hello there, world.")
     }
 
+    @Test func removesSoundTagsButKeepsRealParentheticals() {
+        #expect(TranscriptCleaner.clean("(beep) Testing audio pencil.") == "Testing audio pencil.")
+        #expect(TranscriptCleaner.clean("Meet at noon (Thursday) please.") == "Meet at noon (Thursday) please.")
+    }
+
     @Test func joinsSegments() {
         let segments = [
             TranscriptSegment(start: 0, end: 1, text: " First part."),

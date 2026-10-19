@@ -23,6 +23,7 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
 
     private let root: URL
     private var kit: WhisperKit?
+    private var vocabulary: [String] = []
     /// Serialises loads, unloads and transcriptions: WhisperKit isn't safe to use concurrently.
     private let lock = AsyncLock()
 
@@ -32,6 +33,11 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
     }
 
     public var isLoaded: Bool { kit != nil }
+
+    /// Terms passed to Whisper as prompt context so they're spelled correctly.
+    public func setVocabulary(_ words: [String]) {
+        vocabulary = words.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
 
     private nonisolated var folder: URL { ModelLocations.whisperFolder(variant: variant, root: root) }
 
@@ -107,6 +113,10 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
     private func runTranscription(_ samples: [Float]) async throws -> [TranscriptSegment] {
         guard let kit else { throw WhisperEngineError.notLoaded }
 
+        // Whisper treats the prompt as preceding text, so a short glossary steers spelling.
+        // WhisperKit keeps the last 224 prompt tokens and drops special tokens.
+        let promptTokens = vocabulary.isEmpty ? nil : kit.tokenizer?.encode(text: " Glossary: " + vocabulary.joined(separator: ", ") + ".")
+
         let options = DecodingOptions(
             task: .transcribe,
             language: "en",
@@ -115,6 +125,7 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
             detectLanguage: false,
             skipSpecialTokens: true,
             withoutTimestamps: false,
+            promptTokens: promptTokens,
             suppressBlank: true,
             noSpeechThreshold: 0.6
         )

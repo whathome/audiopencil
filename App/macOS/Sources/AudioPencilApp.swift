@@ -14,6 +14,46 @@ struct AudioPencilApp: App {
         Settings {
             SettingsView(app: delegate.app)
         }
+
+        // SwiftUI writes isInserted back on every scene update. Only assign real changes: any write to
+        // `settings` invalidates the scene again, and an unconditional one loops forever on the main thread.
+        MenuBarExtra(isInserted: Binding(
+            get: { delegate.app.settings.menuBarMode },
+            set: { if delegate.app.settings.menuBarMode != $0 { delegate.app.settings.menuBarMode = $0 } }
+        )) {
+            MenuBarContent(app: delegate.app)
+        } label: {
+            Image(systemName: delegate.app.dictation.phase == .recording ? "waveform.circle.fill" : "pencil.and.scribble")
+        }
+    }
+}
+
+private struct MenuBarContent: View {
+    let app: AppModel
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Text(statusText)
+        Button(app.dictation.phase == .recording ? "Stop Dictation" : "Start Dictation") {
+            app.toggleDictation()
+        }
+        .disabled(app.dictation.phase == .starting || app.dictation.phase == .finishing)
+        Divider()
+        Button("Open Audio Pencil") {
+            openWindow(id: "main")
+            NSApp.activate()
+        }
+        SettingsLink { Text("Settings…") }
+        Divider()
+        Button("Quit Audio Pencil") { NSApp.terminate(nil) }
+    }
+
+    private var statusText: String {
+        switch app.dictation.phase {
+        case .recording: "Recording…"
+        case .starting, .finishing: "Working…"
+        case .idle: app.hotkeyActive ? "Ready: double-tap Fn" : "Needs Accessibility permission"
+        }
     }
 }
 

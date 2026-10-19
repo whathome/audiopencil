@@ -1,7 +1,9 @@
+import APAudio
 import APCore
 import APModels
 import APTranscription
 import AppKit
+import ServiceManagement
 
 enum TranscriptionModelState: Equatable {
     case idle
@@ -29,6 +31,21 @@ final class AppModel {
     @ObservationIgnored private var traceOrigin: TimeInterval?
     private(set) var memoryPressure: MemoryPressureMonitor.Level = .normal
     private(set) var whisper: WhisperEngine
+    /// Connected input devices, kept current as devices come and go.
+    private(set) var microphones: [Microphone] = MicrophoneCatalog.current()
+    private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
+    private(set) var launchAtLoginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
+
+    /// The microphone the next recording will use: first connected preference, else nil (system default).
+    var currentMicrophone: Microphone? {
+        MicrophoneCatalog.resolve(preferred: settings.preferredMicrophones.map(\.uid), among: microphones)
+    }
+
+    var currentMicrophoneName: String {
+        if let currentMicrophone { return currentMicrophone.name }
+        let fallback = MicrophoneCatalog.systemDefault(among: microphones)?.name ?? "unknown"
+        return "System default (\(fallback))"
+    }
 
     @ObservationIgnored let coordinator = ModelCoordinator()
     @ObservationIgnored private(set) var dictation: DictationController!
@@ -38,6 +55,8 @@ final class AppModel {
     @ObservationIgnored private var modelTask: Task<Void, any Error>?
     @ObservationIgnored private var memoryMonitor: MemoryPressureMonitor?
     @ObservationIgnored private var permissionPoll: Task<Void, Never>?
+    @ObservationIgnored private var debugObserver: (any NSObjectProtocol)?
+    @ObservationIgnored private var microphoneCatalog: MicrophoneCatalog?
 
     init() {
         let settings = Self.loadSettings()
@@ -61,11 +80,47 @@ final class AppModel {
         memoryMonitor = MemoryPressureMonitor { level in
             Task { @MainActor [weak self] in self?.memoryPressure = level }
         }
+        microphoneCatalog = MicrophoneCatalog { microphones in
+            Task { @MainActor [weak self] in self?.microphones = microphones }
+        }
+        applyAppPresence()
         permissions.refresh()
         startHotkeysIfPossible()
         prepareModel()
         pollPermissions()
+        #if DEBUG
+        listenForDebugCommands()
+        #endif
     }
+
+    #if DEBUG
+    /// Lets scripts/debug-dictation.sh drive dictation without key presses, for end-to-end timing.
+    /// Debug builds only; dictations started this way never paste.
+    private func listenForDebugCommands() {
+        debugObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("com.weshopkins.audiopencil.debug"), object: nil, queue: .main
+        ) { [unowned self] note in
+            let command = note.object as? String ?? ""
+            MainActor.assumeIsolated {
+                Log.dictation.notice("Debug command: \(command, privacy: .public)")
+                switch command {
+                case "start": startDictation(dryRun: true)
+                case "warm": dictation.warmUp(deviceID: currentMicrophone?.deviceID) // a lone first tap
+                case "tap-start":
+                    // Simulates a double-tap: warm-up on the first tap, start on the second.
+                    dictation.warmUp(deviceID: currentMicrophone?.deviceID)
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(250))
+                        startDictation(dryRun: true)
+                    }
+                case "stop": dictation.stop()
+                case "cancel": dictation.cancel()
+                default: break
+                }
+            }
+        }
+    }
+    #endif
 
     /// Accessibility has no change notification, so poll until everything needed is granted.
     private func pollPermissions() {
@@ -91,7 +146,9 @@ final class AppModel {
 
     func prepareModel() {
         let engine = whisper
+        let vocabulary = settings.customVocabulary
         modelTask = Task {
+            await engine.setVocabulary(vocabulary)
             do {
                 if !engine.isDownloaded {
                     modelState = .downloading(0)
@@ -157,7 +214,7 @@ final class AppModel {
             switch dictation.phase {
             case .idle: startDictation()
             case .recording: dictation.stop()
-            case .finishing: break
+            case .starting, .finishing: break
             }
             return true
         }
@@ -165,6 +222,9 @@ final class AppModel {
 
     private func handle(_ gesture: FnTapDetector.Gesture) {
         switch (dictation.phase, gesture, settings.stopGesture) {
+        case (.idle, .singleTap, _) where settings.warmMicOnFirstTap && permissions.microphone == .granted:
+            trace("→ tap: warming up the mic")
+            dictation.warmUp(deviceID: currentMicrophone?.deviceID)
         case (.idle, .doubleTap, _):
             trace("→ double-tap: start recording")
             detector.reset()
@@ -190,9 +250,20 @@ final class AppModel {
         Log.hotkey.notice("\(text, privacy: .public)")
     }
 
-    private func startDictation() {
+    /// Menu bar item: start when idle, stop when recording.
+    func toggleDictation() {
+        switch dictation.phase {
+        case .idle: startDictation()
+        case .recording: dictation.stop()
+        case .starting, .finishing: break
+        }
+    }
+
+    private func startDictation(dryRun: Bool = false) {
+        guard dictation.phase == .idle else { return }
+        dictation.dryRun = dryRun
         permissions.refresh()
-        dictation.start(microphoneGranted: permissions.microphone == .granted)
+        dictation.start(microphoneGranted: permissions.microphone == .granted, deviceID: currentMicrophone?.deviceID)
     }
 
     // MARK: Settings
@@ -212,6 +283,36 @@ final class AppModel {
         indicator.showLiveText = settings.showLiveText
         if settings.transcriptionModel != old.transcriptionModel {
             switchModel(to: settings.transcriptionModel)
+        } else if settings.customVocabulary != old.customVocabulary {
+            let engine = whisper
+            let vocabulary = settings.customVocabulary
+            Task { await engine.setVocabulary(vocabulary) }
         }
+        if settings.menuBarMode != old.menuBarMode {
+            applyAppPresence()
+        }
+    }
+
+    // MARK: App presence
+
+    /// Dock icon (default) or menu-bar-only.
+    private func applyAppPresence() {
+        NSApp.setActivationPolicy(settings.menuBarMode ? .accessory : .regular)
+        if !settings.menuBarMode { NSApp.activate() }
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            Log.dictation.error("Launch at login change failed: \(error.localizedDescription, privacy: .public)")
+        }
+        let status = SMAppService.mainApp.status
+        launchAtLogin = status == .enabled
+        launchAtLoginNeedsApproval = status == .requiresApproval
     }
 }

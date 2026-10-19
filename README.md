@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 1 (bare loop). Double-tap Fn, talk, stop, and the raw transcript is pasted into the active field.
+**Status:** milestone 2 (dictation polish). Double-tap Fn, talk, stop, and the raw transcript is pasted into the active field, using your preferred microphone and vocabulary.
 
 ## Build and run
 
@@ -43,6 +43,14 @@ Input Monitoring is shown for diagnosis but isn't requested: the active event ta
 | Stop and paste | Single tap **Fn** or **Return** (configurable: double-tap Fn; Return can be turned off) |
 | Cancel | **Esc**, at any point; nothing is pasted |
 
+Recording starts about 0.05 s after the second Fn tap: the mic comes on at the first tap and goes off again within a second if no second tap follows. Turn this off in Settings if the brief mic-indicator flash on a lone Fn tap bothers you.
+
+Settings (⌘,) also has:
+
+- **Microphones**: a priority list. The first connected one is used, otherwise the system default. Unplugged entries stay in the list.
+- **Custom vocabulary**: one term per line, passed to Whisper as spelling hints. In a test, "next cloud / web dev / whisker kit" became "Nextcloud / WebDAV / WhisperKit".
+- **Menu bar only** (hides the Dock icon) and **Launch at login**.
+
 The text is left on the clipboard as well. If the focused element clearly isn't a text field, nothing is pasted and the indicator shows "On clipboard".
 
 The hotkey doesn't work while macOS Secure Input is on: password fields, Terminal with Secure Keyboard Entry, some password managers.
@@ -55,7 +63,7 @@ Config/Signing.xcconfig       ad-hoc by default; includes Signing.local.xcconfig
 App/macOS/Sources             thin macOS app: event tap, paste, indicator panel, windows
 Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
   APCore                      settings, Fn tap detection, async lock, diagnostics
-  APAudio                     16 kHz mono capture, levels, synthesised cues
+  APAudio                     16 kHz mono capture (off the main thread), mic catalogue, levels, cues
   APModels                    ModelCoordinator (one large model resident at a time), catalogue
   APTranscription             WhisperKit wrapper, streaming transcriber
 ```
@@ -74,12 +82,18 @@ There's also an opt-in end-to-end WhisperKit test. It synthesises speech with `s
 cd Packages/AudioPencilKit && AUDIOPENCIL_INTEGRATION=1 swift test --filter WhisperIntegration
 ```
 
+Debug builds can be driven without key presses, for end-to-end timing. These dictations never paste; the transcript goes to the log. Use `say` to talk to the mic:
+
+```bash
+scripts/debug-dictation.sh tap-start   # or: start (cold), warm (a lone first tap), stop, cancel
+```
+
 Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each dictation logs its stop→text and stop→paste times.
 
 ## Milestones
 
-1. **Bare loop** (this): hotkey, record, live transcription, stop, paste raw text.
-2. Dictation polish: mic priority list, clipboard indicator details, settings, Dock/menu-bar mode, launch at login, custom vocabulary.
+1. **Bare loop** (done): hotkey, record, live transcription, stop, paste raw text.
+2. **Dictation polish** (this): instant start, mic priority list, Dock/menu-bar mode, launch at login, custom vocabulary.
 3. LLM and styles (MLX Swift): model swapping, presets, picker, per-app defaults.
 4. Storage: offline-first queue, Nextcloud WebDAV, Login Flow v2, shared config with ETag merge.
 5. Long-form and Obsidian: promotion, retention, notes and frontmatter, review prompt, Bases file.

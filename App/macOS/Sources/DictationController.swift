@@ -22,6 +22,8 @@ struct DictationReport {
 final class DictationController {
     enum Phase {
         case idle
+        /// Waiting for the microphone to come on (only noticeable when it wasn't warmed up).
+        case starting
         case recording
         case finishing
     }
@@ -30,7 +32,10 @@ final class DictationController {
     private(set) var lastReport: DictationReport?
     private(set) var lastError: String?
 
-    /// Recording or finishing: Escape cancels in either.
+    /// Debug builds: skip the paste and log the transcript instead (set by the debug control hook).
+    var dryRun = false
+
+    /// Starting, recording or finishing: Escape cancels in any of them.
     var isActive: Bool { phase != .idle }
 
     private let recorder = AudioRecorder()
@@ -42,6 +47,8 @@ final class DictationController {
     private var streamer: StreamingTranscriber?
     /// Bumped on every start/cancel so a finishing task can tell it has been cancelled.
     private var generation = 0
+    /// Bumped on every warm-up so only the latest one turns the mic back off.
+    private var warmGeneration = 0
 
     init(indicator: IndicatorModel, engine: @escaping () -> WhisperEngine, waitForModel: @escaping () async throws -> Void) {
         self.indicator = indicator
@@ -49,7 +56,21 @@ final class DictationController {
         self.waitForModel = waitForModel
     }
 
-    func start(microphoneGranted: Bool) {
+    /// First Fn tap: turn the mic on so a second tap starts recording instantly.
+    /// Turns it off again if no recording starts within `seconds`.
+    func warmUp(deviceID: UInt32?, seconds: Double = 0.8) {
+        guard phase == .idle else { return }
+        warmGeneration += 1
+        let warm = warmGeneration
+        let recorder = self.recorder
+        Task {
+            try? await recorder.warmUp(deviceID: deviceID)
+            try? await Task.sleep(for: .seconds(seconds))
+            if warm == warmGeneration, phase == .idle { recorder.stop() }
+        }
+    }
+
+    func start(microphoneGranted: Bool, deviceID: UInt32?) {
         guard phase == .idle else { return }
         guard microphoneGranted else {
             cues.play(.cancel)
@@ -57,34 +78,45 @@ final class DictationController {
             return
         }
 
-        let indicator = self.indicator
-        do {
-            try recorder.start(
-                onLevel: { level in Task { @MainActor in indicator.push(level) } },
-                onInterruption: { Task { @MainActor [weak self] in self?.stop() } }
-            )
-        } catch {
-            fail("Couldn't start the microphone: \(error.localizedDescription)")
-            return
-        }
-
         generation += 1
-        phase = .recording
-        cues.play(.start)
-        indicator.show(.listening)
+        let generation = self.generation
+        phase = .starting
+        let requestedAt = ContinuousClock.now
+        let indicator = self.indicator
 
-        let engine = self.engine()
-        let streamer = StreamingTranscriber(
-            engine: engine,
-            source: recorder.samples,
-            isEngineReady: { await engine.isLoaded },
-            onUpdate: { confirmed, pending in
-                Task { @MainActor in indicator.liveText = [confirmed, pending].filter { !$0.isEmpty }.joined(separator: " ") }
+        Task {
+            do {
+                try await recorder.beginRecording(
+                    deviceID: deviceID,
+                    onLevel: { level in Task { @MainActor in indicator.push(level) } },
+                    onInterruption: { Task { @MainActor [weak self] in self?.stop() } }
+                )
+            } catch {
+                if generation == self.generation {
+                    fail("Couldn't start the microphone: \(error.localizedDescription)")
+                }
+                return
             }
-        )
-        self.streamer = streamer
-        Task { await streamer.start() }
-        Log.dictation.notice("Recording started")
+            guard generation == self.generation else { return } // cancelled while the mic came on
+
+            phase = .recording
+            cues.play(.start)
+            recorder.muteNext(seconds: 0.3) // keep the start cue out of the transcript
+            indicator.show(.listening)
+
+            let engine = self.engine()
+            let streamer = StreamingTranscriber(
+                engine: engine,
+                source: recorder.samples,
+                isEngineReady: { await engine.isLoaded },
+                onUpdate: { confirmed, pending in
+                    Task { @MainActor in indicator.liveText = [confirmed, pending].filter { !$0.isEmpty }.joined(separator: " ") }
+                }
+            )
+            self.streamer = streamer
+            await streamer.start()
+            Log.dictation.notice("Recording started \(ContinuousClock.now - requestedAt, privacy: .public) after the request")
+        }
     }
 
     func stop() {
@@ -113,6 +145,10 @@ final class DictationController {
                 if text.isEmpty {
                     outcome = "nothing heard"
                     indicator.flash(.nothingHeard)
+                } else if dryRun {
+                    outcome = "dry run"
+                    indicator.hide()
+                    Log.dictation.notice("Dry-run transcript: \(text, privacy: .public)")
                 } else {
                     let result = Paster.deliver(text)
                     outcome = result.rawValue

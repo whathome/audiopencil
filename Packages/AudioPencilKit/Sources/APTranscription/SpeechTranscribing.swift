@@ -28,8 +28,16 @@ public enum TranscriptCleaner {
 
     public static func clean(_ text: String) -> String {
         var result = text
-        for pattern in [#"\[[^\]]*\]"#, #"\([^)]*(music|silence|noise|inaudible|blank)[^)]*\)"#, #"\*[^*]*\*"#] {
-            result = result.replacingOccurrences(of: pattern, with: " ", options: [.regularExpression, .caseInsensitive])
+        // [BLANK_AUDIO], *sigh*, and short lowercase sound tags like (beep) or (keyboard clicking).
+        // Spoken dictation practically never produces real lowercase parentheticals.
+        let annotations: [(String, String.CompareOptions)] = [
+            (#"\[[^\]]*\]"#, []),
+            (#"\([^)]*(music|silence|noise|inaudible|blank)[^)]*\)"#, .caseInsensitive),
+            (#"\([a-z][a-z ]{0,30}\)"#, []),
+            (#"\*[^*]*\*"#, []),
+        ]
+        for (pattern, options) in annotations {
+            result = result.replacingOccurrences(of: pattern, with: " ", options: options.union(.regularExpression))
         }
         result = result.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
         result = result.replacingOccurrences(of: #" ([,.;:!?])"#, with: "$1", options: .regularExpression)
