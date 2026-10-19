@@ -11,17 +11,18 @@ Requirements: Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`bre
 ```bash
 xcodegen generate          # creates AudioPencil.xcodeproj (not committed)
 open AudioPencil.xcodeproj # then Run, or:
-xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencil -derivedDataPath build/DerivedData build
+xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencil -derivedDataPath build/DerivedData -allowProvisioningUpdates build
 ```
 
 ### Signing (do this once)
 
 Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new app: you'd have to grant Accessibility again after each build. To fix that for free:
 
-1. Xcode › Settings › Accounts › add your Apple ID (a free Personal Team is fine).
-2. Select the team › Manage Certificates… › **+** › Apple Development.
-3. Run `scripts/set-team.sh`. It writes the gitignored `Config/Signing.local.xcconfig`.
-4. `xcodegen generate`, rebuild, and grant Accessibility one last time.
+1. Xcode › Settings › Accounts › add your Apple ID (a free Personal Team is fine). If no "(Personal Team)" appears, accept the agreement at developer.apple.com/account, then sign out and back in.
+2. Open the project and pick the team under the AudioPencil target › Signing & Capabilities. Note the `DEVELOPMENT_TEAM` value Xcode writes into the project.
+3. Run `scripts/set-team.sh <TEAMID>`. It writes the gitignored `Config/Signing.local.xcconfig`, which survives `xcodegen generate`.
+4. `xcodegen generate`, then build with `-allowProvisioningUpdates` (Xcode creates the Apple Development certificate on the first build).
+5. Remove the old Audio Pencil entry under Accessibility and grant it one last time.
 
 ### First run
 
