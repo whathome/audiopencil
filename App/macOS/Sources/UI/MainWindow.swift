@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum Page: String, CaseIterable, Identifiable, Hashable {
-    case dictation, styles, notes, setup, settings
+    case dictation, styles, notes, vault, setup, settings
     var id: Self { self }
 
     var title: String {
@@ -9,6 +9,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .dictation: "Dictation"
         case .styles: "Styles"
         case .notes: "Notes"
+        case .vault: "Vault"
         case .setup: "Setup"
         case .settings: "Settings"
         }
@@ -19,6 +20,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .dictation: "keyboard"
         case .styles: "paintbrush.pointed"
         case .notes: "book.closed"
+        case .vault: "externaldrive.connected.to.line.below"
         case .setup: "checkmark.shield"
         case .settings: "gearshape"
         }
@@ -39,6 +41,7 @@ struct MainWindow: View {
                 case .dictation: DictationPage(app: app)
                 case .styles: StylesPage(app: app)
                 case .notes: ComingSoonPage(title: "Notes", symbol: "book.closed", message: "Long recordings become notes in your Obsidian vault, synced through Nextcloud.")
+                case .vault: VaultPage(vault: app.vault)
                 case .setup: SetupView(app: app)
                 case .settings: SettingsView(app: app, embedded: true)
                 }
@@ -63,6 +66,7 @@ private struct Sidebar: View {
                 row(.notes, soon: true)
             }
             Section {
+                row(.vault)
                 row(.setup)
                 row(.settings)
             }
@@ -102,6 +106,8 @@ private struct Sidebar: View {
             Spacer()
             if soon {
                 Text("Soon").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
+            } else if page == .vault, !app.vault.settings.isConfigured {
+                Text("Set up").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
             } else if page == .setup, app.needsSetup {
                 Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
             }

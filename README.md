@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 3 (styles). Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
+**Status:** milestone 4 in progress (vault connection: Nextcloud or a folder on this Mac, such as an iCloud Drive vault). Milestone 3 (styles) done. Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
 
 ## Build and run
 
@@ -75,6 +75,7 @@ Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
   APModels                    ModelCoordinator (one large model resident at a time), catalogue
   APTranscription             WhisperKit wrapper, streaming transcriber
   APSummary                   MLX writing model (SmolLM3 by default), Hugging Face download, benchmark
+  APStorage                   vault storage: Nextcloud WebDAV + Login Flow v2, local folder (iCloud Drive), Keychain
 ```
 
 Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, which unloads whatever else is resident first. Whisper and the writing model are both `ManagedModel`s, so they can't be loaded at the same time.

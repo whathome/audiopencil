@@ -42,6 +42,9 @@ targets:
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         NSMicrophoneUsageDescription: Audio Pencil listens while you dictate and transcribes on this Mac. Audio never leaves the device.
         NSHumanReadableCopyright: ""
+        # Plain-HTTP Nextcloud on the local network (LAN IPs, .local names); public servers still need HTTPS.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     entitlements:
       path: App/macOS/AudioPencil.entitlements
       properties:
@@ -68,6 +71,8 @@ targets:
         product: APTranscription
       - package: AudioPencilKit
         product: APSummary
+      - package: AudioPencilKit
+        product: APStorage
 
 schemes:
   AudioPencil:
@@ -82,6 +87,7 @@ schemes:
         - package: AudioPencilKit/APCoreTests
         - package: AudioPencilKit/APTranscriptionTests
         - package: AudioPencilKit/APSummaryTests
+        - package: AudioPencilKit/APStorageTests
     profile:
       config: Release
     archive:

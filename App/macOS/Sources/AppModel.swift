@@ -38,6 +38,7 @@ final class AppModel {
 
     let permissions = Permissions()
     let indicator = IndicatorModel()
+    let vault = VaultController()
     var modelState: TranscriptionModelState = .idle
     private(set) var hotkeyActive = false
     /// Recent Fn events and gesture decisions, newest last.

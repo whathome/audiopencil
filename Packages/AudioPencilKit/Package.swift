@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "APModels", targets: ["APModels"]),
         .library(name: "APTranscription", targets: ["APTranscription"]),
         .library(name: "APSummary", targets: ["APSummary"]),
+        .library(name: "APStorage", targets: ["APStorage"]),
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/WhisperKit.git", exact: "1.1.1"),
@@ -66,12 +67,16 @@ let package = Package(
             swiftSettings: concurrency
         ),
 
+        // Vault storage: Nextcloud (WebDAV, Login Flow v2) or a local folder such as iCloud Drive.
+        .target(name: "APStorage", dependencies: ["APCore"], swiftSettings: concurrency),
+
         .testTarget(name: "APCoreTests", dependencies: ["APCore"], swiftSettings: concurrency),
         .testTarget(
             name: "APTranscriptionTests",
             dependencies: ["APTranscription", "APModels"],
             swiftSettings: concurrency
         ),
+        .testTarget(name: "APStorageTests", dependencies: ["APStorage"], swiftSettings: concurrency),
         .testTarget(
             name: "APSummaryTests",
             dependencies: ["APSummary", "APModels", "APCore"],
