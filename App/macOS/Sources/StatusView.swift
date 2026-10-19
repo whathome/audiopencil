@@ -47,6 +47,9 @@ struct StatusView: View {
                 LabeledContent("Start", value: "Double-tap Fn")
                 LabeledContent("Stop", value: stopDescription)
                 LabeledContent("Cancel", value: "Esc")
+                LabeledContent("Microphones, vocabulary, menu bar…") {
+                    SettingsLink { Text("Open Settings…") }
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Fn trace")
                     if app.hotkeyTrace.isEmpty {
@@ -92,6 +95,14 @@ struct StatusView: View {
             }
         }
         .formStyle(.grouped)
+        .toolbar {
+            ToolbarItem {
+                SettingsLink {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .help("Settings (⌘,)")
+            }
+        }
         .frame(minWidth: 480, idealWidth: 520, minHeight: 560)
     }
 
