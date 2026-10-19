@@ -30,6 +30,8 @@ public struct MicrophonePreference: Codable, Equatable, Hashable, Sendable, Iden
 public struct DictationSettings: Codable, Equatable, Sendable {
     /// Gesture that stops a recording (starting is always a double-tap of Fn).
     public var stopGesture: StopGesture = .singleTapFn
+    /// Press and hold Fn to talk; release to paste the raw transcript.
+    public var holdFnForRaw: Bool = true
     /// Return / Enter also stops a recording (the key press is swallowed).
     public var returnStops: Bool = true
     /// ⌃⌥Space toggles recording, for keyboards without a usable Fn key.
@@ -58,6 +60,7 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         let defaults = DictationSettings()
         let c = try decoder.container(keyedBy: CodingKeys.self)
         stopGesture = try c.decodeIfPresent(StopGesture.self, forKey: .stopGesture) ?? defaults.stopGesture
+        holdFnForRaw = try c.decodeIfPresent(Bool.self, forKey: .holdFnForRaw) ?? defaults.holdFnForRaw
         returnStops = try c.decodeIfPresent(Bool.self, forKey: .returnStops) ?? defaults.returnStops
         fallbackShortcutEnabled = try c.decodeIfPresent(Bool.self, forKey: .fallbackShortcutEnabled) ?? defaults.fallbackShortcutEnabled
         doubleTapWindow = try c.decodeIfPresent(Double.self, forKey: .doubleTapWindow) ?? defaults.doubleTapWindow

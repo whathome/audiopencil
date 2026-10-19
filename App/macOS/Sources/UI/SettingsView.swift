@@ -15,6 +15,10 @@ struct SettingsView: View {
                 Picker("Stop with", selection: $app.settings.stopGesture) {
                     ForEach(StopGesture.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
+                Toggle(isOn: $app.settings.holdFnForRaw) {
+                    Text("Hold Fn for a raw transcript")
+                    Text("Press and hold, talk, release to paste. Pressing another key while holding cancels, so Fn still works as a modifier.")
+                }
                 Toggle("Return also stops", isOn: $app.settings.returnStops)
                 Toggle("⌃⌥Space starts and stops (for keyboards without Fn)", isOn: $app.settings.fallbackShortcutEnabled)
                 LabeledContent("Double-tap speed") {

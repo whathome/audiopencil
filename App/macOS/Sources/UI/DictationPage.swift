@@ -61,6 +61,11 @@ private struct HotkeyCard: View {
             }
             Divider().padding(.vertical, 2)
             HStack(alignment: .top, spacing: 12) {
+                if app.settings.holdFnForRaw {
+                    Gesture(title: "Push to talk", detail: "Hold, release to paste") {
+                        KeyCap(label: "hold fn")
+                    }
+                }
                 Gesture(title: "Start", detail: "Double-tap") {
                     KeyCap(label: "fn"); KeyCap(label: "fn")
                 }

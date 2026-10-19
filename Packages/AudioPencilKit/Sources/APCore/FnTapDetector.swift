@@ -78,6 +78,13 @@ public struct FnTapDetector: Sendable {
         }
     }
 
+    /// True while the key has been held cleanly (no other input) for at least `duration`.
+    /// Used for press-and-hold push-to-talk; the caller polls it after a timer.
+    public func isHeld(for duration: TimeInterval, at time: TimeInterval) -> Bool {
+        guard let pressed = pressedAt, !spoiled else { return false }
+        return time - pressed >= duration
+    }
+
     /// Forgets any partial sequence, e.g. after a tap has been consumed to stop a recording,
     /// so that tap can't become the first half of a double-tap.
     public mutating func reset() {

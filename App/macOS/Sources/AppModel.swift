@@ -67,6 +67,15 @@ final class AppModel {
     @ObservationIgnored private(set) var dictation: DictationController!
     @ObservationIgnored private let hotkeys = HotkeyMonitor()
     @ObservationIgnored private var detector: FnTapDetector
+    @ObservationIgnored private var holdTask: Task<Void, Never>?
+    /// A press-and-hold recording is running; releasing Fn stops it.
+    @ObservationIgnored private var holdRecording = false
+    /// Longer than the longest tap (0.30 s), short enough to feel immediate.
+    static let holdThreshold: TimeInterval = 0.35
+    #if DEBUG
+    /// Simulated key presses from the debug hook make dictations dry runs until this time.
+    @ObservationIgnored private var debugDryRunUntil = Date.distantPast
+    #endif
     @ObservationIgnored private var indicatorPanel: IndicatorPanelController?
     @ObservationIgnored private var modelTask: Task<Void, any Error>?
     @ObservationIgnored private var memoryMonitor: MemoryPressureMonitor?
@@ -146,6 +155,13 @@ final class AppModel {
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
                 case "snapshot": snapshotMainWindow()
+                case let command where command.hasPrefix("key:"):
+                    // Simulated hotkey input through the real gesture logic: key:fnDown, key:fnUp, key:other, key:escape, key:return.
+                    let events: [String: HotkeyMonitor.KeyEvent] = ["fnDown": .fnDown, "fnUp": .fnUp, "other": .other, "escape": .escape, "return": .returnKey]
+                    if let event = events[String(command.dropFirst(4))] {
+                        debugDryRunUntil = Date().addingTimeInterval(30)
+                        _ = handle(event, at: ProcessInfo.processInfo.systemUptime)
+                    }
                 case let command where command.hasPrefix("page:"):
                     page = Page(rawValue: String(command.dropFirst(5))) ?? page
                 default: break
@@ -238,8 +254,18 @@ final class AppModel {
         switch event {
         case .fnDown:
             _ = detector.handle(.keyDown(at: time))
+            scheduleHoldCheck()
             return false
         case .fnUp:
+            holdTask?.cancel()
+            if holdRecording {
+                holdRecording = false
+                _ = detector.handle(.keyUp(at: time))
+                detector.reset()
+                trace("→ Fn released: stop (raw)")
+                dictation.stop()
+                return false
+            }
             if let gesture = detector.handle(.keyUp(at: time)) {
                 handle(gesture)
             } else {
@@ -248,6 +274,13 @@ final class AppModel {
             return false
         case .other:
             _ = detector.handle(.otherInput)
+            holdTask?.cancel()
+            if holdRecording {
+                // Fn was being used as a modifier after all (Fn+arrow): drop the recording, pass the key on.
+                holdRecording = false
+                trace("→ another key during hold: cancelled")
+                dictation.cancel()
+            }
             return false
         case .escape:
             guard dictation.isActive else { return false }
@@ -286,6 +319,21 @@ final class AppModel {
         }
     }
 
+    /// Press-and-hold push-to-talk: if Fn is still held cleanly after the threshold, record raw until release.
+    private func scheduleHoldCheck() {
+        guard settings.holdFnForRaw, dictation.phase == .idle else { return }
+        holdTask?.cancel()
+        holdTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Self.holdThreshold))
+            guard let self, !Task.isCancelled, dictation.phase == .idle,
+                  detector.isHeld(for: Self.holdThreshold, at: ProcessInfo.processInfo.systemUptime)
+            else { return }
+            holdRecording = true
+            trace("→ Fn held: recording until release (raw)")
+            startDictation()
+        }
+    }
+
     private func trace(_ text: String) {
         let now = ProcessInfo.processInfo.systemUptime
         if let origin = traceOrigin, now - origin < 3 {
@@ -309,7 +357,11 @@ final class AppModel {
 
     private func startDictation(dryRun: Bool = false) {
         guard dictation.phase == .idle else { return }
+        #if DEBUG
+        dictation.dryRun = dryRun || Date() < debugDryRunUntil
+        #else
         dictation.dryRun = dryRun
+        #endif
         permissions.refresh()
         dictation.start(microphoneGranted: permissions.microphone == .granted, deviceID: currentMicrophone?.deviceID)
     }

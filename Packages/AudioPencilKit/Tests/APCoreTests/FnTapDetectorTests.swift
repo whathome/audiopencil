@@ -54,6 +54,22 @@ struct FnTapDetectorTests {
         #expect(detector.handle(.keyUp(at: 0.25)) == .singleTap)
     }
 
+    @Test func cleanHoldIsReported() {
+        var detector = FnTapDetector()
+        _ = detector.handle(.keyDown(at: 0))
+        #expect(!detector.isHeld(for: 0.35, at: 0.2))
+        #expect(detector.isHeld(for: 0.35, at: 0.4))
+        #expect(detector.handle(.keyUp(at: 1.5)) == nil) // a hold is never a tap
+        #expect(!detector.isHeld(for: 0.35, at: 2))
+    }
+
+    @Test func holdWithAnotherKeyIsNotAHold() {
+        var detector = FnTapDetector()
+        _ = detector.handle(.keyDown(at: 0))
+        _ = detector.handle(.otherInput) // Fn+arrow
+        #expect(!detector.isHeld(for: 0.35, at: 0.5))
+    }
+
     @Test func gapIsConfigurable() {
         let tight = FnTapDetector.Configuration(maxTapDuration: 0.3, maxGapBetweenTaps: 0.1)
         let gestures = run([.keyDown(at: 0), .keyUp(at: 0.05), .keyDown(at: 0.25), .keyUp(at: 0.3)], config: tight)

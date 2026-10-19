@@ -52,6 +52,7 @@ final class DictationController {
     private var generation = 0
     /// Bumped on every warm-up so only the latest one turns the mic back off.
     private var warmGeneration = 0
+    private var stopWhenStarted = false
 
     init(indicator: IndicatorModel, engine: @escaping () -> WhisperEngine, waitForModel: @escaping () async throws -> Void) {
         self.indicator = indicator
@@ -83,6 +84,7 @@ final class DictationController {
 
         generation += 1
         let generation = self.generation
+        stopWhenStarted = false
         phase = .starting
         let requestedAt = ContinuousClock.now
         let indicator = self.indicator
@@ -119,10 +121,19 @@ final class DictationController {
             self.streamer = streamer
             await streamer.start()
             Log.dictation.notice("Recording started \(ContinuousClock.now - requestedAt, privacy: .public) after the request")
+            if stopWhenStarted {
+                stopWhenStarted = false
+                stop()
+            }
         }
     }
 
     func stop() {
+        if phase == .starting {
+            // Released before the mic came on (a very short hold): stop as soon as it does.
+            stopWhenStarted = true
+            return
+        }
         guard phase == .recording, let streamer else { return }
         let stoppedAt = ContinuousClock.now
         phase = .finishing
