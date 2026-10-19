@@ -1,9 +1,11 @@
 import APStorage
+import APSync
 import SwiftUI
 
 /// Where notes and settings will live: Nextcloud or a folder on this Mac (e.g. iCloud Drive).
 struct VaultPage: View {
     @Bindable var vault: VaultController
+    let sync: SyncController
 
     var body: some View {
         ScrollView {
@@ -45,15 +47,86 @@ struct VaultPage: View {
                     }
                 }
 
-                Text("Notes and the shared settings file arrive in the next milestones. For now this sets up and checks the connection.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if vault.settings.isConfigured {
+                    SyncCard(sync: sync)
+                }
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
         }
         .sheet(isPresented: $vault.isBrowsing) {
             NextcloudFolderBrowser(vault: vault)
+        }
+    }
+}
+
+private struct SyncCard: View {
+    let sync: SyncController
+
+    var body: some View {
+        Card(title: "Sync") {
+            HStack(spacing: 10) {
+                statusIcon
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(statusTitle).font(.headline)
+                    if let detail = statusDetail {
+                        Text(detail).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
+                    }
+                }
+                Spacer()
+                Button("Sync now") { Task { await sync.syncNow() } }
+                    .disabled(sync.status == .syncing)
+            }
+            Divider()
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 6) {
+                GridRow {
+                    Text("Settings file").foregroundStyle(.secondary)
+                    Text(sync.settingsFilePath ?? "–").font(.callout.monospaced()).textSelection(.enabled)
+                }
+                GridRow {
+                    Text("This device").foregroundStyle(.secondary)
+                    Text(sync.deviceName)
+                }
+                GridRow {
+                    Text("Waiting to upload").foregroundStyle(.secondary)
+                    Text(sync.queuedUploads == 0 ? "Nothing" : "\(sync.queuedUploads) item\(sync.queuedUploads == 1 ? "" : "s")")
+                }
+            }
+            .font(.callout)
+            Text("Styles, vocabulary and tags are shared through the settings file; edit it in Obsidian and changes arrive here within a minute. This Mac's hotkey, microphone and model choices live in its own section.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var statusIcon: some View {
+        switch sync.status {
+        case .syncing: ProgressView().controlSize(.small)
+        case .idle: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+        case .offline: Image(systemName: "wifi.slash").foregroundStyle(.secondary)
+        case .paused: Image(systemName: "pause.circle.fill").foregroundStyle(.orange)
+        case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+        case .notConfigured: Image(systemName: "circle.dashed").foregroundStyle(.secondary)
+        }
+    }
+
+    private var statusTitle: String {
+        switch sync.status {
+        case .syncing: "Syncing…"
+        case .idle: "Up to date"
+        case .offline: "Offline: changes wait here and sync when you're back"
+        case .paused: "Paused: fix the settings file in Obsidian"
+        case .failed: "Couldn't sync"
+        case .notConfigured: "Waiting for the vault"
+        }
+    }
+
+    private var statusDetail: String? {
+        switch sync.status {
+        case .idle: sync.lastSynced.map { "Last synced \($0.formatted(date: .omitted, time: .shortened))" }
+        case .paused(let message), .failed(let message): message
+        default: nil
         }
     }
 }

@@ -22,6 +22,7 @@ let package = Package(
         .library(name: "APTranscription", targets: ["APTranscription"]),
         .library(name: "APSummary", targets: ["APSummary"]),
         .library(name: "APStorage", targets: ["APStorage"]),
+        .library(name: "APSync", targets: ["APSync"]),
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/WhisperKit.git", exact: "1.1.1"),
@@ -31,6 +32,7 @@ let package = Package(
         .package(url: "https://github.com/ml-explore/mlx-swift", exact: "0.31.4"),
         .package(url: "https://github.com/huggingface/swift-huggingface", .upToNextMinor(from: "0.9.0")),
         .package(url: "https://github.com/huggingface/swift-transformers", .upToNextMinor(from: "1.3.5")),
+        .package(url: "https://github.com/jpsim/Yams.git", .upToNextMinor(from: "6.2.2")),
     ],
     targets: [
         // Pure logic: settings, gesture detection, diagnostics. No platform frameworks beyond Foundation.
@@ -70,6 +72,13 @@ let package = Package(
         // Vault storage: Nextcloud (WebDAV, Login Flow v2) or a local folder such as iCloud Drive.
         .target(name: "APStorage", dependencies: ["APCore"], swiftSettings: concurrency),
 
+        // Shared settings file (YAML in the vault), three-way merge, offline upload queue.
+        .target(
+            name: "APSync",
+            dependencies: ["APCore", "APStorage", .product(name: "Yams", package: "Yams")],
+            swiftSettings: concurrency
+        ),
+
         .testTarget(name: "APCoreTests", dependencies: ["APCore"], swiftSettings: concurrency),
         .testTarget(
             name: "APTranscriptionTests",
@@ -77,6 +86,7 @@ let package = Package(
             swiftSettings: concurrency
         ),
         .testTarget(name: "APStorageTests", dependencies: ["APStorage"], swiftSettings: concurrency),
+        .testTarget(name: "APSyncTests", dependencies: ["APSync", "APStorage", "APCore"], swiftSettings: concurrency),
         .testTarget(
             name: "APSummaryTests",
             dependencies: ["APSummary", "APModels", "APCore"],

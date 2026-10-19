@@ -73,6 +73,8 @@ targets:
         product: APSummary
       - package: AudioPencilKit
         product: APStorage
+      - package: AudioPencilKit
+        product: APSync
 
 schemes:
   AudioPencil:
@@ -88,6 +90,7 @@ schemes:
         - package: AudioPencilKit/APTranscriptionTests
         - package: AudioPencilKit/APSummaryTests
         - package: AudioPencilKit/APStorageTests
+        - package: AudioPencilKit/APSyncTests
     profile:
       config: Release
     archive:

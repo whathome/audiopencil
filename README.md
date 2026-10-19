@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 4 in progress (vault connection: Nextcloud or a folder on this Mac, such as an iCloud Drive vault). Milestone 3 (styles) done. Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
+**Status:** milestone 4 (vault and sync). Connect your Obsidian vault on Nextcloud or in a folder on this Mac (e.g. iCloud Drive); styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` in the vault. Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
 
 ## Build and run
 
@@ -59,6 +59,10 @@ Settings (⌘,) also has:
 - **Custom vocabulary**: one term per line, passed to Whisper as spelling hints. In a test, "next cloud / web dev / whisker kit" became "Nextcloud / WebDAV / WhisperKit".
 - **Menu bar only** (hides the Dock icon) and **Launch at login**.
 
+### Vault settings file
+
+Once a vault is connected (Vault page), the app keeps `Audio Pencil/Settings.md` in it: a short note with one `yaml` block holding the shared styles, vocabulary and tags, plus a section per device (microphones, hotkey options, models). Edit it in Obsidian and the app picks the changes up within a minute, or when you switch to it. Changes made on both sides merge field by field against the last synced version. If both sides changed the same style, the vault's version wins. If the YAML has a mistake, syncing pauses until you fix it, and the file is never overwritten. Per-app style memory and stats stay on the device.
+
 The text is left on the clipboard as well. If the focused element clearly isn't a text field, nothing is pasted and the indicator shows "On clipboard".
 
 The hotkey doesn't work while macOS Secure Input is on: password fields, Terminal with Secure Keyboard Entry, some password managers.
@@ -76,6 +80,7 @@ Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
   APTranscription             WhisperKit wrapper, streaming transcriber
   APSummary                   MLX writing model (SmolLM3 by default), Hugging Face download, benchmark
   APStorage                   vault storage: Nextcloud WebDAV + Login Flow v2, local folder (iCloud Drive), Keychain
+  APSync                      shared settings file (YAML in Markdown), three-way merge, offline upload queue
 ```
 
 Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, which unloads whatever else is resident first. Whisper and the writing model are both `ManagedModel`s, so they can't be loaded at the same time.
@@ -111,7 +116,7 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 
 1. **Bare loop** (done): hotkey, record, live transcription, stop, paste raw text.
 2. **Dictation polish** (done): instant start, mic priority list, Dock/menu-bar mode, launch at login, custom vocabulary.
-3. **Styles** (this): hold-for-raw, MLX writing model with swapping, presets, number keys, picker, per-app defaults, Styles page.
-4. Storage: offline-first queue, Nextcloud WebDAV, Login Flow v2, shared config with ETag merge.
+3. **Styles** (done): hold-for-raw, MLX writing model with swapping, presets, number keys and clickable style menu, picker, per-app defaults, Styles page.
+4. **Vault and sync** (this): Nextcloud (Login Flow v2) or a local/iCloud folder, folder selection, shared YAML settings file with three-way merge and ETag retries, offline upload queue.
 5. Long-form and Obsidian: promotion, retention, notes and frontmatter, review prompt, Bases file.
 6. "Like me" and model discovery.

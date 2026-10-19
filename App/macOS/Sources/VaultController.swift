@@ -41,6 +41,8 @@ final class VaultController {
     private(set) var browserError: String?
 
     @ObservationIgnored private var signInTask: Task<Void, Never>?
+    /// Called when the vault folder has been checked and is usable.
+    @ObservationIgnored var onLocationReady: (() -> Void)?
 
     init() {
         if let data = UserDefaults.standard.data(forKey: Self.settingsKey),
@@ -54,6 +56,13 @@ final class VaultController {
             connection = Keychain.password(for: account) == nil ? .signedOut : .signedIn
         }
         if settings.isConfigured { verifyLocation() }
+        if connection == .signedIn, let server = settings.account?.server {
+            Task {
+                if let status = try? await NextcloudServer.status(of: server) {
+                    serverDescription = [status.productname, status.versionstring].compactMap { $0 }.joined(separator: " ")
+                }
+            }
+        }
     }
 
     private func save() {
@@ -239,6 +248,7 @@ final class VaultController {
                 try await provider.write(probe, data: Data("ok".utf8), ifMatch: nil, createOnly: false)
                 try await provider.delete(probe)
                 locationCheck = .ok(isObsidianVault: isVault)
+                onLocationReady?()
             } catch {
                 locationCheck = .failed(error.localizedDescription)
             }

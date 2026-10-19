@@ -2,6 +2,7 @@ import APAudio
 import APCore
 import APModels
 import APSummary
+import APSync
 import APTranscription
 import AppKit
 import ServiceManagement
@@ -39,6 +40,11 @@ final class AppModel {
     let permissions = Permissions()
     let indicator = IndicatorModel()
     let vault = VaultController()
+    @ObservationIgnored private(set) var sync: SyncController!
+    /// Master tag list from the vault settings file (used from milestone 5).
+    var tags: [String] = []
+    /// Set while applying a synced config, so the change doesn't schedule another sync.
+    @ObservationIgnored var applyingSync = false
     var modelState: TranscriptionModelState = .idle
     private(set) var hotkeyActive = false
     /// Recent Fn events and gesture decisions, newest last.
@@ -117,6 +123,10 @@ final class AppModel {
         )
         indicator.showLiveText = settings.showLiveText
         dictation.onStyleUsed = { [unowned self] style, app in styleMemory.remember(style.id, forApp: app) }
+        sync = SyncController(vault: vault)
+        sync.localConfig = { [unowned self] base in localConfig(from: base) }
+        sync.apply = { [unowned self] config in apply(config) }
+        vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         dictation.onPrepareRewrite = { [unowned self] _ in prefetchWritingModel() }
         applyPickerSettings()
         dictation.onDelivered = { [unowned self] words, audioSeconds in
@@ -147,6 +157,7 @@ final class AppModel {
             Task { @MainActor [weak self] in self?.microphones = microphones }
         }
         applyAppPresence()
+        sync.start()
         permissions.refresh()
         startHotkeysIfPossible()
         if needsSetup { page = .setup }
@@ -180,6 +191,30 @@ final class AppModel {
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
                 case "snapshot": snapshotMainWindow()
+                case "vault:read":
+                    // Logs the vault settings file as the app sees it.
+                    Task {
+                        guard let location = vault.vaultLocation else { return }
+                        let path = ConfigSync.filePath(inVault: location.path)
+                        let text = (try? await location.provider.read(path)).map { String(decoding: $0.data, as: UTF8.self) } ?? "(unreadable)"
+                        Log.dictation.notice("Vault file \(path, privacy: .public):\n\(text, privacy: .public)")
+                    }
+                case let command where command.hasPrefix("vault:addword:") || command.hasPrefix("vault:removeword:"):
+                    // Simulates an edit made in Obsidian: changes the vocabulary list in the file directly.
+                    let word = String(command.split(separator: ":", maxSplits: 2).last ?? "")
+                    let adding = command.hasPrefix("vault:addword:")
+                    Task {
+                        guard let location = vault.vaultLocation else { return }
+                        let path = ConfigSync.filePath(inVault: location.path)
+                        guard let (data, etag) = try? await location.provider.read(path),
+                              var config = try? ConfigDocument.parse(String(decoding: data, as: UTF8.self)) else { return }
+                        if adding { config.vocabulary.append(word) } else { config.vocabulary.removeAll { $0 == word } }
+                        let wrote = (try? await location.provider.write(path, data: Data(ConfigDocument.render(config).utf8), ifMatch: etag, createOnly: false)) != nil
+                        Log.dictation.notice("Simulated Obsidian edit (\(adding ? "add" : "remove") \(word, privacy: .public)): \(wrote ? "written" : "failed", privacy: .public)")
+                    }
+                case "vault:sync": sync.syncSoon(after: .zero)
+                case "report:vocabulary":
+                    Log.dictation.notice("App vocabulary: \(self.settings.customVocabulary.joined(separator: ", "), privacy: .public); sync \(String(describing: self.sync.status), privacy: .public)")
                 case let command where command.hasPrefix("mouse:") || command.hasPrefix("click:"):
                     // Synthetic pointer input at the indicator (moves the real cursor):
                     // mouse:chip, click:chip, mouse:above, click:<style id> (picker choice).
@@ -487,6 +522,7 @@ final class AppModel {
         if settings.menuBarMode != old.menuBarMode {
             applyAppPresence()
         }
+        if !applyingSync { sync?.syncSoon() }
         if settings.writingModel != old.writingModel {
             switchWritingModel(to: settings.writingModel)
         }

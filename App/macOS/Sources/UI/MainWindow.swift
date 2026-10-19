@@ -41,7 +41,7 @@ struct MainWindow: View {
                 case .dictation: DictationPage(app: app)
                 case .styles: StylesPage(app: app)
                 case .notes: ComingSoonPage(title: "Notes", symbol: "book.closed", message: "Long recordings become notes in your Obsidian vault, synced through Nextcloud.")
-                case .vault: VaultPage(vault: app.vault)
+                case .vault: VaultPage(vault: app.vault, sync: app.sync)
                 case .setup: SetupView(app: app)
                 case .settings: SettingsView(app: app, embedded: true)
                 }

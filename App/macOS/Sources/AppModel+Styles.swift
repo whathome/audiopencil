@@ -1,19 +1,26 @@
 import APCore
 import APModels
 import APSummary
+import APSync
 import AppKit
 
 /// Styles, per-app defaults and the MLX writing model.
 extension AppModel {
     // MARK: Styles
 
+    private static let seenPresetsKey = "seenPresetStyles"
+
     static func loadStyles() -> [Style] {
+        let seen = Set(UserDefaults.standard.stringArray(forKey: seenPresetsKey) ?? [])
+        UserDefaults.standard.set(Style.presets.map(\.id), forKey: seenPresetsKey)
         guard let data = UserDefaults.standard.data(forKey: stylesKey),
               var saved = try? JSONDecoder().decode([Style].self, from: data)
         else { return Style.presets }
-        // Presets added in later versions appear after the user's own list.
+        // Presets added in a later version appear once. A preset that was deleted (here or in the
+        // vault settings file) stays deleted. Raw is always there.
+        let legacy = seen.isEmpty // before this was tracked: every preset already shipped counts as seen
         for preset in Style.presets where !saved.contains(where: { $0.id == preset.id }) {
-            saved.append(preset)
+            if preset.isRaw || (!legacy && !seen.contains(preset.id)) { saved.append(preset) }
         }
         return saved
     }
@@ -23,6 +30,33 @@ extension AppModel {
             UserDefaults.standard.set(data, forKey: Self.stylesKey)
         }
         applyPickerSettings()
+        if !applyingSync { sync?.syncSoon() }
+    }
+
+    // MARK: Vault settings file
+
+    /// The app's side of the settings file, built on the last agreed version so fields the app
+    /// doesn't edit (tags, other devices) carry over unchanged.
+    func localConfig(from base: SharedConfig?) -> SharedConfig {
+        var config = base ?? SharedConfig()
+        config.styles = styles.map(ConfigStyle.init)
+        config.vocabulary = settings.customVocabulary
+        config.devices[sync.deviceName] = DeviceSection(settings)
+        return config
+    }
+
+    /// Applies a merged settings file: shared styles and vocabulary, plus this device's section.
+    func apply(_ config: SharedConfig) {
+        applyingSync = true
+        defer { applyingSync = false }
+        var synced = config.styles.map(\.style)
+        if !synced.contains(where: \.isRaw) { synced.insert(.raw, at: 0) }
+        if synced != styles { styles = synced }
+        var updated = settings
+        updated.customVocabulary = config.vocabulary
+        config.devices[sync.deviceName]?.apply(to: &updated)
+        if updated != settings { settings = updated }
+        if config.tags != tags { tags = config.tags }
     }
 
     static func loadStyleMemory() -> StyleMemory {
