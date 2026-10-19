@@ -88,6 +88,7 @@ final class AppModel {
     #if DEBUG
     /// Simulated key presses from the debug hook make dictations dry runs until this time.
     @ObservationIgnored private var debugDryRunUntil = Date.distantPast
+    @ObservationIgnored private var debugSavedCursor: CGPoint?
     #endif
     @ObservationIgnored private var indicatorPanel: IndicatorPanelController?
     @ObservationIgnored private var modelTask: Task<Void, any Error>?
@@ -178,6 +179,39 @@ final class AppModel {
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
                 case "snapshot": snapshotMainWindow()
+                case let command where command.hasPrefix("mouse:") || command.hasPrefix("click:"):
+                    // Synthetic pointer input at the indicator (moves the real cursor):
+                    // mouse:chip, click:chip, mouse:above, click:<style id> (picker choice).
+                    let target = String(command.split(separator: ":").last ?? "")
+                    if command == "mouse:restore" {
+                        if let saved = debugSavedCursor {
+                            CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: saved, mouseButton: .left)?.post(tap: .cghidEventTap)
+                            debugSavedCursor = nil
+                        }
+                        break
+                    }
+                    let pickerID = ["chip", "above"].contains(target) ? nil : target
+                    guard let point = indicatorPanel?.debugPoint(chip: target == "chip", pickerStyleID: pickerID) else { break }
+                    if debugSavedCursor == nil { debugSavedCursor = CGEvent(source: nil)?.location }
+                    CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: point, mouseButton: .left)?.post(tap: .cghidEventTap)
+                    if command.hasPrefix("click:") {
+                        // Post asynchronously: the click opens a menu whose tracking loop blocks this handler.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            for type in [CGEventType.leftMouseDown, .leftMouseUp] {
+                                CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)?.post(tap: .cghidEventTap)
+                            }
+                        }
+                    }
+                case let command where command.hasPrefix("real:"):
+                    // Real key events through the system (and our tap): real:down, real:return.
+                    let codes: [String: CGKeyCode] = ["down": 125, "up": 126, "return": 36, "escape": 53]
+                    if let code = codes[String(command.dropFirst(5))] {
+                        for isDown in [true, false] {
+                            CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: isDown)?.post(tap: .cghidEventTap)
+                        }
+                    }
+                case "report":
+                    Log.dictation.notice("Report: frontmost \(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "–", privacy: .public), Audio Pencil active \(NSApp.isActive), menu open \(self.indicator.isMenuOpen), panel ignores mouse \(self.indicatorPanel?.debugIgnoresMouse ?? true), style \(self.dictation.style.name, privacy: .public), phase \(String(describing: self.dictation.phase), privacy: .public)")
                 case let command where command.hasPrefix("key:"):
                     // Simulated hotkey input through the real gesture logic: key:fnDown, key:fnUp, key:other, key:escape, key:return.
                     let events: [String: HotkeyMonitor.KeyEvent] = ["fnDown": .fnDown, "fnUp": .fnUp, "other": .other, "escape": .escape, "return": .returnKey]
@@ -281,6 +315,13 @@ final class AppModel {
 
     /// Returns true to swallow the key event.
     private func handle(_ event: HotkeyMonitor.KeyEvent, at time: TimeInterval) -> Bool {
+        // The style menu is open: Return, Esc and number keys belong to it.
+        if indicator.isMenuOpen {
+            switch event {
+            case .escape, .returnKey, .digit: return false
+            default: break
+            }
+        }
         switch event {
         case .fnDown:
             _ = detector.handle(.keyDown(at: time))

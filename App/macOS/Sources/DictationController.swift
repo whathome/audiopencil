@@ -63,7 +63,9 @@ final class DictationController {
     var pickAfterStop = false
     var pickerAutoConfirm: Double = 1.0
     /// Styles offered by the picker.
-    var pickerStyles: [Style] = []
+    var pickerStyles: [Style] = [] {
+        didSet { indicator.styleChoices = pickerStyles }
+    }
     /// Called when the picker opens with a styled default, so the writing model can start loading early.
     var onPrepareRewrite: ((Style) -> Void)?
 
@@ -103,6 +105,8 @@ final class DictationController {
         self.engine = engine
         self.waitForModel = waitForModel
         self.rewrite = rewrite
+        indicator.onSelectStyle = { [weak self] style in self?.select(style) }
+        indicator.onPick = { [weak self] style in self?.pick(style) }
     }
 
     /// First Fn tap: turn the mic on so a second tap starts recording instantly.
@@ -134,7 +138,7 @@ final class DictationController {
         self.style = style
         self.targetApp = targetApp
         self.remembersStyle = remembersStyle
-        indicator.styleName = style.isRaw ? nil : style.name
+        indicator.currentStyle = style
         phase = .starting
         let requestedAt = ContinuousClock.now
         let indicator = self.indicator
@@ -182,7 +186,7 @@ final class DictationController {
     func select(_ style: Style) {
         guard phase == .recording || phase == .starting else { return }
         self.style = style
-        indicator.styleName = style.isRaw ? nil : style.name
+        indicator.currentStyle = style
         Log.dictation.notice("Style: \(style.name, privacy: .public)")
     }
 
@@ -315,7 +319,7 @@ final class DictationController {
             if generation == self.generation {
                 phase = .idle
                 self.streamer = nil
-                indicator.styleName = nil
+                indicator.currentStyle = nil
             }
         }
     }
@@ -343,7 +347,7 @@ final class DictationController {
         finishTask?.cancel()
         finishTask = nil
         if isPicking { pick(nil) }
-        indicator.styleName = nil
+        indicator.currentStyle = nil
         recorder.stop()
         if let streamer { Task { await streamer.cancel() } }
         streamer = nil
@@ -354,7 +358,7 @@ final class DictationController {
     }
 
     private func fail(_ message: String) {
-        indicator.styleName = nil
+        indicator.currentStyle = nil
         recorder.stop()
         streamer = nil
         phase = .idle

@@ -43,7 +43,7 @@ Input Monitoring is shown for diagnosis but isn't requested: the active event ta
 | --- | --- |
 | Raw transcript (push to talk) | Hold **Fn**, talk, release. Another key while holding cancels, so Fn still works as a modifier |
 | Dictate in a style | Double-tap **Fn** (or ⌃⌥Space). Starts in the style last used in this app |
-| Switch style while talking | **1–9** for styles, **0** for raw (the number keys are swallowed while recording) |
+| Switch style while talking | Click the style name in the recording indicator for a menu, or press **1–9** (**0** for raw). The menu shows each style's number |
 | Stop and paste | Single tap **Fn** or **Return** (configurable: double-tap Fn; Return can be turned off) |
 | Cancel | **Esc**, at any point, including during a rewrite; nothing is pasted |
 
