@@ -17,6 +17,17 @@ enum TranscriptionModelState: Equatable {
 @Observable
 final class AppModel {
     private static let settingsKey = "dictationSettings"
+    private static let statsKey = "usageStats"
+
+    /// Page shown in the main window.
+    var page: Page = .dictation
+    /// Counts only, for the stats column.
+    private(set) var stats: UsageStats = AppModel.loadStats()
+
+    /// Something the hotkey needs is missing.
+    var needsSetup: Bool {
+        !permissions.allRequiredGranted || !hotkeyActive || !permissions.fnKeyIsFree
+    }
 
     var settings: DictationSettings {
         didSet { settingsChanged(from: oldValue) }
@@ -39,6 +50,11 @@ final class AppModel {
     /// The microphone the next recording will use: first connected preference, else nil (system default).
     var currentMicrophone: Microphone? {
         MicrophoneCatalog.resolve(preferred: settings.preferredMicrophones.map(\.uid), among: microphones)
+    }
+
+    /// Device name only, for tight spaces.
+    var microphoneShortName: String {
+        currentMicrophone?.name ?? MicrophoneCatalog.systemDefault(among: microphones)?.name ?? "System default"
     }
 
     var currentMicrophoneName: String {
@@ -69,6 +85,19 @@ final class AppModel {
             waitForModel: { [unowned self] in try await waitForModel() }
         )
         indicator.showLiveText = settings.showLiveText
+        dictation.onDelivered = { [unowned self] words, audioSeconds in
+            stats.record(words: words, audioSeconds: audioSeconds)
+            if let data = try? JSONEncoder().encode(stats) {
+                UserDefaults.standard.set(data, forKey: Self.statsKey)
+            }
+        }
+    }
+
+    private static func loadStats() -> UsageStats {
+        guard let data = UserDefaults.standard.data(forKey: statsKey),
+              let stats = try? JSONDecoder().decode(UsageStats.self, from: data)
+        else { return UsageStats() }
+        return stats
     }
 
     // MARK: Lifecycle
@@ -86,6 +115,7 @@ final class AppModel {
         applyAppPresence()
         permissions.refresh()
         startHotkeysIfPossible()
+        if needsSetup { page = .setup }
         prepareModel()
         pollPermissions()
         #if DEBUG
@@ -115,10 +145,28 @@ final class AppModel {
                     }
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
+                case "snapshot": snapshotMainWindow()
+                case let command where command.hasPrefix("page:"):
+                    page = Page(rawValue: String(command.dropFirst(5))) ?? page
                 default: break
                 }
             }
         }
+    }
+
+    /// Writes the main window (including title bar) to Application Support/AudioPencil/Debug/snapshot.png,
+    /// so UI changes can be checked without screen-recording permission.
+    private func snapshotMainWindow() {
+        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }),
+              let view = window.contentView?.superview ?? window.contentView,
+              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds)
+        else { return }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Debug")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let url = folder.appending(path: "snapshot.png")
+        try? rep.representation(using: .png, properties: [:])?.write(to: url)
+        Log.dictation.notice("Snapshot written to \(url.path, privacy: .public)")
     }
     #endif
 

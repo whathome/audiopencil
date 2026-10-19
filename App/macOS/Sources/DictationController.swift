@@ -32,6 +32,9 @@ final class DictationController {
     private(set) var lastReport: DictationReport?
     private(set) var lastError: String?
 
+    /// Called after a real (not dry-run) dictation delivers text, with its word count and audio length.
+    var onDelivered: ((_ words: Int, _ audioSeconds: Double) -> Void)?
+
     /// Debug builds: skip the paste and log the transcript instead (set by the debug control hook).
     var dryRun = false
 
@@ -152,6 +155,7 @@ final class DictationController {
                 } else {
                     let result = Paster.deliver(text)
                     outcome = result.rawValue
+                    onDelivered?(UsageStats.wordCount(text), audioSeconds)
                     if result == .clipboardOnly {
                         indicator.flash(.clipboard)
                     } else {

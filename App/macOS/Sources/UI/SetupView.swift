@@ -2,13 +2,13 @@ import APCore
 import APModels
 import SwiftUI
 
-/// Main window: setup checklist plus live status of the dictation loop. Doubles as onboarding.
-struct StatusView: View {
+/// Setup checklist (doubles as onboarding) and diagnostics for the dictation loop.
+struct SetupView: View {
     @Bindable var app: AppModel
 
     var body: some View {
         Form {
-            Section("Permissions") {
+            Section {
                 PermissionRow(
                     title: "Microphone",
                     detail: "To hear you while you dictate.",
@@ -17,7 +17,7 @@ struct StatusView: View {
                 )
                 PermissionRow(
                     title: "Accessibility",
-                    detail: "To see the Fn key and paste into the active field. If you rebuilt the app, remove the old entry and add it again.",
+                    detail: "To see the Fn key and paste into the active field.",
                     granted: app.permissions.accessibility,
                     action: ("Open Settings…", { app.permissions.requestAccessibility() })
                 )
@@ -33,6 +33,12 @@ struct StatusView: View {
                     Text(app.permissions.inputMonitoring ? "Granted" : "Not needed so far")
                         .foregroundStyle(.secondary)
                 }
+            } header: {
+                VStack(alignment: .leading, spacing: 18) {
+                    PageHeader(title: "Setup", subtitle: app.needsSetup ? "A few things to finish before the Fn key works." : "Everything's ready. Diagnostics are below.")
+                    Text("Permissions").font(.headline)
+                }
+                .padding(.top, 8)
             }
 
             Section("Hotkey") {
@@ -47,9 +53,6 @@ struct StatusView: View {
                 LabeledContent("Start", value: "Double-tap Fn")
                 LabeledContent("Stop", value: stopDescription)
                 LabeledContent("Cancel", value: "Esc")
-                LabeledContent("Microphones, vocabulary, menu bar…") {
-                    SettingsLink { Text("Open Settings…") }
-                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Fn trace")
                     if app.hotkeyTrace.isEmpty {
@@ -70,23 +73,6 @@ struct StatusView: View {
                 }
             }
 
-            Section("Last dictation") {
-                if let report = app.dictation.lastReport {
-                    LabeledContent("Result", value: report.outcome)
-                    LabeledContent("Audio", value: String(format: "%.1f s", report.audioSeconds))
-                    LabeledContent("Stop → text", value: report.stopToText.formatted(.units(allowed: [.seconds, .milliseconds], width: .narrow)))
-                    LabeledContent("Stop → paste", value: report.stopToDelivery.formatted(.units(allowed: [.seconds, .milliseconds], width: .narrow)))
-                    LabeledContent("Streaming passes", value: "\(report.passes)")
-                    Text(report.preview).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
-                } else {
-                    Text("Nothing yet. Double-tap Fn in any text field and start talking.")
-                        .foregroundStyle(.secondary)
-                }
-                if let error = app.dictation.lastError {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
-                }
-            }
-
             Section("Memory") {
                 TimelineView(.periodic(from: .now, by: 2)) { _ in
                     LabeledContent("App footprint", value: MemoryFootprint.formatted(MemoryFootprint.currentBytes()))
@@ -95,15 +81,7 @@ struct StatusView: View {
             }
         }
         .formStyle(.grouped)
-        .toolbar {
-            ToolbarItem {
-                SettingsLink {
-                    Label("Settings", systemImage: "gearshape")
-                }
-                .help("Settings (⌘,)")
-            }
-        }
-        .frame(minWidth: 480, idealWidth: 520, minHeight: 560)
+
     }
 
     private var stopDescription: String {

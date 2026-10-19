@@ -7,7 +7,7 @@ struct AudioPencilApp: App {
 
     var body: some Scene {
         Window("Audio Pencil", id: "main") {
-            StatusView(app: delegate.app)
+            MainWindow(app: delegate.app)
         }
         .windowResizability(.contentMinSize)
 

@@ -5,11 +5,13 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var app: AppModel
+    /// Shown as a page in the main window rather than the ⌘, Settings window.
+    var embedded = false
     @State private var vocabularyText = ""
 
     var body: some View {
         Form {
-            Section("Dictation hotkey") {
+            Section {
                 Picker("Stop with", selection: $app.settings.stopGesture) {
                     ForEach(StopGesture.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
@@ -27,6 +29,14 @@ struct SettingsView: View {
                     Text("Start the mic on the first Fn tap")
                     Text("Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone Fn tap.")
                 }
+            } header: {
+                VStack(alignment: .leading, spacing: 18) {
+                    if embedded {
+                        PageHeader(title: "Settings", subtitle: "Hotkey, microphones, vocabulary, and how the app shows up.")
+                    }
+                    Text("Dictation hotkey").font(.headline)
+                }
+                .padding(.top, embedded ? 8 : 0)
             }
 
             MicrophonePriorityList(app: app)
@@ -45,6 +55,7 @@ struct SettingsView: View {
                 Text("Custom vocabulary")
             } footer: {
                 Text("One name, place or term per line. Whisper gets them as spelling hints.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Section("Transcription") {
@@ -71,8 +82,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540)
-        .frame(minHeight: 600)
+        .frame(width: embedded ? nil : 540)
+        .frame(minHeight: embedded ? nil : 600)
         .onAppear { vocabularyText = app.settings.customVocabulary.joined(separator: "\n") }
     }
 }
@@ -123,6 +134,8 @@ private struct MicrophonePriorityList: View {
             Text("Microphones")
         } footer: {
             Text("Uses the first connected microphone in this list, otherwise the system default. Now: \(app.currentMicrophoneName).")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
         }
     }
 
