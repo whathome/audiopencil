@@ -84,7 +84,7 @@ final class DictationController {
         )
         self.streamer = streamer
         Task { await streamer.start() }
-        Log.dictation.info("Recording started")
+        Log.dictation.notice("Recording started")
     }
 
     func stop() {

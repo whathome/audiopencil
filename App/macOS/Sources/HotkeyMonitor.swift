@@ -24,13 +24,15 @@ final class HotkeyMonitor {
 
     /// Return true to swallow the event. Timestamps are seconds of system uptime.
     var handler: ((KeyEvent, TimeInterval) -> Bool)?
-    /// Last modifier event, for diagnosing Fn detection. Never contains typed characters.
+    /// Fn-related events, for diagnosing tap detection. Never contains typed characters;
+    /// key codes of ordinary keys are only reported within a second of an Fn press.
     var onDiagnostic: ((String) -> Void)?
 
     private(set) var isActive = false
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var fnIsDown = false
+    private var lastFnChange: TimeInterval = 0
     private var swallowedKeyUps: Set<Int64> = []
 
     private enum KeyCode {
@@ -39,6 +41,8 @@ final class HotkeyMonitor {
         static let returnKey: Int64 = 36
         static let keypadEnter: Int64 = 76
         static let space: Int64 = 49
+        /// Key events some keyboards emit for the Fn/Globe key itself.
+        static let globeArtifacts: Set<Int64> = [63, 179]
     }
 
     @discardableResult
@@ -94,16 +98,27 @@ final class HotkeyMonitor {
 
         switch type {
         case .flagsChanged:
-            if keyCode == KeyCode.function {
-                let down = event.flags.contains(.maskSecondaryFn)
-                onDiagnostic?("Fn \(down ? "down" : "up") (key code \(keyCode))")
-                guard down != fnIsDown else { return false }
+            // Fn state comes from the flags, whatever key code the event carries
+            // (the Globe key doesn't always report kVK_Function).
+            let down = event.flags.contains(.maskSecondaryFn)
+            if down != fnIsDown {
                 fnIsDown = down
+                lastFnChange = time
+                onDiagnostic?("Fn \(down ? "down" : "up") (flags, key code \(keyCode))")
                 _ = handler?(down ? .fnDown : .fnUp, time)
             } else {
-                onDiagnostic?("Modifier key code \(keyCode)")
+                if fnIsDown || time - lastFnChange < 1 {
+                    onDiagnostic?("Other modifier near Fn (key code \(keyCode)) spoils the tap")
+                }
                 _ = handler?(.other, time)
             }
+            return false
+
+        case .keyDown where KeyCode.globeArtifacts.contains(keyCode),
+             .keyUp where KeyCode.globeArtifacts.contains(keyCode):
+            // The built-in keyboard sends key code 179 down/up right after each Fn release.
+            // Treating it as "other input" broke every double-tap.
+            onDiagnostic?("Globe key \(type == .keyDown ? "down" : "up") event (key code \(keyCode)), ignored")
             return false
 
         case .keyDown:
@@ -121,6 +136,10 @@ final class HotkeyMonitor {
                 keyEvent = .fallbackShortcut
             } else {
                 keyEvent = .other
+                // Key codes only near an Fn press, to diagnose taps without logging typing.
+                if fnIsDown || time - lastFnChange < 1 {
+                    onDiagnostic?("Key down near Fn (key code \(keyCode)) spoils the tap")
+                }
             }
             let swallow = handler?(keyEvent, time) ?? false
             if swallow { swallowedKeyUps.insert(keyCode) }

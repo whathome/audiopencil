@@ -24,7 +24,9 @@ final class AppModel {
     let indicator = IndicatorModel()
     private(set) var modelState: TranscriptionModelState = .idle
     private(set) var hotkeyActive = false
-    private(set) var lastKeyDiagnostic = "Press Fn to test"
+    /// Recent Fn events and gesture decisions, newest last.
+    private(set) var hotkeyTrace: [String] = []
+    @ObservationIgnored private var traceOrigin: TimeInterval?
     private(set) var memoryPressure: MemoryPressureMonitor.Level = .normal
     private(set) var whisper: WhisperEngine
 
@@ -55,7 +57,7 @@ final class AppModel {
     func bootstrap() {
         indicatorPanel = IndicatorPanelController(model: indicator)
         hotkeys.handler = { [unowned self] event, time in handle(event, at: time) }
-        hotkeys.onDiagnostic = { [unowned self] text in lastKeyDiagnostic = text }
+        hotkeys.onDiagnostic = { [unowned self] text in trace(text) }
         memoryMonitor = MemoryPressureMonitor { level in
             Task { @MainActor [weak self] in self?.memoryPressure = level }
         }
@@ -133,7 +135,11 @@ final class AppModel {
             _ = detector.handle(.keyDown(at: time))
             return false
         case .fnUp:
-            if let gesture = detector.handle(.keyUp(at: time)) { handle(gesture) }
+            if let gesture = detector.handle(.keyUp(at: time)) {
+                handle(gesture)
+            } else {
+                trace("→ not a tap (held too long, or another key in between)")
+            }
             return false
         case .other:
             _ = detector.handle(.otherInput)
@@ -160,14 +166,28 @@ final class AppModel {
     private func handle(_ gesture: FnTapDetector.Gesture) {
         switch (dictation.phase, gesture, settings.stopGesture) {
         case (.idle, .doubleTap, _):
+            trace("→ double-tap: start recording")
             detector.reset()
             startDictation()
         case (.recording, .singleTap, .singleTapFn), (.recording, .doubleTap, .doubleTapFn):
+            trace("→ \(gesture == .singleTap ? "tap" : "double-tap"): stop")
             detector.reset()
             dictation.stop()
         default:
-            break
+            trace("→ \(gesture == .singleTap ? "tap" : "double-tap") (no action while \(dictation.phase))")
         }
+    }
+
+    private func trace(_ text: String) {
+        let now = ProcessInfo.processInfo.systemUptime
+        if let origin = traceOrigin, now - origin < 3 {
+            hotkeyTrace.append(String(format: "+%4.0f ms  ", (now - origin) * 1000) + text)
+        } else {
+            traceOrigin = now
+            hotkeyTrace.append("     0 ms  " + text)
+        }
+        hotkeyTrace = Array(hotkeyTrace.suffix(12))
+        Log.hotkey.notice("\(text, privacy: .public)")
     }
 
     private func startDictation() {

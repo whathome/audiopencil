@@ -46,8 +46,14 @@ struct StatusView: View {
                 LabeledContent("Start", value: "Double-tap Fn")
                 LabeledContent("Stop", value: stopDescription)
                 LabeledContent("Cancel", value: "Esc")
-                LabeledContent("Last key seen") {
-                    Text(app.lastKeyDiagnostic).monospaced().foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Fn trace")
+                    if app.hotkeyTrace.isEmpty {
+                        Text("Press Fn to test").foregroundStyle(.secondary)
+                    }
+                    ForEach(Array(app.hotkeyTrace.enumerated()), id: \.offset) { _, line in
+                        Text(line).font(.caption.monospaced()).foregroundStyle(.secondary)
+                    }
                 }
             }
 
