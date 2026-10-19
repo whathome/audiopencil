@@ -52,6 +52,12 @@ public struct DictationSettings: Codable, Equatable, Sendable {
     public var customVocabulary: [String] = []
     /// Menu bar icon instead of a Dock icon.
     public var menuBarMode: Bool = false
+    /// Hugging Face repository of the MLX writing model used for styles.
+    public var writingModel: String = "mlx-community/SmolLM3-3B-4bit"
+    /// Show a style picker after stopping (PRD flow) instead of delivering straight away.
+    public var pickStyleAfterStop: Bool = false
+    /// Seconds before the picker accepts the preselected style.
+    public var pickerAutoConfirm: Double = 1.0
 
     public init() {}
 
@@ -70,5 +76,8 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         warmMicOnFirstTap = try c.decodeIfPresent(Bool.self, forKey: .warmMicOnFirstTap) ?? defaults.warmMicOnFirstTap
         customVocabulary = try c.decodeIfPresent([String].self, forKey: .customVocabulary) ?? defaults.customVocabulary
         menuBarMode = try c.decodeIfPresent(Bool.self, forKey: .menuBarMode) ?? defaults.menuBarMode
+        writingModel = try c.decodeIfPresent(String.self, forKey: .writingModel) ?? defaults.writingModel
+        pickStyleAfterStop = try c.decodeIfPresent(Bool.self, forKey: .pickStyleAfterStop) ?? defaults.pickStyleAfterStop
+        pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
     }
 }

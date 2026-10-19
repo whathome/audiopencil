@@ -1,3 +1,4 @@
+import APCore
 import AppKit
 import SwiftUI
 
@@ -9,6 +10,10 @@ final class IndicatorModel {
         case listening
         case preparingModel
         case processing
+        /// Style picker after stop.
+        case picking
+        /// Writing model is producing the styled text.
+        case rewriting(String)
         case clipboard
         case nothingHeard
         case error(String)
@@ -21,6 +26,18 @@ final class IndicatorModel {
     private(set) var noAudio = false
     var liveText = ""
     var showLiveText = false
+    /// Style shown next to the level bars while recording; nil for raw.
+    var styleName: String?
+    /// 0…1 while rewriting.
+    var rewriteProgress: Double = 0
+    var picker: PickerState?
+
+    struct PickerState: Equatable {
+        var styles: [Style]
+        var selected: Style
+        var autoConfirm: Double
+        var shownAt = Date()
+    }
 
     private var quietSince: Date?
     private var flashGeneration = 0
@@ -151,6 +168,23 @@ struct IndicatorView: View {
                         .foregroundStyle(.red)
                 }
                 LevelBars(levels: model.levels)
+                if let styleName = model.styleName {
+                    Text(styleName)
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Color.accentColor.opacity(0.85)))
+                        .foregroundStyle(.black.opacity(0.8))
+                }
+            case .picking:
+                if let picker = model.picker { PickerRow(picker: picker) }
+            case .rewriting(let name):
+                Image(systemName: "pencil.and.scribble")
+                Text(name).font(.callout.weight(.medium))
+                ProgressView(value: model.rewriteProgress)
+                    .progressViewStyle(.linear)
+                    .tint(Color.accentColor)
+                    .frame(width: 90)
             case .preparingModel:
                 ProgressView().controlSize(.small).tint(.white)
                 Text("Preparing model…").font(.callout)
@@ -171,6 +205,40 @@ struct IndicatorView: View {
         .frame(height: 34)
         .background(Capsule().fill(.black.opacity(0.82)))
         .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
+    }
+}
+
+/// Style choices after stop: number badges, the default highlighted, a shrinking countdown underline.
+private struct PickerRow: View {
+    let picker: IndicatorModel.PickerState
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(picker.styles) { style in
+                let isSelected = style.id == picker.selected.id
+                HStack(spacing: 4) {
+                    Text("\(style.shortcut ?? 0)")
+                        .font(.caption2.monospacedDigit().weight(.bold))
+                        .frame(width: 15, height: 15)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.18)))
+                    Text(style.isRaw ? "Raw" : style.name).font(.callout)
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.85) : .clear))
+                .foregroundStyle(isSelected ? .black.opacity(0.85) : .white)
+                .overlay(alignment: .bottom) {
+                    if isSelected {
+                        TimelineView(.animation) { context in
+                            let elapsed = context.date.timeIntervalSince(picker.shownAt)
+                            let remaining = max(0, 1 - elapsed / max(picker.autoConfirm, 0.1))
+                            Capsule().fill(.white.opacity(0.9)).frame(height: 2).scaleEffect(x: remaining, anchor: .leading)
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                }
+            }
+        }
     }
 }
 

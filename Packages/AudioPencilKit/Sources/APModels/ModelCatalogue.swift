@@ -19,6 +19,26 @@ public struct TranscriptionModelOption: Identifiable, Hashable, Sendable {
     }
 }
 
+/// Curated MLX writing models that fit an 8 GB Mac alongside the system (one at a time with Whisper).
+/// Notes come from docs/benchmarks/summary-models-m1-8gb.md.
+public struct WritingModelOption: Identifiable, Hashable, Sendable {
+    public let id: String
+    public let name: String
+    public let note: String
+    public let approximateDownloadGB: Double
+
+    public static let catalogue: [WritingModelOption] = [
+        .init(id: "mlx-community/SmolLM3-3B-4bit", name: "SmolLM3 3B", note: "Recommended: most faithful to what you said", approximateDownloadGB: 1.7),
+        .init(id: "mlx-community/Qwen3.5-2B-4bit", name: "Qwen3.5 2B", note: "Fastest and lightest; occasionally invents details", approximateDownloadGB: 1.7),
+        .init(id: "mlx-community/Llama-3.2-3B-Instruct-4bit", name: "Llama 3.2 3B", note: "Tends to add things you didn't say", approximateDownloadGB: 1.8),
+        .init(id: "mlx-community/Qwen3-4B-4bit", name: "Qwen3 4B", note: "Slowest and heaviest on 8 GB", approximateDownloadGB: 2.3),
+    ]
+
+    public static func option(for id: String) -> WritingModelOption? {
+        catalogue.first { $0.id == id }
+    }
+}
+
 public enum ModelLocations {
     public static let whisperRepository = "argmaxinc/whisperkit-coreml"
 

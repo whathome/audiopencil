@@ -1,6 +1,7 @@
 import APAudio
 import APCore
 import APModels
+import APSummary
 import APTranscription
 import AppKit
 import ServiceManagement
@@ -18,6 +19,8 @@ enum TranscriptionModelState: Equatable {
 final class AppModel {
     private static let settingsKey = "dictationSettings"
     private static let statsKey = "usageStats"
+    static let stylesKey = "styles"
+    static let styleMemoryKey = "styleMemory"
 
     /// Page shown in the main window.
     var page: Page = .dictation
@@ -35,13 +38,23 @@ final class AppModel {
 
     let permissions = Permissions()
     let indicator = IndicatorModel()
-    private(set) var modelState: TranscriptionModelState = .idle
+    var modelState: TranscriptionModelState = .idle
     private(set) var hotkeyActive = false
     /// Recent Fn events and gesture decisions, newest last.
     private(set) var hotkeyTrace: [String] = []
     @ObservationIgnored private var traceOrigin: TimeInterval?
     private(set) var memoryPressure: MemoryPressureMonitor.Level = .normal
     private(set) var whisper: WhisperEngine
+    /// MLX writing model for styles. Never resident at the same time as Whisper.
+    var writing: SummaryEngine
+    var writingModelState: TranscriptionModelState = .idle
+    /// Styles in picker order. Local until milestone 4 moves them into the vault config.
+    var styles: [Style] {
+        didSet { saveStyles() }
+    }
+    var styleMemory: StyleMemory {
+        didSet { saveStyleMemory() }
+    }
     /// Connected input devices, kept current as devices come and go.
     private(set) var microphones: [Microphone] = MicrophoneCatalog.current()
     private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -82,18 +95,28 @@ final class AppModel {
     @ObservationIgnored private var permissionPoll: Task<Void, Never>?
     @ObservationIgnored private var debugObserver: (any NSObjectProtocol)?
     @ObservationIgnored private var microphoneCatalog: MicrophoneCatalog?
+    @ObservationIgnored var writingTask: Task<Void, Never>?
 
     init() {
         let settings = Self.loadSettings()
         self.settings = settings
         self.whisper = WhisperEngine(variant: settings.transcriptionModel)
+        self.writing = SummaryEngine(modelID: settings.writingModel)
+        self.styles = Self.loadStyles()
+        self.styleMemory = Self.loadStyleMemory()
         self.detector = FnTapDetector(configuration: .init(maxGapBetweenTaps: settings.doubleTapWindow))
         self.dictation = DictationController(
             indicator: indicator,
             engine: { [unowned self] in whisper },
-            waitForModel: { [unowned self] in try await waitForModel() }
+            waitForModel: { [unowned self] in try await waitForModel() },
+            rewrite: { [unowned self] transcript, style, progress in
+                try await rewrite(transcript, style: style, progress: progress)
+            }
         )
         indicator.showLiveText = settings.showLiveText
+        dictation.onStyleUsed = { [unowned self] style, app in styleMemory.remember(style.id, forApp: app) }
+        dictation.onPrepareRewrite = { [unowned self] _ in prefetchWritingModel() }
+        applyPickerSettings()
         dictation.onDelivered = { [unowned self] words, audioSeconds in
             stats.record(words: words, audioSeconds: audioSeconds)
             if let data = try? JSONEncoder().encode(stats) {
@@ -158,7 +181,8 @@ final class AppModel {
                 case let command where command.hasPrefix("key:"):
                     // Simulated hotkey input through the real gesture logic: key:fnDown, key:fnUp, key:other, key:escape, key:return.
                     let events: [String: HotkeyMonitor.KeyEvent] = ["fnDown": .fnDown, "fnUp": .fnUp, "other": .other, "escape": .escape, "return": .returnKey]
-                    if let event = events[String(command.dropFirst(4))] {
+                    let name = String(command.dropFirst(4))
+                    if let event = events[name] ?? Int(name).map(HotkeyMonitor.KeyEvent.digit) {
                         debugDryRunUntil = Date().addingTimeInterval(30)
                         _ = handle(event, at: ProcessInfo.processInfo.systemUptime)
                     }
@@ -183,6 +207,12 @@ final class AppModel {
         let url = folder.appending(path: "snapshot.png")
         try? rep.representation(using: .png, properties: [:])?.write(to: url)
         Log.dictation.notice("Snapshot written to \(url.path, privacy: .public)")
+        // The floating indicator too, when it's showing.
+        if let panel = NSApp.windows.first(where: { $0 is NSPanel && $0.isVisible }), let view = panel.contentView,
+           let panelRep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            view.cacheDisplay(in: view.bounds, to: panelRep)
+            try? panelRep.representation(using: .png, properties: [:])?.write(to: folder.appending(path: "indicator.png"))
+        }
     }
     #endif
 
@@ -287,9 +317,24 @@ final class AppModel {
             dictation.cancel()
             return true
         case .returnKey:
+            if dictation.isPicking {
+                dictation.confirmPick()
+                return true
+            }
             guard dictation.phase == .recording, settings.returnStops else { return false }
             dictation.stop()
             return true
+        case .digit(let number):
+            if dictation.isPicking {
+                if let style = enabledStyle(shortcut: number) { dictation.pick(style) }
+                return true
+            }
+            guard dictation.phase == .recording || dictation.phase == .starting else { return false }
+            if let style = enabledStyle(shortcut: number) {
+                trace("→ \(number): \(style.name)")
+                dictation.select(style)
+            }
+            return true // swallow digits while recording so they don't type into the field
         case .fallbackShortcut:
             guard settings.fallbackShortcutEnabled else { return false }
             switch dictation.phase {
@@ -330,7 +375,7 @@ final class AppModel {
             else { return }
             holdRecording = true
             trace("→ Fn held: recording until release (raw)")
-            startDictation()
+            startDictation(raw: true)
         }
     }
 
@@ -355,7 +400,8 @@ final class AppModel {
         }
     }
 
-    private func startDictation(dryRun: Bool = false) {
+    /// `raw`: push-to-talk. Otherwise the style remembered for the frontmost app.
+    private func startDictation(dryRun: Bool = false, raw: Bool = false) {
         guard dictation.phase == .idle else { return }
         #if DEBUG
         dictation.dryRun = dryRun || Date() < debugDryRunUntil
@@ -363,7 +409,15 @@ final class AppModel {
         dictation.dryRun = dryRun
         #endif
         permissions.refresh()
-        dictation.start(microphoneGranted: permissions.microphone == .granted, deviceID: currentMicrophone?.deviceID)
+        let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        let style = raw ? Style.raw : styleMemory.defaultStyle(forApp: app, among: styles)
+        dictation.start(
+            microphoneGranted: permissions.microphone == .granted,
+            deviceID: currentMicrophone?.deviceID,
+            style: style,
+            targetApp: app,
+            remembersStyle: !raw
+        )
     }
 
     // MARK: Settings
@@ -391,6 +445,10 @@ final class AppModel {
         if settings.menuBarMode != old.menuBarMode {
             applyAppPresence()
         }
+        if settings.writingModel != old.writingModel {
+            switchWritingModel(to: settings.writingModel)
+        }
+        applyPickerSettings()
     }
 
     // MARK: App presence

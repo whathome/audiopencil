@@ -37,7 +37,7 @@ struct MainWindow: View {
             Group {
                 switch app.page {
                 case .dictation: DictationPage(app: app)
-                case .styles: ComingSoonPage(title: "Styles", symbol: "paintbrush.pointed", message: "Turn what you say into a diary entry, a professional summary, or text in your own voice.")
+                case .styles: StylesPage(app: app)
                 case .notes: ComingSoonPage(title: "Notes", symbol: "book.closed", message: "Long recordings become notes in your Obsidian vault, synced through Nextcloud.")
                 case .setup: SetupView(app: app)
                 case .settings: SettingsView(app: app, embedded: true)
@@ -59,7 +59,7 @@ private struct Sidebar: View {
         List(selection: Binding(get: { app.page }, set: { if let page = $0 { app.page = page } })) {
             Section {
                 row(.dictation)
-                row(.styles, soon: true)
+                row(.styles)
                 row(.notes, soon: true)
             }
             Section {

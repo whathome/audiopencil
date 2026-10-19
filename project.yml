@@ -66,6 +66,8 @@ targets:
         product: APModels
       - package: AudioPencilKit
         product: APTranscription
+      - package: AudioPencilKit
+        product: APSummary
 
 schemes:
   AudioPencil:
@@ -79,6 +81,7 @@ schemes:
       targets:
         - package: AudioPencilKit/APCoreTests
         - package: AudioPencilKit/APTranscriptionTests
+        - package: AudioPencilKit/APSummaryTests
     profile:
       config: Release
     archive:

@@ -2,11 +2,13 @@
 
 Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 2 (dictation polish). Double-tap Fn, talk, stop, and the raw transcript is pasted into the active field, using your preferred microphone and vocabulary.
+**Status:** milestone 3 (styles). Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
 
 ## Build and run
 
-Requirements: Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), macOS 15+, Apple silicon.
+Requirements: Xcode 26.3+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), macOS 15+, Apple silicon, and Xcode's Metal toolchain for MLX (`xcodebuild -downloadComponent MetalToolchain`, once).
+
+MLX is pinned to `mlx-swift-lm` 3.31.4 / `mlx-swift` 0.31.4, the last versions that build with Swift 6.2. Newer `mlx-swift` needs Swift tools 6.3, so move up after updating Xcode.
 
 ```bash
 xcodegen generate          # creates AudioPencil.xcodeproj (not committed)
@@ -39,9 +41,15 @@ Input Monitoring is shown for diagnosis but isn't requested: the active event ta
 
 | Action | Keys |
 | --- | --- |
-| Start | Double-tap **Fn** (or ⌃⌥Space) |
+| Raw transcript (push to talk) | Hold **Fn**, talk, release. Another key while holding cancels, so Fn still works as a modifier |
+| Dictate in a style | Double-tap **Fn** (or ⌃⌥Space). Starts in the style last used in this app |
+| Switch style while talking | **1–9** for styles, **0** for raw (the number keys are swallowed while recording) |
 | Stop and paste | Single tap **Fn** or **Return** (configurable: double-tap Fn; Return can be turned off) |
-| Cancel | **Esc**, at any point; nothing is pasted |
+| Cancel | **Esc**, at any point, including during a rewrite; nothing is pasted |
+
+Styles (Styles page): **Raw** (0), **Polished** (1, the default: cleaned-up text in your words), **Diary** (2, filler removed, wording kept), **Professional** (3, summary plus key points), and **Like me** (4, milestone 6). Edit their instructions, renumber them, or add your own. Optionally (Settings), a picker appears after stop with this app's style preselected; it picks automatically after a second unless you press a number.
+
+The writing model (default SmolLM3 3B, 1.7 GB, downloaded once from the Styles page) never sits in memory alongside Whisper. A styled dictation swaps Whisper out, rewrites, then swaps Whisper back in the background. On the M1 Air a styled quick note takes about 5–7 s from stop to paste; raw is about 0.5 s. See [docs/benchmarks](docs/benchmarks) for the model comparison.
 
 Recording starts about 0.05 s after the second Fn tap: the mic comes on at the first tap and goes off again within a second if no second tap follows. Turn this off in Settings if the brief mic-indicator flash on a lone Fn tap bothers you.
 
@@ -62,13 +70,14 @@ project.yml                   XcodeGen definition (app target, signing, schemes)
 Config/Signing.xcconfig       ad-hoc by default; includes Signing.local.xcconfig if present
 App/macOS/Sources             thin macOS app: event tap, paste, indicator panel, windows
 Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
-  APCore                      settings, Fn tap detection, async lock, diagnostics
+  APCore                      settings, Fn tap/hold detection, styles, prompt builder, per-app memory, stats
   APAudio                     16 kHz mono capture (off the main thread), mic catalogue, levels, cues
   APModels                    ModelCoordinator (one large model resident at a time), catalogue
   APTranscription             WhisperKit wrapper, streaming transcriber
+  APSummary                   MLX writing model (SmolLM3 by default), Hugging Face download, benchmark
 ```
 
-Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, which unloads whatever else is resident first. The summarisation LLM (milestone 3) is another `ManagedModel`, so Whisper and the LLM can't be loaded at the same time.
+Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, which unloads whatever else is resident first. Whisper and the writing model are both `ManagedModel`s, so they can't be loaded at the same time.
 
 ## Tests
 
@@ -86,6 +95,13 @@ Debug builds can be driven without key presses, for end-to-end timing. These dic
 
 ```bash
 scripts/debug-dictation.sh tap-start   # or: start (cold), warm (a lone first tap), stop, cancel
+scripts/debug-dictation.sh key:fnDown 0.6 key:fnUp   # simulated keys: fnDown, fnUp, other, escape, return, 0–9
+```
+
+Writing-model benchmark (downloads each candidate; must run through xcodebuild for Metal):
+
+```bash
+cd Packages/AudioPencilKit && TEST_RUNNER_AUDIOPENCIL_BENCH=1 TEST_RUNNER_AUDIOPENCIL_BENCH_OUT=$PWD/../../docs/benchmarks/run.md xcodebuild test -scheme AudioPencilKit-Package -destination platform=macOS -only-testing:APSummaryTests
 ```
 
 Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each dictation logs its stop→text and stop→paste times.
@@ -93,8 +109,8 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 ## Milestones
 
 1. **Bare loop** (done): hotkey, record, live transcription, stop, paste raw text.
-2. **Dictation polish** (this): instant start, mic priority list, Dock/menu-bar mode, launch at login, custom vocabulary.
-3. LLM and styles (MLX Swift): model swapping, presets, picker, per-app defaults.
+2. **Dictation polish** (done): instant start, mic priority list, Dock/menu-bar mode, launch at login, custom vocabulary.
+3. **Styles** (this): hold-for-raw, MLX writing model with swapping, presets, number keys, picker, per-app defaults, Styles page.
 4. Storage: offline-first queue, Nextcloud WebDAV, Login Flow v2, shared config with ETag merge.
 5. Long-form and Obsidian: promotion, retention, notes and frontmatter, review prompt, Bases file.
 6. "Like me" and model discovery.

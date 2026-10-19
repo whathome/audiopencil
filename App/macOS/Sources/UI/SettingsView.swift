@@ -62,6 +62,44 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            Section {
+                Picker("Writing model", selection: $app.settings.writingModel) {
+                    ForEach(WritingModelOption.catalogue) { option in
+                        Text("\(option.name) – \(option.note)").tag(option.id)
+                    }
+                }
+                .disabled(app.dictation.isActive)
+                LabeledContent("Status") {
+                    switch app.writingModelState {
+                    case .downloading(let fraction): ProgressView(value: fraction).frame(width: 160)
+                    case .failed(let message): Text(message).foregroundStyle(.red)
+                    default:
+                        if app.writingModelDownloaded {
+                            Text("Downloaded").foregroundStyle(.secondary)
+                        } else {
+                            Button("Download (\(String(format: "%.1f", app.writingModelOption?.approximateDownloadGB ?? 2)) GB)") { app.downloadWritingModel() }
+                        }
+                    }
+                }
+                Toggle(isOn: $app.settings.pickStyleAfterStop) {
+                    Text("Show a style picker after stopping")
+                    Text("The style for this app is preselected and picked automatically unless you press a number.")
+                }
+                if app.settings.pickStyleAfterStop {
+                    LabeledContent("Pick automatically after") {
+                        HStack {
+                            Slider(value: $app.settings.pickerAutoConfirm, in: 0.5...3, step: 0.25)
+                            Text(String(format: "%.2g s", app.settings.pickerAutoConfirm)).monospacedDigit().frame(width: 44, alignment: .trailing)
+                        }
+                    }
+                }
+            } header: {
+                Text("Styles")
+            } footer: {
+                Text("The writing model runs on this Mac. On 8 GB it swaps with the transcription model, so a styled dictation takes a few seconds longer than raw.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             Section("Transcription") {
                 Picker("Model", selection: $app.settings.transcriptionModel) {
                     ForEach(TranscriptionModelOption.catalogue) { option in

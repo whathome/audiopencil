@@ -15,6 +15,8 @@ final class HotkeyMonitor {
         case escape
         case returnKey
         case fallbackShortcut
+        /// A number key 0–9 with no modifiers (top row or keypad): picks a style while recording.
+        case digit(Int)
         /// Any other key or modifier. Never swallowed; only spoils Fn taps.
         case other
     }
@@ -41,6 +43,11 @@ final class HotkeyMonitor {
         static let returnKey: Int64 = 36
         static let keypadEnter: Int64 = 76
         static let space: Int64 = 49
+        /// Top-row and keypad number keys → digit (key codes are layout-independent positions).
+        static let digits: [Int64: Int] = [
+            29: 0, 18: 1, 19: 2, 20: 3, 21: 4, 23: 5, 22: 6, 26: 7, 28: 8, 25: 9,
+            82: 0, 83: 1, 84: 2, 85: 3, 86: 4, 87: 5, 88: 6, 89: 7, 91: 8, 92: 9,
+        ]
         /// Key events some keyboards emit for the Fn/Globe key itself.
         static let globeArtifacts: Set<Int64> = [63, 179]
     }
@@ -134,6 +141,8 @@ final class HotkeyMonitor {
                 keyEvent = .returnKey
             } else if keyCode == KeyCode.space, flags.contains([.maskControl, .maskAlternate]), !flags.contains(.maskCommand) {
                 keyEvent = .fallbackShortcut
+            } else if let digit = KeyCode.digits[keyCode], flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
+                keyEvent = .digit(digit)
             } else {
                 keyEvent = .other
                 // Key codes only near an Fn press, to diagnose taps without logging typing.

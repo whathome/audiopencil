@@ -20,9 +20,16 @@ let package = Package(
         .library(name: "APAudio", targets: ["APAudio"]),
         .library(name: "APModels", targets: ["APModels"]),
         .library(name: "APTranscription", targets: ["APTranscription"]),
+        .library(name: "APSummary", targets: ["APSummary"]),
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/WhisperKit.git", exact: "1.1.1"),
+        // Pinned: mlx-swift 0.31.5+ needs Swift tools 6.3; Xcode 26.3 ships Swift 6.2.
+        // Move to the latest mlx-swift-lm after updating Xcode.
+        .package(url: "https://github.com/ml-explore/mlx-swift-lm", exact: "3.31.4"),
+        .package(url: "https://github.com/ml-explore/mlx-swift", exact: "0.31.4"),
+        .package(url: "https://github.com/huggingface/swift-huggingface", .upToNextMinor(from: "0.9.0")),
+        .package(url: "https://github.com/huggingface/swift-transformers", .upToNextMinor(from: "1.3.5")),
     ],
     targets: [
         // Pure logic: settings, gesture detection, diagnostics. No platform frameworks beyond Foundation.
@@ -45,10 +52,29 @@ let package = Package(
             swiftSettings: concurrency
         ),
 
+        // MLX summarisation model. Needs xcodebuild (Metal shaders), not `swift build`.
+        .target(
+            name: "APSummary",
+            dependencies: [
+                "APCore",
+                "APModels",
+                .product(name: "MLXLLM", package: "mlx-swift-lm"),
+                .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
+                .product(name: "HuggingFace", package: "swift-huggingface"),
+                .product(name: "Tokenizers", package: "swift-transformers"),
+            ],
+            swiftSettings: concurrency
+        ),
+
         .testTarget(name: "APCoreTests", dependencies: ["APCore"], swiftSettings: concurrency),
         .testTarget(
             name: "APTranscriptionTests",
             dependencies: ["APTranscription", "APModels"],
+            swiftSettings: concurrency
+        ),
+        .testTarget(
+            name: "APSummaryTests",
+            dependencies: ["APSummary", "APModels", "APCore"],
             swiftSettings: concurrency
         ),
     ]

@@ -66,7 +66,7 @@ private struct HotkeyCard: View {
                         KeyCap(label: "hold fn")
                     }
                 }
-                Gesture(title: "Start", detail: "Double-tap") {
+                Gesture(title: "In a style", detail: "Double-tap; 1–9 to switch") {
                     KeyCap(label: "fn"); KeyCap(label: "fn")
                 }
                 Gesture(title: "Stop and paste", detail: stopDetail) {
@@ -120,11 +120,25 @@ private struct TranscriptionCard: View {
                     Text("Whisper \(TranscriptionModelOption.option(for: app.settings.transcriptionModel)?.name ?? app.settings.transcriptionModel)")
                 }
                 GridRow {
+                    Label("Writing", systemImage: "pencil.and.scribble").foregroundStyle(.secondary)
+                    Text(writingStatus)
+                }
+                GridRow {
                     Label("Microphone", systemImage: "mic").foregroundStyle(.secondary)
                     Text(app.currentMicrophoneName).lineLimit(1).truncationMode(.middle)
                 }
             }
             .font(.callout)
+        }
+    }
+
+    private var writingStatus: String {
+        let name = app.writingModelOption?.name ?? app.settings.writingModel
+        switch app.writingModelState {
+        case .downloading(let fraction): return "\(name), downloading \(Int(fraction * 100))%"
+        case .ready: return "\(name), loaded"
+        case .failed: return "\(name), download failed"
+        default: return app.writingModelDownloaded ? name : "\(name), not downloaded"
         }
     }
 
@@ -146,6 +160,9 @@ private struct LastDictationCard: View {
     var body: some View {
         if let report = app.dictation.lastReport {
             Card(title: "Last dictation", trailing: trailing(for: report)) {
+                if report.styleName != Style.raw.name {
+                    Label(report.styleName, systemImage: "pencil.and.scribble").font(.caption).foregroundStyle(Color.pencil)
+                }
                 Text(report.preview)
                     .font(.system(.title3, design: .serif))
                     .lineSpacing(3)
