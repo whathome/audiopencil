@@ -52,6 +52,13 @@ struct LanguageTests {
         #expect(PromptBuilder.titleAndTagsPrompt(text: "x", knownTags: [], language: SpokenLanguage(code: "es")).instructions.contains("Spanish"))
     }
 
+    @Test func longFormSectionsAskForTranslatedHeadings() {
+        let french = PromptBuilder.prompt(for: .professional, transcript: "Bonjour", context: .longForm, language: SpokenLanguage(code: "fr"))
+        #expect(french.input.contains("headings included, in French."))
+        let english = PromptBuilder.prompt(for: .professional, transcript: "Hello", context: .longForm)
+        #expect(!english.input.contains("headings included"))
+    }
+
     @Test func tagsKeepAccentedLetters() {
         #expect(TitleAndTags.normaliseTag("#Été 2026") == "été-2026")
         #expect(TitleAndTags.normaliseTag("Año Nuevo") == "año-nuevo")

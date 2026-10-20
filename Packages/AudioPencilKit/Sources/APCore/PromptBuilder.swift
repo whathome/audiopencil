@@ -70,6 +70,10 @@ public enum PromptBuilder {
                 **Key points**: bullets, grouped under a bold heading per theme.
                 **Action items**: a bullet for each thing I said I'd do, or just "None".
                 """
+            if !language.isEnglish {
+                // The headings above are English; without this the note comes back half translated.
+                input += "\nWrite all of it, headings included, in \(language.englishName)."
+            }
         }
 
         // Roughly 1.4 tokens per English word; light cleanup returns about as much as it gets.
