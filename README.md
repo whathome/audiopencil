@@ -70,12 +70,12 @@ Settings (⌘,) also has:
 
 ### Notes
 
-A hotkey recording longer than the long-form threshold (5 minutes by default; Settings › General › Notes) doesn't paste. While you talk, the indicator shows the elapsed time after 30 s, counts down "Note in 0:25" for the last 30 s, then shows "Note" and plays one soft cue when the recording crosses over. Instead, Audio Pencil:
+A hotkey recording longer than the long-form threshold (5 minutes by default; Settings › General › Notes) doesn't paste. While you talk, the indicator shows the elapsed time after 30 s and counts down "Note in 0:25" for the last 30 s, and its **Paste / Note** toggle switches to Note with one soft cue as the recording crosses over. Click the toggle (or choose under "When you stop" in the style menu) to decide for this recording only: make a short dictation into a note, or paste a long one. A note:
 
 1. Keeps the audio (`Audio Pencil/Recordings/*.m4a`, AAC mono, about 1.2 MB for 5 minutes).
 2. Writes it up in the recording's style. Long transcripts go section by section, and summaries are combined from per-section notes.
 3. Suggests a title and tags (preferring the tag list in the settings file).
-4. Sends a notification. The review window lets you edit the title, tags and folder, then **Approve** (`status: reviewed`) or **Skip** (`status: needs-review`). Pending reviews wait on the Mac, and the Notes page lists them.
+4. Is filed straight away as `status: needs-review`, with the suggested tags (new ones join the tag list), and a notification opens it in Obsidian. Review happens on the board, the same on Mac and iPhone.
 
 Notes are `YYYY-MM-DD HHmm Title.md` in the style's folder (Styles page), or `Audio Pencil/Notes`. They carry the PRD frontmatter (`type`, `style`, `status`, `recorded`, `duration`, `device`, `mode`, `tags`, `audio`), with the transcript folded in a callout under rewritten text. Uploads go through the offline queue. Optionally, quick dictations are saved too (no audio, no review).
 
@@ -180,7 +180,7 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 2. **Dictation polish** (done): instant start, mic priority list, Dock/menu-bar mode, launch at login, custom vocabulary.
 3. **Styles** (done): hold-for-raw, MLX writing model with swapping, presets, number keys and clickable style menu, picker, per-app defaults, Styles page.
 4. **Vault and sync** (done): Nextcloud (Login Flow v2) or a local/iCloud folder, folder selection, shared YAML settings file with three-way merge and ETag retries, offline upload queue.
-5. **Notes in Obsidian** (done): long-form promotion (5 min, configurable), m4a audio, sectioned summaries, suggested title and tags, review prompt and notification, notes and frontmatter via the offline queue, optional saving of quick dictations, Bases board, guide and samples. One-year audio retention moves to milestone 6.
+5. **Notes in Obsidian** (done): long-form promotion (5 min, configurable), m4a audio, sectioned summaries, suggested title and tags, notification, notes and frontmatter via the offline queue, optional saving of quick dictations, Bases board, guide and samples. One-year audio retention moves to milestone 6.
 6. **Like me, discovery, retention** (done): My writing page and interview, machine-aware model suggestions with on-device trials, Retention board (regular / archive / delete) with one-year audio expiry, board and settings-file repair, sound themes.
 7. **Multilingual** (done): 7a spoken languages (per-app language memory, language badge and menu in the indicator, English and multilingual Whisper models, prompts and notes in the spoken language, per-language vocabulary, Like me samples by language, layout-aware paste); 7b the interface in French and Spanish (String Catalogs in the app and each package target; the vault guide and sample notes are written in the interface language when a vault is first set up; board view names and properties stay English).
 8. **Setup and storage** (done): 8a models prepared in the background (dictation never waits; Small first for other languages, then Large v3 Turbo), configurable dictation key (Fn, Right ⌥ or Right ⌘; double-tap or single tap; a recordable shortcut) and a Try it here box; 8b storage without Obsidian (plain Markdown in any folder, any WebDAV server, Keep forever and Delete on the Notes page, Vault renamed Storage); 8c the six-step setup window.

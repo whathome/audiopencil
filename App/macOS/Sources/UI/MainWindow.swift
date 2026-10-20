@@ -184,7 +184,6 @@ private struct Sidebar: View {
     /// What the badge or rail dot says, in words, for VoiceOver.
     private func attentionDescription(_ page: Page) -> LocalizedStringResource? {
         switch page {
-        case .notes where !app.notes.pending.isEmpty: "\(app.notes.pending.count) waiting for review"
         case .vault where !app.vault.settings.isConfigured: "Not set up"
         case .settings where app.needsSetup: "Permissions need attention"
         default: nil
@@ -193,11 +192,7 @@ private struct Sidebar: View {
 
     @ViewBuilder
     private func badge(_ page: Page) -> some View {
-        if page == .notes, !app.notes.pending.isEmpty {
-            Text("\(app.notes.pending.count)").font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 1)
-                .background(Capsule().fill(app.page == page ? Color.white.opacity(0.3) : Color.pencil))
-                .foregroundStyle(app.page == page ? Color.white : Color.black.opacity(0.8))
-        } else if page == .vault, !app.vault.settings.isConfigured {
+        if page == .vault, !app.vault.settings.isConfigured {
             Text("Set up").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
         } else if page == .settings, app.needsSetup {
             Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
@@ -207,8 +202,7 @@ private struct Sidebar: View {
     /// Rails have no room for text: a dot says something needs attention.
     @ViewBuilder
     private func railBadge(_ page: Page) -> some View {
-        let needsAttention = (page == .notes && !app.notes.pending.isEmpty)
-            || (page == .vault && !app.vault.settings.isConfigured)
+        let needsAttention = (page == .vault && !app.vault.settings.isConfigured)
             || (page == .settings && app.needsSetup)
         if needsAttention {
             Circle()

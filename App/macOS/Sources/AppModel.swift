@@ -328,6 +328,7 @@ final class AppModel: WritingHost {
                 case "vault:sync": sync.syncSoon(after: .zero)
                 case "setup": showSetup(hidingMainWindow: false)
                 case "setup:close": setupWindow?.close()
+                case "delivery:toggle": dictation.toggleDelivery()
                 case let command where command.hasPrefix("paste:"):
                     // The real paste path into the frontmost app, for measuring confirmation per app.
                     let text = String(command.dropFirst("paste:".count))
@@ -348,7 +349,6 @@ final class AppModel: WritingHost {
                 case let command where command.hasPrefix("longform-threshold:"):
                     debugLongFormThreshold = Double(command.dropFirst("longform-threshold:".count))
                     applyNoteSettings()
-                case "review": notes.review()
                 case "models:check": Task { await advisor.check() }
                 case let command where command.hasPrefix("models:try:"):
                     let id = String(command.dropFirst("models:try:".count))
@@ -365,9 +365,6 @@ final class AppModel: WritingHost {
                             Log.models.notice("Trial \(id, privacy: .public): \(String(describing: trial), privacy: .public)")
                         }
                     }
-                case "review:skip": if let first = notes.pending.first { notes.skip(first) }
-                case "review:approve":
-                    if let first = notes.pending.first { notes.approve(first, title: first.note.title, tags: first.note.tags, folder: first.note.folder) }
                 case "report:vocabulary":
                     Log.dictation.notice("App vocabulary: \(self.settings.customVocabulary.joined(separator: ", "), privacy: .public); sync \(String(describing: self.sync.status), privacy: .public)")
                 case let command where command.hasPrefix("mouse:") || command.hasPrefix("click:"):
@@ -422,7 +419,7 @@ final class AppModel: WritingHost {
     /// Writes the main window (including title bar) to Application Support/AudioPencil/Debug/snapshot.png,
     /// so UI changes can be checked without screen-recording permission.
     private func snapshotMainWindow() {
-        for name in ["review", "setup"] {
+        for name in ["setup"] {
             guard let other = NSApp.windows.first(where: { $0.isVisible && $0.identifier?.rawValue == name }),
                   let view = other.contentView?.superview, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds)
             else { continue }

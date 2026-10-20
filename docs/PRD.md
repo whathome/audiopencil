@@ -52,7 +52,7 @@ The Mac app is a paste-and-forget workflow accelerator: hotkey, talk, hotkey, an
 
 **Per-app defaults:** the picker remembers the chosen style per frontmost app (e.g. raw in Mail, technical writing in Obsidian); unseen apps fall back to the last-used style.
 
-**Promotion to long-form:** if a hotkey recording exceeds the long-form threshold (configurable, default 5 min), it does not paste. It is processed as a long-form entry (audio kept, note written to the vault, review prompt) and the user is notified when done.
+**Promotion to long-form:** if a hotkey recording exceeds the long-form threshold (configurable, default 5 min), it does not paste. It is processed as a long-form entry (audio kept, note written to the vault straight away as needs-review) and the user is notified when done. A toggle on the recording indicator overrides this per recording: make any recording a note, or paste a long one.
 
 **Saving quick dictations:** configurable; default is paste-and-forget (audio and text not saved).
 
@@ -76,7 +76,7 @@ The iPhone is the long-form, walk-and-talk recorder, usually with the phone's ow
 **After recording**
 
 - Choose a style when recording ends (defaults to last-used).
-- Long-form processing runs in the background with a notification when done, then the review prompt (see Obsidian integration).
+- Long-form processing runs in the background; the note is filed straight away as needs-review, with a notification when done (see Obsidian integration).
 
 **Meeting mode**
 
@@ -187,10 +187,10 @@ Obsidian is the library and review surface: the app writes consistent frontmatte
 | `tags` | from the master taxonomy |
 | `audio` | link to the file in the recordings folder |
 
-**Review flow (long-form only)**
+**Review flow (long-form only)** (changed Oct 2026)
 
-- When processing finishes, prompt to approve the suggested title, tags and folder, with an immediate Skip.
-- Approved notes get `status: reviewed`; skipped or unsure notes get `status: needs-review`.
+- Notes are filed in the vault as soon as processing finishes, with `status: needs-review` and the suggested title and tags. There is no review window on either platform.
+- Review happens on the board: drag a card to reviewed, then actioned.
 
 **Bases file created by the app**
 

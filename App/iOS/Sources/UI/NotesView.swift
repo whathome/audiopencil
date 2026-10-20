@@ -24,16 +24,6 @@ struct NotesView: View {
                         StatusRow(symbol: nil, text: processing)
                     }
                 }
-                if !app.notes.pending.isEmpty {
-                    Section("To review") {
-                        ForEach(app.notes.pending) { item in
-                            Button { app.notes.reviewing = item } label: {
-                                NoteRow(title: item.note.title, detail: item.note.recorded.formatted(date: .abbreviated, time: .shortened))
-                            }
-                            .tint(.primary)
-                        }
-                    }
-                }
                 if !app.notes.recent.isEmpty {
                     Section("Filed") {
                         ForEach(app.notes.recent) { note in
@@ -43,11 +33,11 @@ struct NotesView: View {
                 }
             }
             .overlay {
-                if app.notes.pending.isEmpty, app.notes.recent.isEmpty, app.notes.processing == nil {
+                if app.notes.recent.isEmpty, app.notes.processing == nil {
                     ContentUnavailableView {
                         Label("No notes yet", systemImage: "doc.text")
                     } description: {
-                        Text("Recordings become notes: written up in a style, with their audio, filed in your notes folder.")
+                        Text("Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board.")
                     }
                 }
             }

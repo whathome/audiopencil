@@ -2,22 +2,6 @@
   "sourceLanguage": "en",
   "strings": {
     "": {},
-    "#%@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "#%@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "#%@"
-          }
-        }
-      }
-    },
     "%@ of about %lld min": {
       "localizations": {
         "en": {
@@ -58,28 +42,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ sur environ %lld s"
-          }
-        }
-      }
-    },
-    "%@ · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ · %2$@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@"
           }
         }
       }
@@ -148,22 +110,6 @@
         }
       }
     },
-    "Add a tag": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir una etiqueta"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajouter un tag"
-          }
-        }
-      }
-    },
     "Allow Microphone": {
       "localizations": {
         "es": {
@@ -208,22 +154,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mot de passe d’application"
-          }
-        }
-      }
-    },
-    "Approve": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aprobar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Approuver"
           }
         }
       }
@@ -764,6 +694,22 @@
         }
       }
     },
+    "Filing the note…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivando la nota…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classement de la note…"
+          }
+        }
+      }
+    },
     "Finishing the transcript…": {
       "localizations": {
         "es": {
@@ -856,22 +802,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Langues"
-          }
-        }
-      }
-    },
-    "Later": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Más tarde"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus tard"
           }
         }
       }
@@ -1100,22 +1030,6 @@
         }
       }
     },
-    "No tags": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin etiquetas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun tag"
-          }
-        }
-      }
-    },
     "Not set up": {
       "localizations": {
         "es": {
@@ -1128,22 +1042,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Non configuré"
-          }
-        }
-      }
-    },
-    "Note": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nota"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note"
           }
         }
       }
@@ -1532,22 +1430,6 @@
         }
       }
     },
-    "Recorded": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabada"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrée"
-          }
-        }
-      }
-    },
     "Recorded time": {
       "localizations": {
         "es": {
@@ -1564,34 +1446,18 @@
         }
       }
     },
-    "Recordings become notes: written up in a style, with their audio, filed in your notes folder.": {
+    "Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las grabaciones se convierten en notas: redactadas en un estilo, con su audio, archivadas en tu carpeta de notas."
+            "value": "Las grabaciones se convierten en notas: redactadas en un estilo, con su audio, archivadas en tu carpeta de notas. Revísalas en tu tablero de Obsidian."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les enregistrements deviennent des notes : rédigées dans un style, avec leur audio, rangées dans votre dossier de notes."
-          }
-        }
-      }
-    },
-    "Remove tag %@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitar la etiqueta %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retirer le tag %@"
+            "value": "Les enregistrements deviennent des notes : rédigées dans un style, avec leur audio, classées dans votre dossier de notes. Relisez-les sur votre tableau Obsidian."
           }
         }
       }
@@ -1624,22 +1490,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reprendre"
-          }
-        }
-      }
-    },
-    "Review note": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revisar nota"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Relire la note"
           }
         }
       }
@@ -1826,22 +1676,6 @@
         }
       }
     },
-    "Skip": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Omitir"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passer"
-          }
-        }
-      }
-    },
     "Skip for Now": {
       "localizations": {
         "es": {
@@ -1854,22 +1688,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plus tard"
-          }
-        }
-      }
-    },
-    "Skipped notes are filed as “needs review”.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las notas omitidas se archivan como «needs review»."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les notes passées sont rangées comme « needs review »."
           }
         }
       }
@@ -2084,22 +1902,6 @@
         }
       }
     },
-    "Suggested new tags (added to your tag list if you keep them)": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etiquetas nuevas sugeridas (se añaden a tu lista si las conservas)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nouveaux tags suggérés (ajoutés à votre liste si vous les gardez)"
-          }
-        }
-      }
-    },
     "Suggesting a title and tags…": {
       "localizations": {
         "es": {
@@ -2186,22 +1988,6 @@
         }
       }
     },
-    "Tags": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etiquetas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tags"
-          }
-        }
-      }
-    },
     "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note.": {
       "localizations": {
         "es": {
@@ -2278,38 +2064,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Met au propre une entrée de journal parlée : enlève les tics et les répétitions, corrige la ponctuation, ajoute des paragraphes. Ne change jamais vos mots."
-          }
-        }
-      }
-    },
-    "Title": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Título"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Titre"
-          }
-        }
-      }
-    },
-    "To review": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Por revisar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "À relire"
           }
         }
       }
@@ -2700,22 +2454,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rédaction de la note…"
-          }
-        }
-      }
-    },
-    "Your tags": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tus etiquetas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vos tags"
           }
         }
       }

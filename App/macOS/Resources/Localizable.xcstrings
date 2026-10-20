@@ -2,22 +2,6 @@
   "sourceLanguage": "en",
   "strings": {
     "": {},
-    "#%@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "#%@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "#%@"
-          }
-        }
-      }
-    },
     "%@": {
       "localizations": {
         "es": {
@@ -182,28 +166,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "En attendant le modèle plus précis, %@ utilise un modèle de démarrage plus rapide."
-          }
-        }
-      }
-    },
-    "%@ · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ · %2$@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@"
           }
         }
       }
@@ -1052,22 +1014,6 @@
         }
       }
     },
-    "Add a tag": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir una etiqueta"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajouter un tag"
-          }
-        }
-      }
-    },
     "Add another language": {
       "localizations": {
         "es": {
@@ -1374,22 +1320,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mot de passe d’application"
-          }
-        }
-      }
-    },
-    "Approve": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aprobar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Approuver"
           }
         }
       }
@@ -1940,6 +1870,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cliquez pour choisir un autre style."
+          }
+        }
+      }
+    },
+    "Click to switch between paste and note for this recording.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz clic para cambiar entre pegar y nota en esta grabación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez pour choisir entre coller et note pour cet enregistrement."
           }
         }
       }
@@ -3066,6 +3012,22 @@
         }
       }
     },
+    "Filing the note…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivando la nota…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classement de la note…"
+          }
+        }
+      }
+    },
     "Finish setup": {
       "localizations": {
         "es": {
@@ -3126,22 +3088,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suivi de Fn"
-          }
-        }
-      }
-    },
-    "Folder": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Carpeta"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dossier"
           }
         }
       }
@@ -3994,6 +3940,22 @@
         }
       }
     },
+    "Make a note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer une note"
+          }
+        }
+      }
+    },
     "Make a note instead of pasting after": {
       "localizations": {
         "es": {
@@ -4410,22 +4372,6 @@
         }
       }
     },
-    "No tags": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin etiquetas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun tag"
-          }
-        }
-      }
-    },
     "No writing model": {
       "localizations": {
         "es": {
@@ -4554,6 +4500,38 @@
         }
       }
     },
+    "Note filed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota archivada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note classée"
+          }
+        }
+      }
+    },
+    "Note filed in Obsidian": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota archivada en Obsidian"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note classée dans Obsidian"
+          }
+        }
+      }
+    },
     "Note in %@": {
       "localizations": {
         "es": {
@@ -4570,22 +4548,6 @@
         }
       }
     },
-    "Note ready to review": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nota lista para revisar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note prête à relire"
-          }
-        }
-      }
-    },
     "Note saving and audio retention…": {
       "localizations": {
         "es": {
@@ -4598,22 +4560,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enregistrement des notes et conservation de l’audio…"
-          }
-        }
-      }
-    },
-    "Note · %@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nota · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note · %@"
           }
         }
       }
@@ -5210,6 +5156,22 @@
         }
       }
     },
+    "Paste": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller"
+          }
+        }
+      }
+    },
     "Paste in emails, posts or notes you've written. Pick the kind so the right ones get matched.": {
       "localizations": {
         "es": {
@@ -5222,6 +5184,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Collez des e-mails, des posts ou des notes que vous avez écrits. Choisissez le type pour que les bons soient retenus."
+          }
+        }
+      }
+    },
+    "Paste it": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegarla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La coller"
           }
         }
       }
@@ -5840,22 +5818,6 @@
         }
       }
     },
-    "Recorded": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabada"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrée"
-          }
-        }
-      }
-    },
     "Recording a test sentence…": {
       "localizations": {
         "es": {
@@ -5948,22 +5910,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Retirer de la liste"
-          }
-        }
-      }
-    },
-    "Remove tag %@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitar la etiqueta %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retirer le tag %@"
           }
         }
       }
@@ -6128,22 +6074,6 @@
         }
       }
     },
-    "Review note": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revisar nota"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Relire la note"
-          }
-        }
-      }
-    },
     "Reviewing": {
       "localizations": {
         "es": {
@@ -6156,22 +6086,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Relecture"
-          }
-        }
-      }
-    },
-    "Review…": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revisar…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Relire…"
           }
         }
       }
@@ -6758,22 +6672,6 @@
         }
       }
     },
-    "Skip": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Omitir"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passer"
-          }
-        }
-      }
-    },
     "Skip for Now": {
       "localizations": {
         "es": {
@@ -6786,22 +6684,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plus tard"
-          }
-        }
-      }
-    },
-    "Skipped notes are saved as “needs review” for your Obsidian board.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las notas omitidas se guardan como «por revisar» (needs-review) en tu tablero de Obsidian."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les notes passées sont enregistrées « à relire » (needs-review) pour votre tableau Obsidian."
           }
         }
       }
@@ -7300,22 +7182,6 @@
         }
       }
     },
-    "Suggested new tags (added to your tag list if you keep them)": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etiquetas nuevas sugeridas (se añaden a tu lista si las conservas)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nouveaux tags suggérés (ajoutés à votre liste si vous les gardez)"
-          }
-        }
-      }
-    },
     "Suggesting a title and tags…": {
       "localizations": {
         "es": {
@@ -7462,22 +7328,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pression sur le système"
-          }
-        }
-      }
-    },
-    "Tags": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etiquetas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tags"
           }
         }
       }
@@ -7978,22 +7828,6 @@
         }
       }
     },
-    "Title": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Título"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Titre"
-          }
-        }
-      }
-    },
     "To hear you while you dictate.": {
       "localizations": {
         "es": {
@@ -8394,22 +8228,6 @@
         }
       }
     },
-    "Waiting for review": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pendientes de revisar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "À relire"
-          }
-        }
-      }
-    },
     "Waiting for storage": {
       "localizations": {
         "es": {
@@ -8598,6 +8416,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quand un long enregistrement est prêt, vous recevez une notification. Approuvez son titre, ses tags et son dossier, ou passez-le : il attend sur le tableau en needs-review."
+          }
+        }
+      }
+    },
+    "When you stop": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al parar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’arrêt"
+          }
+        }
+      }
+    },
+    "When you stop: make a note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al parar: crear una nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’arrêt : créer une note"
+          }
+        }
+      }
+    },
+    "When you stop: paste": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al parar: pegar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’arrêt : coller"
           }
         }
       }
@@ -9062,22 +8928,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Votre tableau de relecture est prêt"
-          }
-        }
-      }
-    },
-    "Your tags": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tus etiquetas"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vos tags"
           }
         }
       }

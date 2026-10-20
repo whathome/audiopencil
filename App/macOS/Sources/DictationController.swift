@@ -156,6 +156,19 @@ final class DictationController {
         indicator.onSelectStyle = { [weak self] style in self?.select(style) }
         indicator.onSelectLanguage = { [weak self] language in self?.select(language) }
         indicator.onPick = { [weak self] style in self?.pick(style) }
+        indicator.onToggleDelivery = { [weak self] in self?.toggleDelivery() }
+    }
+
+    /// Paste or note, chosen on the pill for this recording; nil decides by length.
+    private(set) var deliveryOverride: Delivery?
+
+    /// Flips what stopping will do: a short dictation can become a note, a long one can paste.
+    func toggleDelivery() {
+        guard phase == .recording || phase == .starting else { return }
+        let current = indicator.delivery()
+        deliveryOverride = current == .note ? .paste : .note
+        indicator.deliveryOverride = deliveryOverride
+        Log.dictation.notice("Delivery for this recording: \(self.deliveryOverride == .note ? "note" : "paste", privacy: .public)")
     }
 
     /// First Fn tap: turn the mic on so a second tap starts recording instantly.
@@ -188,6 +201,8 @@ final class DictationController {
         self.language = language
         self.targetApp = targetApp
         self.remembersStyle = remembersStyle
+        deliveryOverride = nil
+        indicator.deliveryOverride = nil
         indicator.currentStyle = style
         indicator.currentLanguage = language
         phase = .starting
@@ -287,7 +302,7 @@ final class DictationController {
     private func markLongForm(after seconds: Double, generation: Int) {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(seconds))
-            guard let self, generation == self.generation, phase == .recording else { return }
+            guard let self, generation == self.generation, phase == .recording, deliveryOverride == nil else { return }
             cues.play(.mark)
             recorder.muteNext(seconds: 0.4) // keep the cue out of the transcript
         }
@@ -312,7 +327,7 @@ final class DictationController {
         let targetApp = self.targetApp
         let recorded = recordingStartedAt
 
-        if audioSeconds >= longFormThreshold {
+        if deliveryOverride.map({ $0 == .note }) ?? (audioSeconds >= longFormThreshold) {
             finishLongForm(streamer: streamer, audioSeconds: audioSeconds, recorded: recorded, generation: generation)
             return
         }

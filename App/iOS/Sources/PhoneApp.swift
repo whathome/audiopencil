@@ -34,7 +34,6 @@ struct RootView: View {
     }
 
     var body: some View {
-        @Bindable var notes = app.notes
         TabView(selection: $tab) {
             SwiftUI.Tab("Record", systemImage: "mic", value: Tab.record) {
                 RecordView(app: app)
@@ -42,31 +41,9 @@ struct RootView: View {
             SwiftUI.Tab("Notes", systemImage: "doc.text", value: Tab.notes) {
                 NotesView(app: app)
             }
-            .badge(app.notes.pending.count)
             SwiftUI.Tab("Settings", systemImage: "gearshape", value: Tab.settings) {
                 PhoneSettingsView(app: app)
             }
-        }
-        .sheet(item: $notes.reviewing) { item in
-            NavigationStack {
-                ReviewView(item: item, knownTags: app.tags) { title, tags, folder in
-                    app.notes.approve(item, title: title, tags: tags, folder: folder)
-                } skip: {
-                    app.notes.skip(item)
-                }
-                .navigationTitle("Review note")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Later") { app.notes.reviewing = nil }
-                    }
-                    ToolbarItem(placement: .destructiveAction) {
-                        Button("Discard", role: .destructive) { app.notes.discard(item) }
-                    }
-                }
-            }
-            .interactiveDismissDisabled()
-            .tint(Color.pencil)
         }
         .fullScreenCover(isPresented: Binding(get: { !app.setupCompleted }, set: { _ in })) {
             PhoneSetupView(app: app)

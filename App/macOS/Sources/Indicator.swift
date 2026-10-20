@@ -3,6 +3,12 @@ import APTranscription
 import AppKit
 import SwiftUI
 
+/// What stopping a recording does: paste the text, or file it as a note (audio kept).
+enum Delivery: Equatable {
+    case paste
+    case note
+}
+
 /// State shown by the floating indicator at the bottom centre of the screen.
 @Observable
 final class IndicatorModel {
@@ -60,6 +66,18 @@ final class IndicatorModel {
     var recordingStartedAt: Date?
     /// Recordings this long become notes instead of pasting; the pill warns as it approaches.
     var longFormThreshold: Double = 300
+    /// Chosen on the pill for this recording: always paste, or always make a note. Nil: by length.
+    var deliveryOverride: Delivery?
+    /// Clicked: flip this recording between paste and note.
+    @ObservationIgnored var onToggleDelivery: (() -> Void)?
+    @ObservationIgnored var deliveryFrame: CGRect = .zero
+
+    /// What stopping now would do.
+    func delivery(at date: Date = .now) -> Delivery {
+        if let deliveryOverride { return deliveryOverride }
+        guard let recordingStartedAt else { return .paste }
+        return date.timeIntervalSince(recordingStartedAt) >= longFormThreshold ? .note : .paste
+    }
     /// 0…1 while rewriting.
     var rewriteProgress: Double = 0
     var picker: PickerState?
@@ -134,6 +152,8 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
         if model.mode == .picking, let id = model.pickerFrames.first(where: { $0.value.contains(point) })?.key,
            let style = model.styleChoices.first(where: { $0.id == id }) {
             model.onPick?(style)
+        } else if model.mode == .listening, model.deliveryFrame.insetBy(dx: -3, dy: -4).contains(point) {
+            model.onToggleDelivery?()
         } else if model.mode == .listening,
                   model.chipFrame.insetBy(dx: -4, dy: -4).contains(point) || model.languageFrame.insetBy(dx: -4, dy: -4).contains(point) {
             model.showStyleMenu?()
@@ -261,6 +281,21 @@ final class IndicatorPanelController: NSObject {
             item.state = style.id == model.currentStyle?.id ? .on : .off
             menu.addItem(item)
         }
+        if model.mode == .listening {
+            // Paste or note, for this recording only.
+            menu.addItem(.separator())
+            let deliveryHeader = NSMenuItem(title: String(localized: "When you stop"), action: nil, keyEquivalent: "")
+            deliveryHeader.isEnabled = false
+            menu.addItem(deliveryHeader)
+            let current = model.delivery()
+            for (delivery, title) in [(Delivery.paste, String(localized: "Paste it")), (.note, String(localized: "Make a note"))] {
+                let item = NSMenuItem(title: title, action: #selector(chooseDelivery(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = delivery == .note
+                item.state = delivery == current ? .on : .off
+                menu.addItem(item)
+            }
+        }
         if model.mode == .listening, model.showsLanguage {
             // One language per recording: switching transcribes what you've said again in the new one.
             menu.addItem(.separator())
@@ -288,6 +323,11 @@ final class IndicatorPanelController: NSObject {
         menu.popUp(positioning: current, at: anchor, in: content) // runs until the menu closes
         model.isMenuOpen = false
         openMenu = nil
+    }
+
+    @objc private func chooseDelivery(_ item: NSMenuItem) {
+        guard let note = item.representedObject as? Bool else { return }
+        if model.delivery() != (note ? .note : .paste) { model.onToggleDelivery?() }
     }
 
     @objc private func chooseLanguage(_ item: NSMenuItem) {
@@ -368,7 +408,12 @@ struct IndicatorView: View {
                 LevelBars(levels: model.levels)
                 if let started = model.recordingStartedAt {
                     TimelineView(.periodic(from: started, by: 1)) { context in
-                        RecordingClock(elapsed: context.date.timeIntervalSince(started), threshold: model.longFormThreshold)
+                        RecordingClock(elapsed: context.date.timeIntervalSince(started), threshold: model.longFormThreshold, override: model.deliveryOverride)
+                    }
+                    TimelineView(.periodic(from: started, by: 1)) { context in
+                        // Clicked via IndicatorHostingView (flips paste and note for this recording).
+                        DeliveryToggle(delivery: model.delivery(at: context.date), overridden: model.deliveryOverride != nil)
+                            .background(FrameReporter { model.deliveryFrame = $0 })
                     }
                 }
                 if model.showsLanguage, let language = model.currentLanguage {
@@ -478,11 +523,37 @@ private struct StyleChip: View {
     }
 }
 
-/// Elapsed time while recording, and what stopping will do once the recording is long enough
-/// to become a note. Quiet for short dictations, so the common case stays a bare meter.
+/// Paste or note: what stopping will do, and a click flips it for this recording. Brighter once chosen,
+/// so an override is visible at a glance.
+private struct DeliveryToggle: View {
+    let delivery: Delivery
+    let overridden: Bool
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: delivery == .note ? "doc.text" : "doc.on.clipboard")
+            Text(delivery == .note ? "Note" as LocalizedStringResource : "Paste")
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .fixedSize()
+        .background(Capsule().fill(Color.white.opacity(overridden ? 0.28 : 0.12)))
+        .foregroundStyle(delivery == .note ? Color.accentColor : .white)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(delivery == .note ? "When you stop: make a note" : "When you stop: paste"))
+        .accessibilityHint(Text("Click to switch between paste and note for this recording."))
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// Elapsed time while recording, and a countdown before a long recording switches to a note.
+/// Quiet for short dictations, so the common case stays a bare meter.
 private struct RecordingClock: View {
     let elapsed: TimeInterval
     let threshold: TimeInterval
+    /// Chosen on the pill: the clock stops counting down to a note that won't happen (or already will).
+    var override: Delivery?
 
     /// Short dictations show no clock at all.
     static let showAfter: TimeInterval = 30
@@ -491,13 +562,8 @@ private struct RecordingClock: View {
 
     var body: some View {
         Group {
-            if elapsed >= threshold {
-                HStack(spacing: 3) {
-                    Image(systemName: "doc.text")
-                    Text("Note · \(Self.clock(elapsed))")
-                }
-                .foregroundStyle(Color.accentColor)
-            } else if elapsed >= threshold - Self.warnBefore {
+            // The paste/note toggle next to it says which; the clock only counts down to an automatic switch.
+            if override == nil, elapsed < threshold, elapsed >= threshold - Self.warnBefore {
                 Text("Note in \(Self.clock(threshold - elapsed))")
                     .foregroundStyle(Color.accentColor)
             } else if elapsed >= Self.showAfter {

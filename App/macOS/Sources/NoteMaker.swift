@@ -6,13 +6,13 @@ import AppKit
 import SwiftUI
 import UserNotifications
 
-/// Turns dictations into vault notes (PRD "Vault layout", "Review flow").
+/// Turns dictations into vault notes (PRD "Vault layout"). Long recordings are filed straight away as
+/// needs-review; reviewing happens on the Obsidian board.
 @Observable
 final class NoteMaker {
     static let defaultFolder = NoteFiling.defaultFolder
     static let recordingsFolder = NoteFiling.recordingsFolder
 
-    private(set) var pending: [PendingNote] = []
     private(set) var recent: [RecentNote] = []
     /// What long-form processing is doing right now, if anything.
     private(set) var processing: String?
@@ -20,16 +20,30 @@ final class NoteMaker {
     @ObservationIgnored private unowned let app: AppModel
     @ObservationIgnored private let folder: URL
     @ObservationIgnored private let notifications = NotificationDelegate()
-    @ObservationIgnored private var reviewWindow: NSWindow?
 
     init(app: AppModel) {
         self.app = app
         folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Pending", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        pending = (try? JSONDecoder().decode([PendingNote].self, from: Data(contentsOf: folder.appending(path: "pending.json")))) ?? []
         recent = (try? JSONDecoder().decode([RecentNote].self, from: Data(contentsOf: folder.appending(path: "recent.json")))) ?? []
-        notifications.onOpen = { [weak self] id in self?.review(id: id) }
+        notifications.onOpen = { [weak self] path in
+            if let url = self?.openURL(for: path) { NSWorkspace.shared.open(url) }
+        }
         UNUserNotificationCenter.current().delegate = notifications
+        fileLeftoverReviews()
+    }
+
+    /// Notes from before filing became immediate were held for a review window: file them as they were.
+    private func fileLeftoverReviews() {
+        let file = folder.appending(path: "pending.json")
+        guard let leftovers = try? JSONDecoder().decode([PendingNote].self, from: Data(contentsOf: file)) else { return }
+        try? FileManager.default.removeItem(at: file)
+        for item in leftovers {
+            var note = item.note
+            note.tags += item.newTags.filter { !note.tags.contains($0) }
+            let style = app.styles.first { $0.id == note.styleID }
+            Task { await upload(note, audio: item.audioFile.map { folder.appending(path: $0) }, styleName: style?.displayName ?? note.styleID) }
+        }
     }
 
     // MARK: Quick dictations
@@ -67,6 +81,9 @@ final class NoteMaker {
             let result = await app.processLongForm(transcript: capture.transcript, style: capture.style, language: capture.language) { [weak self] status in
                 self?.processing = status
             }
+            // Suggested tags are used as they are; new ones join the vault's tag list.
+            let added = result.newTags.filter { !app.tags.contains($0) }
+            if !added.isEmpty { app.tags += added }
             let note = Note(
                 id: id,
                 title: result.title ?? NoteRenderer.fallbackTitle(from: capture.transcript),
@@ -75,48 +92,24 @@ final class NoteMaker {
                 recorded: capture.recorded,
                 duration: capture.duration,
                 mode: .longForm,
-                tags: result.knownTags,
+                tags: result.knownTags + added,
                 folder: folder(for: capture.style),
                 language: capture.language.code,
                 body: result.body,
                 transcript: keepsTranscript(capture.style) ? capture.transcript : nil
             )
-            pending.append(PendingNote(note: note, newTags: result.newTags, audioFile: savedAudio ? audioName : nil))
-            savePending()
+            processing = String(localized: "Filing the note…")
+            if let path = await upload(note, audio: savedAudio ? audioURL : nil, styleName: capture.style.displayName) {
+                notifyFiled(note, path: path)
+            }
             processing = nil
-            notifyReady(note)
         }
-    }
-
-    /// Approve: status `reviewed`, with the title, tags and folder as edited. New tags join the vault's list.
-    func approve(_ item: PendingNote, title: String, tags: [String], folder: String) {
-        var note = item.note
-        note.title = title.isEmpty ? note.title : title
-        note.tags = tags
-        note.folder = folder
-        note.status = .reviewed
-        let added = tags.filter { !app.tags.contains($0) }
-        if !added.isEmpty { app.tags += added }
-        finish(item, as: note)
-    }
-
-    /// Skip: upload as suggested with status `needs-review` (only tags already in the vault's list).
-    func skip(_ item: PendingNote) {
-        finish(item, as: item.note)
-    }
-
-    private func finish(_ item: PendingNote, as note: Note) {
-        pending.removeAll { $0.id == item.id }
-        savePending()
-        closeReviewIfShowing(item.id)
-        let audio = item.audioFile.map { folder.appending(path: $0) }
-        let style = app.styles.first { $0.id == note.styleID }
-        Task { await upload(note, audio: audio, styleName: style?.displayName ?? note.styleID) }
     }
 
     // MARK: Upload
 
-    private func upload(_ note: Note, audio: URL?, styleName: String) async {
+    @discardableResult
+    private func upload(_ note: Note, audio: URL?, styleName: String) async -> String? {
         do {
             // Plain until the folder is known to be an Obsidian vault: standard Markdown reads everywhere,
             // Obsidian included.
@@ -126,50 +119,24 @@ final class NoteMaker {
             saveRecent()
             Log.dictation.notice("Note queued: \(filed.path, privacy: .public)")
             app.sync.syncSoon(after: .zero)
+            return filed.path
         } catch {
             Log.dictation.error("Couldn't queue the note: \(error.localizedDescription, privacy: .public)")
+            return nil
         }
     }
 
-    // MARK: Review
+    // MARK: Notification
 
-    func review(id: UUID? = nil) {
-        guard let item = id.flatMap({ id in pending.first { $0.id == id } }) ?? pending.first else { return }
-        if reviewWindow == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 560), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            window.isReleasedWhenClosed = false
-            window.title = String(localized: "Review note")
-            window.identifier = NSUserInterfaceItemIdentifier("review")
-            reviewWindow = window
-        }
-        let review = ReviewView(item: item, knownTags: app.tags) { [weak self] title, tags, folder in
-            self?.approve(item, title: title, tags: tags, folder: folder)
-        } skip: { [weak self] in
-            self?.skip(item)
-        }
-        reviewWindow?.contentView = NSHostingView(rootView: review.id(item.id))
-        reviewWindow?.center()
-        NSApp.activate()
-        reviewWindow?.makeKeyAndOrderFront(nil)
-    }
-
-    private func closeReviewIfShowing(_ id: UUID) {
-        guard reviewWindow?.isVisible == true else { return }
-        if let next = pending.first {
-            review(id: next.id)
-        } else {
-            reviewWindow?.orderOut(nil)
-        }
-    }
-
-    private func notifyReady(_ note: Note) {
+    /// "Note filed": clicking opens it in Obsidian (or the file, for a plain folder on this Mac).
+    private func notifyFiled(_ note: Note, path: String) {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Note ready to review")
+        content.title = app.vault.layout == .obsidian ? String(localized: "Note filed in Obsidian") : String(localized: "Note filed")
         content.body = note.title
         content.sound = .default
-        content.userInfo = ["id": note.id.uuidString]
+        content.userInfo = ["path": path]
         center.add(UNNotificationRequest(identifier: note.id.uuidString, content: content, trigger: nil))
     }
 
@@ -216,10 +183,6 @@ final class NoteMaker {
         return components?.url
     }
 
-    private func savePending() {
-        if let data = try? JSONEncoder().encode(pending) { try? data.write(to: folder.appending(path: "pending.json"), options: .atomic) }
-    }
-
     private func saveRecent() {
         if let data = try? JSONEncoder().encode(recent) { try? data.write(to: folder.appending(path: "recent.json"), options: .atomic) }
     }
@@ -227,14 +190,14 @@ final class NoteMaker {
 
 /// Shows banners while the app is active and opens the review when one is clicked.
 private final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    var onOpen: ((UUID) -> Void)?
+    var onOpen: ((String) -> Void)?
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound]
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard let id = (response.notification.request.content.userInfo["id"] as? String).flatMap(UUID.init) else { return }
-        await MainActor.run { self.onOpen?(id) }
+        guard let path = response.notification.request.content.userInfo["path"] as? String else { return }
+        await MainActor.run { self.onOpen?(path) }
     }
 }

@@ -81,24 +81,6 @@ struct NotesPage: View {
                     }
                 }
 
-                if !notes.pending.isEmpty {
-                    Card(title: "Waiting for review") {
-                        ForEach(notes.pending) { item in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(item.note.title).font(.headline)
-                                    Text("\(item.note.recorded.formatted(date: .abbreviated, time: .shortened)) · \(ReviewView.minutes(item.note.duration))")
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Button("Skip") { notes.skip(item) }
-                                Button("Review…") { notes.review(id: item.id) }
-                                    .buttonStyle(.borderedProminent)
-                            }
-                        }
-                    }
-                }
-
                 if !app.sync.expiringSoon.isEmpty {
                     Card(title: "Audio expiring soon") {
                         Text("These recordings are a year old soon. Their notes stay; the audio goes unless you keep it.")
