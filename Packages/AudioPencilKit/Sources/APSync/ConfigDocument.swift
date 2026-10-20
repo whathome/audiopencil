@@ -8,8 +8,8 @@ public enum ConfigError: LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .missingYAMLBlock: "The settings file has no ```yaml block."
-        case .invalidYAML(let detail): "The settings file has a YAML error: \(detail)"
+        case .missingYAMLBlock: String(localized: "The settings file has no ```yaml block.", bundle: .module)
+        case .invalidYAML(let detail): String(localized: "The settings file has a YAML error: \(detail)", bundle: .module)
         }
     }
 }

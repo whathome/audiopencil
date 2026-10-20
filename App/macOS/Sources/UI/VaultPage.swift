@@ -32,7 +32,7 @@ struct VaultPage: View {
                     NextcloudAccountCard(vault: vault)
                     if vault.connection == .signedIn {
                         LocationCard(vault: vault) {
-                            Text(vault.settings.remoteVaultPath ?? "Not chosen")
+                            Text(vault.settings.remoteVaultPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
                                 .font(.body.monospaced())
                         } choose: {
                             vault.openBrowser()
@@ -40,7 +40,7 @@ struct VaultPage: View {
                     }
                 } else {
                     LocationCard(vault: vault) {
-                        Text(vault.localPathDescription ?? "Not chosen")
+                        Text(vault.localPathDescription.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
                             .font(.body.monospaced())
                             .help(vault.settings.localPath ?? "")
                     } choose: {
@@ -103,7 +103,7 @@ private struct SyncCard: View {
                 }
                 GridRow {
                     Text("Waiting to upload").foregroundStyle(.secondary)
-                    Text(sync.queuedUploads == 0 ? "Nothing" : "\(sync.queuedUploads) item\(sync.queuedUploads == 1 ? "" : "s")")
+                    Text(sync.queuedUploads == 0 ? "Nothing" as LocalizedStringResource : "\(sync.queuedUploads) items")
                 }
             }
             .font(.callout)
@@ -130,7 +130,7 @@ private struct SyncCard: View {
         }
     }
 
-    private var statusTitle: String {
+    private var statusTitle: LocalizedStringResource {
         switch sync.status {
         case .syncing: "Syncing…"
         case .idle: "Up to date"
@@ -141,10 +141,10 @@ private struct SyncCard: View {
         }
     }
 
-    private var statusDetail: String? {
+    private var statusDetail: LocalizedStringResource? {
         switch sync.status {
         case .idle: sync.lastSynced.map { "Last synced \($0.formatted(date: .omitted, time: .shortened))" }
-        case .paused(let message), .failed(let message): message
+        case .paused(let message), .failed(let message): "\(message)"
         default: nil
         }
     }
@@ -277,7 +277,7 @@ private struct NextcloudFolderBrowser: View {
                 }
                 .disabled(vault.browserPath == "/")
                 .accessibilityLabel("Up one folder")
-                Text(vault.browserPath == "/" ? "Files" : vault.browserPath)
+                Text(vault.browserPath == "/" ? "Files" as LocalizedStringResource : "\(vault.browserPath)")
                     .font(.headline.monospaced())
                     .lineLimit(1)
                     .truncationMode(.head)
@@ -323,7 +323,7 @@ private struct NextcloudFolderBrowser: View {
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button("Use “\(vault.browserPath == "/" ? "Files" : StorageItem(path: vault.browserPath, isFolder: true).name)”") {
+                Button("Use “\(vault.browserPath == "/" ? String(localized: "Files") : StorageItem(path: vault.browserPath, isFolder: true).name)”") {
                     vault.chooseRemoteFolder(vault.browserPath)
                 }
                 .keyboardShortcut(.defaultAction)

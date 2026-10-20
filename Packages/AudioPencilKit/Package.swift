@@ -11,6 +11,7 @@ let concurrency: [SwiftSetting] = [
 
 let package = Package(
     name: "AudioPencilKit",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v15),
         .iOS(.v18),
@@ -36,13 +37,13 @@ let package = Package(
     ],
     targets: [
         // Pure logic: settings, gesture detection, diagnostics. No platform frameworks beyond Foundation.
-        .target(name: "APCore", swiftSettings: concurrency),
+        .target(name: "APCore", resources: [.process("Resources")], swiftSettings: concurrency),
 
         // Microphone capture (16 kHz mono), levels, audio cues.
-        .target(name: "APAudio", dependencies: ["APCore"], swiftSettings: concurrency),
+        .target(name: "APAudio", dependencies: ["APCore"], resources: [.process("Resources")], swiftSettings: concurrency),
 
         // Model residency (one large model at a time), catalogue, on-disk locations.
-        .target(name: "APModels", dependencies: ["APCore"], swiftSettings: concurrency),
+        .target(name: "APModels", dependencies: ["APCore"], resources: [.process("Resources")], swiftSettings: concurrency),
 
         // WhisperKit wrapper and streaming confirmation logic.
         .target(
@@ -52,6 +53,7 @@ let package = Package(
                 "APModels",
                 .product(name: "WhisperKit", package: "WhisperKit"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: concurrency
         ),
 
@@ -66,16 +68,18 @@ let package = Package(
                 .product(name: "HuggingFace", package: "swift-huggingface"),
                 .product(name: "Tokenizers", package: "swift-transformers"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: concurrency
         ),
 
         // Vault storage: Nextcloud (WebDAV, Login Flow v2) or a local folder such as iCloud Drive.
-        .target(name: "APStorage", dependencies: ["APCore"], swiftSettings: concurrency),
+        .target(name: "APStorage", dependencies: ["APCore"], resources: [.process("Resources")], swiftSettings: concurrency),
 
         // Shared settings file (YAML in the vault), three-way merge, offline upload queue.
         .target(
             name: "APSync",
             dependencies: ["APCore", "APStorage", .product(name: "Yams", package: "Yams")],
+            resources: [.process("Resources")],
             swiftSettings: concurrency
         ),
 

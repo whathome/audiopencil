@@ -22,11 +22,11 @@ final class Permissions {
 
     var fnKeyActionDescription: String {
         switch fnKeyAction ?? 0 {
-        case 0: "Do Nothing"
-        case 1: "Change Input Source"
-        case 2: "Show Emoji & Symbols"
-        case 3: "Start Dictation"
-        default: "Unknown"
+        case 0: String(localized: "Do Nothing")
+        case 1: String(localized: "Change Input Source")
+        case 2: String(localized: "Show Emoji & Symbols")
+        case 3: String(localized: "Start Dictation")
+        default: String(localized: "Unknown")
         }
     }
 

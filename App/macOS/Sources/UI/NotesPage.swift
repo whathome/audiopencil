@@ -41,7 +41,7 @@ struct NotesPage: View {
                                 Button("Repair…") { confirmingBoardRepair = true }
                             }
                         }
-                        if let summary = app.sync.repairSummary, summary.hasPrefix("Board") {
+                        if let summary = app.sync.repairSummary, app.sync.repairedBoard {
                             Text(summary).font(.caption).foregroundStyle(.secondary)
                         }
                     }
@@ -170,7 +170,7 @@ private struct BoardWalkthrough: View {
         .frame(width: 560)
     }
 
-    private func step(_ symbol: String, _ title: String, _ text: String) -> some View {
+    private func step(_ symbol: String, _ title: LocalizedStringResource, _ text: LocalizedStringResource) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: symbol).font(.title2).foregroundStyle(Color.pencil).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {

@@ -189,7 +189,7 @@ extension AppModel {
         guard memoryPressure != .critical else { throw RewriteError.lowMemory }
         let language = dictation.language
         guard canStyle(in: language) else {
-            throw RewriteError.languageUnsupported(language: language.name(), model: writingModelOption?.name ?? "The writing model")
+            throw RewriteError.languageUnsupported(language: language.name(), model: writingModelOption?.name ?? String(localized: "The writing model"))
         }
         defer { restoreWhisper() }
 

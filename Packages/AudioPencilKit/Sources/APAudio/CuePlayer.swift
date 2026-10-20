@@ -17,12 +17,12 @@ public enum CueTheme: String, CaseIterable, Codable, Sendable {
 
     public var label: String {
         switch self {
-        case .tricorder: "Tricorder"
-        case .soft: "Soft"
-        case .chime: "Chime"
-        case .click: "Click"
-        case .system: "macOS sounds"
-        case .none: "None"
+        case .tricorder: String(localized: "Tricorder", bundle: .module)
+        case .soft: String(localized: "Soft", bundle: .module)
+        case .chime: String(localized: "Chime", bundle: .module)
+        case .click: String(localized: "Click", bundle: .module)
+        case .system: String(localized: "macOS sounds", bundle: .module)
+        case .none: String(localized: "None", bundle: .module)
         }
     }
 }

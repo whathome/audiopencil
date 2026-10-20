@@ -69,7 +69,7 @@ final class NoteMaker {
             body: capture.text,
             transcript: keepsTranscript(style) ? capture.transcript : nil
         )
-        Task { await upload(note, audio: nil, styleName: style.name) }
+        Task { await upload(note, audio: nil, styleName: style.displayName) }
     }
 
     // MARK: Long-form
@@ -78,7 +78,7 @@ final class NoteMaker {
         let id = UUID()
         let audioName = "\(id.uuidString).m4a"
         let audioURL = folder.appending(path: audioName)
-        processing = "Saving the audio…"
+        processing = String(localized: "Saving the audio…")
         Task {
             let samples = capture.samples
             let savedAudio = await Task.detached(priority: .userInitiated) { () -> Bool in
@@ -131,7 +131,7 @@ final class NoteMaker {
         closeReviewIfShowing(item.id)
         let audio = item.audioFile.map { folder.appending(path: $0) }
         let style = app.styles.first { $0.id == note.styleID }
-        Task { await upload(note, audio: audio, styleName: style?.name ?? note.styleID) }
+        Task { await upload(note, audio: audio, styleName: style?.displayName ?? note.styleID) }
     }
 
     // MARK: Upload
@@ -165,7 +165,8 @@ final class NoteMaker {
         if reviewWindow == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 560), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             window.isReleasedWhenClosed = false
-            window.title = "Review note"
+            window.title = String(localized: "Review note")
+            window.identifier = NSUserInterfaceItemIdentifier("review")
             reviewWindow = window
         }
         reviewWindow?.contentView = NSHostingView(rootView: ReviewView(maker: self, item: item, knownTags: app.tags).id(item.id))
@@ -187,7 +188,7 @@ final class NoteMaker {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         let content = UNMutableNotificationContent()
-        content.title = "Note ready to review"
+        content.title = String(localized: "Note ready to review")
         content.body = note.title
         content.sound = .default
         content.userInfo = ["id": note.id.uuidString]

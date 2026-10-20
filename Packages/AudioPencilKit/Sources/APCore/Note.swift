@@ -140,7 +140,7 @@ public enum NoteRenderer {
         lines.append(note.body.trimmingCharacters(in: .whitespacesAndNewlines))
         if let transcript = note.transcript?.trimmingCharacters(in: .whitespacesAndNewlines), !transcript.isEmpty {
             lines.append("")
-            lines.append("> [!quote]- Transcript")
+            lines.append("> [!quote]- " + String(localized: "Transcript", bundle: .module))
             lines += transcript.components(separatedBy: "\n").map { $0.isEmpty ? ">" : "> \($0)" }
         }
         return lines.joined(separator: "\n") + "\n"

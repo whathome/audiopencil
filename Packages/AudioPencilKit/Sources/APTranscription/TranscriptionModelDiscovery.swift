@@ -42,8 +42,8 @@ public enum TranscriptionModelDiscovery {
             let bytes = (try? await HubAPI.size(ofRepo: ModelLocations.whisperRepository, folder: variant, suffix: "", session: session)) ?? 0
             guard bytes > 0, bytes <= machine.transcriptionModelBudget else { continue }
             let reason = kind == .transcription
-                ? "more accurate English than your current model; supported on \(machine.chip); may be slower to keep up live"
-                : "more accurate for your other languages; supported on \(machine.chip); may be slower to keep up live"
+                ? String(localized: "more accurate English than your current model; supported on \(machine.chip); may be slower to keep up live", bundle: .module)
+                : String(localized: "more accurate for your other languages; supported on \(machine.chip); may be slower to keep up live", bundle: .module)
             result.append(ModelSuggestion(id: variant, kind: kind, name: variant.replacingOccurrences(of: "openai_whisper-", with: "Whisper "), sizeBytes: bytes, reason: reason))
         }
         return result.sorted { tier($0.id) < tier($1.id) } // smallest step up first

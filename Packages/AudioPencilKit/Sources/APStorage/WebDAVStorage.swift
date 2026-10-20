@@ -140,7 +140,7 @@ enum MultistatusParser {
         parser.shouldProcessNamespaces = true
         parser.delegate = delegate
         guard parser.parse() else {
-            throw StorageError.invalidServer("Couldn't read the server's folder listing.")
+            throw StorageError.invalidServer(String(localized: "Couldn't read the server's folder listing.", bundle: .module))
         }
         return delegate.items
     }

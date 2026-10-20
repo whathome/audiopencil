@@ -39,17 +39,17 @@ public struct InterviewPrompt: Identifiable, Sendable, Equatable {
     public static let wordRange = 100...300
 
     public static let all: [InterviewPrompt] = [
-        .init(id: "work-email", kind: "work-email", title: "Work email", prompt: "Tell a colleague or client that something is running late, why, and what happens next."),
-        .init(id: "technical", kind: "technical-explanation", title: "Technical explanation", prompt: "Explain to a smart, non-technical friend why you run your own server instead of using cloud services."),
-        .init(id: "instructions", kind: "instructions", title: "Instructions", prompt: "Write step-by-step instructions for a task you know well, around the house or on a computer."),
-        .init(id: "opinion", kind: "opinion", title: "Opinion", prompt: "Pick a tool, product or habit you feel strongly about and argue for or against it."),
-        .init(id: "problem-story", kind: "problem-story", title: "Problem story", prompt: "Describe something that broke or went wrong recently and how you worked it out."),
-        .init(id: "diary", kind: "diary", title: "Diary", prompt: "Write a few honest paragraphs about how today actually went."),
-        .init(id: "decision", kind: "decision", title: "Decision", prompt: "Lay out a decision you're weighing, the options, and which way you're leaning."),
-        .init(id: "short-messages", kind: "short-messages", title: "Short messages", prompt: "Write three quick texts: making plans, turning something down, and thanking someone."),
-        .init(id: "feedback", kind: "feedback", title: "Feedback", prompt: "Give honest feedback on someone's idea or piece of work, kind but direct."),
-        .init(id: "place", kind: "place", title: "Place", prompt: "Describe a place you know well to someone who has never been there."),
-        .init(id: "recap", kind: "recap", title: "Recap", prompt: "Summarise a recent conversation or meeting for someone who missed it."),
+        .init(id: "work-email", kind: "work-email", title: String(localized: "Work email", bundle: .module), prompt: String(localized: "Tell a colleague or client that something is running late, why, and what happens next.", bundle: .module)),
+        .init(id: "technical", kind: "technical-explanation", title: String(localized: "Technical explanation", bundle: .module), prompt: String(localized: "Explain to a smart, non-technical friend why you run your own server instead of using cloud services.", bundle: .module)),
+        .init(id: "instructions", kind: "instructions", title: String(localized: "Instructions", bundle: .module), prompt: String(localized: "Write step-by-step instructions for a task you know well, around the house or on a computer.", bundle: .module)),
+        .init(id: "opinion", kind: "opinion", title: String(localized: "Opinion", bundle: .module), prompt: String(localized: "Pick a tool, product or habit you feel strongly about and argue for or against it.", bundle: .module)),
+        .init(id: "problem-story", kind: "problem-story", title: String(localized: "Problem story", bundle: .module), prompt: String(localized: "Describe something that broke or went wrong recently and how you worked it out.", bundle: .module)),
+        .init(id: "diary", kind: "diary", title: String(localized: "Diary", bundle: .module), prompt: String(localized: "Write a few honest paragraphs about how today actually went.", bundle: .module)),
+        .init(id: "decision", kind: "decision", title: String(localized: "Decision", bundle: .module), prompt: String(localized: "Lay out a decision you're weighing, the options, and which way you're leaning.", bundle: .module)),
+        .init(id: "short-messages", kind: "short-messages", title: String(localized: "Short messages", bundle: .module), prompt: String(localized: "Write three quick texts: making plans, turning something down, and thanking someone.", bundle: .module)),
+        .init(id: "feedback", kind: "feedback", title: String(localized: "Feedback", bundle: .module), prompt: String(localized: "Give honest feedback on someone's idea or piece of work, kind but direct.", bundle: .module)),
+        .init(id: "place", kind: "place", title: String(localized: "Place", bundle: .module), prompt: String(localized: "Describe a place you know well to someone who has never been there.", bundle: .module)),
+        .init(id: "recap", kind: "recap", title: String(localized: "Recap", bundle: .module), prompt: String(localized: "Summarise a recent conversation or meeting for someone who missed it.", bundle: .module)),
     ]
 
     /// Kinds for samples added outside the interview.

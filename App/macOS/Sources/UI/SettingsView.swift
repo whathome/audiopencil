@@ -7,7 +7,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case general, models, permissions
     var id: Self { self }
 
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
         case .general: "General"
         case .models: "Models"
@@ -38,7 +38,7 @@ struct SettingsView: View {
             TabView(selection: $app.settingsTab) {
                 ForEach(SettingsTab.allCases) { tab in
                     content(tab)
-                        .tabItem { Label(tab.title, systemImage: tab.symbol) }
+                        .tabItem { Label { Text(tab.title) } icon: { Image(systemName: tab.symbol) } }
                         .tag(tab)
                 }
             }
@@ -116,8 +116,8 @@ private struct PageAlignedForm: ViewModifier {
 /// Explanatory text under a form section: small, secondary and left-aligned, so it reads as a note
 /// on the rows above rather than another setting.
 private struct FormFooter: View {
-    let text: String
-    init(_ text: String) { self.text = text }
+    let text: LocalizedStringResource
+    init(_ text: LocalizedStringResource) { self.text = text }
 
     var body: some View {
         Text(text)
@@ -132,7 +132,7 @@ private struct FormFooter: View {
 private struct FirstSectionHeader: View {
     let app: AppModel
     let embedded: Bool
-    let title: String
+    let title: LocalizedStringResource
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -227,7 +227,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Notes")
             } footer: {
-                FormFooter("Notes go to each style's folder (set on the Styles page), or \(NoteMaker.defaultFolder.dropFirst()). Audio goes to \(NoteMaker.recordingsFolder.dropFirst()).")
+                FormFooter("Notes go to each style's folder (set on the Styles page), or \(String(NoteMaker.defaultFolder.dropFirst())). Audio goes to \(String(NoteMaker.recordingsFolder.dropFirst())).")
             }
 
             Section("App") {
@@ -342,7 +342,7 @@ private struct VocabularySection: View {
             Text("Custom vocabulary")
         } footer: {
             FormFooter(list.isEmpty
-                ? "One name, place or term per line, used in every language. Whisper gets them as spelling hints."
+                ? "One name, place or term per line, used in every language. Whisper gets them as spelling hints." as LocalizedStringResource
                 : "Used only when dictating in \(SpokenLanguage(code: list).name()), on top of the list for all languages.")
         }
         .onAppear { load() }
@@ -375,7 +375,7 @@ private struct ModelSettings: View {
                         Text("\(option.name) – \(option.note)").tag(option.id)
                     }
                     if WritingModelOption.option(for: app.settings.writingModel) == nil {
-                        Text(app.settings.writingModel.replacingOccurrences(of: "mlx-community/", with: "") + " – from discovery").tag(app.settings.writingModel)
+                        Text("\(app.settings.writingModel.replacingOccurrences(of: "mlx-community/", with: "")) – from discovery").tag(app.settings.writingModel)
                     }
                 }
                 .disabled(app.dictation.isActive)
@@ -415,7 +415,7 @@ private struct ModelSettings: View {
                         Text("\(option.name) – \(option.note)").tag(option.id)
                     }
                     if TranscriptionModelOption.option(for: app.settings.transcriptionModel) == nil {
-                        Text(app.settings.transcriptionModel + " – from discovery").tag(app.settings.transcriptionModel)
+                        Text("\(app.settings.transcriptionModel) – from discovery").tag(app.settings.transcriptionModel)
                     }
                 }
                 .disabled(app.dictation.isActive)
@@ -424,7 +424,7 @@ private struct ModelSettings: View {
                         Text("\(option.name) – \(option.note)").tag(option.id)
                     }
                     if TranscriptionModelOption.option(for: app.settings.multilingualTranscriptionModel) == nil {
-                        Text(app.settings.multilingualTranscriptionModel + " – from discovery").tag(app.settings.multilingualTranscriptionModel)
+                        Text("\(app.settings.multilingualTranscriptionModel) – from discovery").tag(app.settings.multilingualTranscriptionModel)
                     }
                 }
                 .disabled(app.dictation.isActive)
@@ -519,7 +519,13 @@ private struct ModelSuggestionsSection: View {
                     .foregroundStyle(.secondary)
             }
             HStack {
-                Text(advisor.lastChecked.map { "Last checked \($0.formatted(.relative(presentation: .named)))" } ?? "Not checked yet")
+                Group {
+                    if let checked = advisor.lastChecked {
+                        Text("Last checked \(checked.formatted(.relative(presentation: .named)))")
+                    } else {
+                        Text("Not checked yet")
+                    }
+                }
                     .foregroundStyle(.secondary)
                 Spacer()
                 if advisor.checking { ProgressView().controlSize(.small) }
@@ -596,16 +602,16 @@ private struct SuggestionRow: View {
         .padding(.vertical, 4)
     }
 
-    private func result(_ title: String, _ text: String, _ seconds: Double, _ wer: Double?) -> some View {
+    private func result(_ title: LocalizedStringResource, _ text: String, _ seconds: Double, _ wer: Double?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 6) {
                 Text(title).font(.caption.weight(.semibold))
-                Text(String(format: "%.1f s", seconds)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                Text("\(seconds.formatted(.number.precision(.fractionLength(1)))) s").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 if let wer {
                     Text("\(Int((wer * 100).rounded()))% word errors").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Text(text).font(.caption).textSelection(.enabled).lineLimit(8)
+            Text(verbatim: text).font(.caption).textSelection(.enabled).lineLimit(8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(8)

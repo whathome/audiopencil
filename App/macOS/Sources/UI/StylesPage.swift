@@ -87,8 +87,8 @@ private struct StyleCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                KeyCap(label: style.shortcut.map(String.init) ?? "–")
-                Text(style.name).font(.headline)
+                KeyCap(label: style.shortcut.map { "\($0)" } ?? "–")
+                Text(verbatim: style.displayName).font(.headline)
                 if isDefault {
                     Text("Last used").font(.caption2.weight(.semibold)).foregroundStyle(Color.pencil)
                 }
@@ -101,11 +101,11 @@ private struct StyleCard: View {
                         .toggleStyle(.switch)
                         .controlSize(.small)
                         .labelsHidden()
-                        .accessibilityLabel("Use \(style.name)")
+                        .accessibilityLabel(Text("Use \(style.displayName)"))
                         .disabled(style.tone == .likeMe && sampleCount < InterviewPrompt.minimumSamples)
                 }
             }
-            Text(style.isRaw ? "Pastes exactly what you said. Holding Fn always gives you this." : style.instructions)
+            Text(verbatim: style.displayDescription)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineLimit(3, reservesSpace: true) // every card keeps room for three lines
@@ -120,7 +120,7 @@ private struct StyleCard: View {
                     if style.length != .asSpoken { Tag(style.length.label) }
                 }
                 if style.tone == .likeMe {
-                    Tag(sampleCount < InterviewPrompt.minimumSamples ? "Needs \(InterviewPrompt.minimumSamples) samples" : "\(sampleCount) samples")
+                    Tag(sampleCount < InterviewPrompt.minimumSamples ? "Needs \(InterviewPrompt.minimumSamples) samples" as LocalizedStringResource : "\(sampleCount) samples")
                         .help("Writing samples on the My writing page")
                 }
                 Spacer()
@@ -140,8 +140,8 @@ private struct StyleCard: View {
 }
 
 private struct Tag: View {
-    let text: String
-    init(_ text: String) { self.text = text }
+    let text: LocalizedStringResource
+    init(_ text: LocalizedStringResource) { self.text = text }
 
     var body: some View {
         Text(text)
@@ -169,7 +169,7 @@ private struct StyleEditor: View {
                 Picker("Number key", selection: $style.shortcut) {
                     Text("None").tag(Int?.none)
                     ForEach(1...9, id: \.self) { number in
-                        Text(takenShortcuts.contains(number) ? "\(number) (in use)" : "\(number)")
+                        Text(takenShortcuts.contains(number) ? "\(number) (in use)" as LocalizedStringResource : "\(number)")
                             .tag(Int?.some(number))
                     }
                 }
@@ -272,10 +272,10 @@ private struct PerAppDefaults: View {
                         Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable().frame(width: 18, height: 18)
                         Text(FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: ""))
                     } else {
-                        Text(bundleID)
+                        Text(verbatim: bundleID)
                     }
                     Spacer()
-                    Text(app.styles.first { $0.id == styleID }?.name ?? styleID).foregroundStyle(.secondary)
+                    Text(verbatim: app.styles.first { $0.id == styleID }?.displayName ?? styleID).foregroundStyle(.secondary)
                     if app.isMultilingual, let code = app.languageMemory.perApp[bundleID] {
                         Text(SpokenLanguage(code: code).name()).foregroundStyle(.secondary)
                     }
@@ -286,8 +286,8 @@ private struct PerAppDefaults: View {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
                     }
                     .buttonStyle(.borderless)
-                    .help("Forget this app's default")
-                    .accessibilityLabel("Forget this app's default")
+                    .help(Text("Forget this app's default"))
+                    .accessibilityLabel(Text("Forget this app's default"))
                 }
             }
         }
@@ -295,7 +295,7 @@ private struct PerAppDefaults: View {
 }
 
 extension Style.Intensity {
-    var label: String {
+    var label: LocalizedStringResource {
         switch self {
         case .light: "Light tidy"
         case .moderate: "Rewrite"
@@ -305,7 +305,7 @@ extension Style.Intensity {
 }
 
 extension Style.Tone {
-    var label: String {
+    var label: LocalizedStringResource {
         switch self {
         case .asSpoken: "As spoken"
         case .casual: "Casual"
@@ -317,7 +317,7 @@ extension Style.Tone {
 }
 
 extension Style.Length {
-    var label: String {
+    var label: LocalizedStringResource {
         switch self {
         case .asSpoken: "Same length"
         case .shorter: "Shorter"

@@ -29,6 +29,8 @@ final class SyncController {
     private(set) var boardProblem: String?
     /// Result of the last repair, for a confirmation message.
     private(set) var repairSummary: String?
+    /// The last repair was of the board (shown on the Notes page) rather than the settings file.
+    private(set) var repairedBoard = false
     /// Last retention pass, for the Notes page.
     private(set) var lastRetention: RetentionKeeper.Report?
     /// First-run files were just created in this vault: show the board walkthrough once.
@@ -159,7 +161,7 @@ final class SyncController {
             }
             queuedUploads = await outbox.pending.count
             if let reason = drained.stoppedBecause {
-                status = .failed("Uploads waiting: \(reason)")
+                status = .failed(String(localized: "Uploads waiting: \(reason)"))
             } else {
                 status = .idle
                 lastSynced = Date()
@@ -197,11 +199,13 @@ final class SyncController {
             let base = await configSync.base
             let repair = try await configSync.repair(fallback: localConfig(base), device: deviceName, provider: location.provider, vaultPath: location.path, location: locationKey)
             apply(repair.config)
-            repairSummary = "Settings repaired. Kept: \(repair.kept.joined(separator: ", ")). Restored from the last good version: \(repair.restored.isEmpty ? "nothing" : repair.restored.joined(separator: "; ")). The broken copy is in \(repair.backupPath.dropFirst())."
+            let restored = repair.restored.isEmpty ? String(localized: "nothing") : repair.restored.joined(separator: "; ")
+            repairSummary = String(localized: "Settings repaired. Kept: \(repair.kept.joined(separator: ", ")). Restored from the last good version: \(restored). The broken copy is in \(String(repair.backupPath.dropFirst())).")
+            repairedBoard = false
             status = .idle
             lastSynced = Date()
         } catch {
-            status = .failed("Repair failed: \(error.localizedDescription)")
+            status = .failed(String(localized: "Repair failed: \(error.localizedDescription)"))
         }
     }
 
@@ -211,9 +215,11 @@ final class SyncController {
         do {
             let repair = try await StarterKit.repairBoard(in: location.provider, vaultPath: location.path)
             boardProblem = nil
-            repairSummary = "Board repaired. Kept your views: \(repair.keptViews.isEmpty ? "none" : repair.keptViews.joined(separator: ", ")). The broken copy is in \(repair.backupPath.dropFirst())."
+            let kept = repair.keptViews.isEmpty ? String(localized: "none") : repair.keptViews.joined(separator: ", ")
+            repairSummary = String(localized: "Board repaired. Kept your views: \(kept). The broken copy is in \(String(repair.backupPath.dropFirst())).")
+            repairedBoard = true
         } catch {
-            boardProblem = "Repair failed: \(error.localizedDescription)"
+            boardProblem = String(localized: "Repair failed: \(error.localizedDescription)")
         }
     }
 
@@ -228,7 +234,7 @@ final class SyncController {
             try await location.provider.write(item.notePath, data: Data(edited.utf8), ifMatch: etag, createOnly: false)
             expiringSoon.removeAll { $0.id == item.id }
         } catch {
-            status = .failed("Couldn't archive \(item.title): \(error.localizedDescription)")
+            status = .failed(String(localized: "Couldn't archive \(item.title): \(error.localizedDescription)"))
         }
     }
 

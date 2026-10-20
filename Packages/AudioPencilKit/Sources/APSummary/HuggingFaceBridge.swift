@@ -12,7 +12,7 @@ enum HubDownloadError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidRepositoryID(let id): "Not a Hugging Face repository ID: \(id)"
+        case .invalidRepositoryID(let id): String(localized: "Not a Hugging Face repository ID: \(id)", bundle: .module)
         }
     }
 }

@@ -45,8 +45,8 @@ struct DictationPage: View {
 }
 
 struct PageHeader: View {
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringResource
+    let subtitle: LocalizedStringResource
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -91,22 +91,30 @@ private struct HotkeyCard: View {
         }
     }
 
-    private var stopKeys: String {
-        let fn = app.settings.stopGesture == .singleTapFn ? "Tap Fn" : "Double-tap Fn"
-        return app.settings.returnStops ? "\(fn) or Return" : fn
+    private var stopKeys: LocalizedStringResource {
+        switch (app.settings.stopGesture, app.settings.returnStops) {
+        case (.singleTapFn, true): "Tap Fn or Return"
+        case (.singleTapFn, false): "Tap Fn"
+        case (.doubleTapFn, true): "Double-tap Fn or Return"
+        case (.doubleTapFn, false): "Double-tap Fn"
+        }
     }
 
-    private var stopDetail: String {
-        let fn = app.settings.stopGesture == .singleTapFn ? "Tap" : "Double-tap"
-        return app.settings.returnStops ? "\(fn) or Return" : fn
+    private var stopDetail: LocalizedStringResource {
+        switch (app.settings.stopGesture, app.settings.returnStops) {
+        case (.singleTapFn, true): "Tap or Return"
+        case (.singleTapFn, false): "Tap"
+        case (.doubleTapFn, true): "Double-tap or Return"
+        case (.doubleTapFn, false): "Double-tap"
+        }
     }
 }
 
 private struct Gesture<Keys: View>: View {
-    let title: String
-    let detail: String
+    let title: LocalizedStringResource
+    let detail: LocalizedStringResource
     /// The keys in words, for VoiceOver (keycaps alone read as "fn fn").
-    let keys: String
+    let keys: LocalizedStringResource
     @ViewBuilder var keycaps: Keys
 
     var body: some View {
@@ -118,8 +126,8 @@ private struct Gesture<Keys: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(title): \(keys)")
-        .accessibilityHint(detail)
+        .accessibilityLabel(Text("\(String(localized: title)): \(String(localized: keys))"))
+        .accessibilityHint(Text(detail))
     }
 }
 
@@ -160,13 +168,13 @@ private struct TranscriptionCard: View {
         }
     }
 
-    private var writingStatus: String {
+    private var writingStatus: LocalizedStringResource {
         let name = app.writingModelOption?.name ?? app.settings.writingModel
         switch app.writingModelState {
         case .downloading(let fraction): return "\(name), downloading \(Int(fraction * 100))%"
         case .ready: return "\(name), loaded"
         case .failed: return "\(name), download failed"
-        default: return app.writingModelDownloaded ? name : "\(name), not downloaded"
+        default: return app.writingModelDownloaded ? "\(name)" : "\(name), not downloaded"
         }
     }
 
@@ -188,8 +196,8 @@ private struct LastDictationCard: View {
     var body: some View {
         if let report = app.dictation.lastReport {
             Card(title: "Last dictation", trailing: trailing(for: report)) {
-                if report.styleName != Style.raw.name {
-                    Label(report.styleName, systemImage: "pencil.and.scribble").font(.caption).foregroundStyle(Color.pencil)
+                if report.styleName != Style.raw.displayName {
+                    Label { Text(verbatim: report.styleName) } icon: { Image(systemName: "pencil.and.scribble") }.font(.caption).foregroundStyle(Color.pencil)
                 }
                 Text(report.preview)
                     .font(.system(.title3, design: .serif))
@@ -210,18 +218,18 @@ private struct LastDictationCard: View {
             }
         }
         if let error = app.dictation.lastError {
-            Banner(symbol: "exclamationmark.triangle.fill", message: error, actionTitle: "Open settings") { app.openPermissions() }
+            Banner(symbol: "exclamationmark.triangle.fill", message: "\(error)", actionTitle: "Open settings") { app.openPermissions() }
         }
     }
 
-    private func trailing(for report: DictationReport) -> String {
-        let outcome = switch report.outcome {
-        case "pasted": "Pasted"
-        case "clipboardOnly": "On clipboard"
-        default: report.outcome.capitalized
-        }
+    private func trailing(for report: DictationReport) -> LocalizedStringResource {
         let seconds = Double(report.stopToDelivery.components.attoseconds) / 1e18 + Double(report.stopToDelivery.components.seconds)
-        return "\(outcome) · \(String(format: "%.2f", seconds)) s after stop"
+        let time = seconds.formatted(.number.precision(.fractionLength(2)))
+        return switch report.outcome {
+        case "pasted": "Pasted · \(time) s after stop"
+        case "clipboardOnly": "On clipboard · \(time) s after stop"
+        default: "\(report.outcome.capitalized) · \(time) s after stop"
+        }
     }
 }
 
@@ -263,27 +271,5 @@ private struct StatsColumn: View {
         if minutes >= 60 { return "\(minutes / 60)h \(minutes % 60)m" }
         if minutes >= 1 { return "\(minutes)m" }
         return "\(Int(seconds))s"
-    }
-}
-
-/// Placeholder for sections arriving in later milestones.
-struct ComingSoonPage: View {
-    let title: String
-    let symbol: String
-    let message: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            PageHeader(title: title, subtitle: message)
-            Card {
-                HStack(spacing: 12) {
-                    Image(systemName: symbol).font(.largeTitle).foregroundStyle(Color.pencil)
-                    Text("Coming in a later milestone.").foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
-        }
-        .padding(24)
-        .frame(maxWidth: 980, alignment: .leading)
     }
 }

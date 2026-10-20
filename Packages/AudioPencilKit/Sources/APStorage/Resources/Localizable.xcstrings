@@ -1,0 +1,182 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ doesn't exist.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no existe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ n’existe pas."
+          }
+        }
+      }
+    },
+    "%@ was changed somewhere else.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ se cambió en otro sitio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a été modifié ailleurs."
+          }
+        }
+      }
+    },
+    "Couldn't read the server's folder listing.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la lista de carpetas del servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire la liste des dossiers du serveur."
+          }
+        }
+      }
+    },
+    "Sign-in timed out. Start again.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inicio de sesión caducó. Vuelve a empezar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion a expiré. Recommencez."
+          }
+        }
+      }
+    },
+    "That address doesn't look like a Nextcloud server.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa dirección no parece un servidor Nextcloud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette adresse ne ressemble pas à un serveur Nextcloud."
+          }
+        }
+      }
+    },
+    "The server didn't start a sign-in.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no inició el inicio de sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’a pas lancé la connexion."
+          }
+        }
+      }
+    },
+    "The server is in maintenance mode. Try again later.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor está en mantenimiento. Inténtalo más tarde."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur est en maintenance. Réessayez plus tard."
+          }
+        }
+      }
+    },
+    "The server rejected the sign-in. Sign in again.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó el inicio de sesión. Vuelve a iniciar sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé la connexion. Reconnectez-vous."
+          }
+        }
+      }
+    },
+    "The server returned an error (HTTP %lld).": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor devolvió un error (HTTP %lld)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a renvoyé une erreur (HTTP %lld)."
+          }
+        }
+      }
+    },
+    "The server's sign-in reply was unreadable.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La respuesta de inicio de sesión del servidor no se pudo leer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La réponse de connexion du serveur était illisible."
+          }
+        }
+      }
+    },
+    "The storage is full.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El almacenamiento está lleno."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le stockage est plein."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

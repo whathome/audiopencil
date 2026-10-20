@@ -1,0 +1,246 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Base (English)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base (inglés)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base (anglais)"
+          }
+        }
+      }
+    },
+    "Base (multilingual)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base (multilingüe)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base (multilingue)"
+          }
+        }
+      }
+    },
+    "Faster, less accurate": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más rápido, menos preciso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus rapide, moins précis"
+          }
+        }
+      }
+    },
+    "Fastest and lightest; occasionally invents details": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El más rápido y ligero; a veces inventa detalles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le plus rapide et léger ; invente parfois des détails"
+          }
+        }
+      }
+    },
+    "Fastest; for testing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El más rápido; para pruebas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le plus rapide ; pour les tests"
+          }
+        }
+      }
+    },
+    "Large v3 Turbo (multilingual)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large v3 Turbo (multilingüe)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large v3 Turbo (multilingue)"
+          }
+        }
+      }
+    },
+    "Lighter; can drop words, especially in Spanish": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más ligero; puede saltarse palabras, sobre todo en español"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus léger ; peut oublier des mots, surtout en espagnol"
+          }
+        }
+      }
+    },
+    "Recommended: far more accurate, about as fast; first use prepares for ~12 min": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recomendado: mucho más preciso y casi igual de rápido; el primer uso lo prepara (~12 min)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommandé : bien plus précis, presque aussi rapide ; la première utilisation prépare le modèle (~12 min)"
+          }
+        }
+      }
+    },
+    "Recommended: keeps up live on any Apple silicon Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recomendado: va en directo en cualquier Mac con Apple silicon"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommandé : suit en direct sur tout Mac Apple silicon"
+          }
+        }
+      }
+    },
+    "Recommended: most faithful to what you said": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recomendado: el más fiel a lo que dijiste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommandé : le plus fidèle à ce que vous avez dit"
+          }
+        }
+      }
+    },
+    "Slowest and heaviest on 8 GB": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El más lento y pesado con 8 GB"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le plus lent et le plus lourd avec 8 Go"
+          }
+        }
+      }
+    },
+    "Small (English)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small (inglés)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small (anglais)"
+          }
+        }
+      }
+    },
+    "Small (multilingual)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small (multilingüe)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small (multilingue)"
+          }
+        }
+      }
+    },
+    "Tends to add things you didn't say": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiende a añadir cosas que no dijiste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tendance à ajouter ce que vous n’avez pas dit"
+          }
+        }
+      }
+    },
+    "Tiny (English)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiny (inglés)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiny (anglais)"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

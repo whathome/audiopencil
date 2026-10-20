@@ -1,0 +1,38 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "The settings file has a YAML error: %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo de ajustes tiene un error de YAML: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier de réglages contient une erreur YAML : %@"
+          }
+        }
+      }
+    },
+    "The settings file has no ```yaml block.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo de ajustes no tiene un bloque ```yaml."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier de réglages n’a pas de bloc ```yaml."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,102 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ downloads last month": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ descargas el mes pasado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ téléchargements le mois dernier"
+          }
+        }
+      }
+    },
+    "Not a Hugging Face repository ID: %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No es un identificador de repositorio de Hugging Face: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce n’est pas un identifiant de dépôt Hugging Face : %@"
+          }
+        }
+      }
+    },
+    "The writing model %@ hasn't been downloaded.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de redacción %@ no se ha descargado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle de rédaction %@ n’a pas été téléchargé."
+          }
+        }
+      }
+    },
+    "The writing model isn't loaded.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de redacción no está cargado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle de rédaction n’est pas chargé."
+          }
+        }
+      }
+    },
+    "fits %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cabe en %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tient sur %@"
+          }
+        }
+      }
+    },
+    "released %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "publicado en %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sorti en %@"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

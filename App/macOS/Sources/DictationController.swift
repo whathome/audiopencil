@@ -31,9 +31,9 @@ enum RewriteError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .modelNotDownloaded: "The writing model isn't downloaded yet"
-        case .lowMemory: "Memory is low"
-        case .languageUnsupported(let language, let model): "\(model) can't write \(language)"
+        case .modelNotDownloaded: String(localized: "The writing model isn't downloaded yet")
+        case .lowMemory: String(localized: "Memory is low")
+        case .languageUnsupported(let language, let model): String(localized: "\(model) can't write \(language)")
         }
     }
 }
@@ -174,7 +174,7 @@ final class DictationController {
         guard phase == .idle else { return }
         guard microphoneGranted else {
             cues.play(.cancel)
-            indicator.flash(.error("Microphone access needed"))
+            indicator.flash(.error(String(localized: "Microphone access needed")))
             return
         }
 
@@ -200,7 +200,7 @@ final class DictationController {
                 )
             } catch {
                 if generation == self.generation {
-                    fail("Couldn't start the microphone: \(error.localizedDescription)")
+                    fail(String(localized: "Couldn't start the microphone: \(error.localizedDescription)"))
                 }
                 return
             }
@@ -354,19 +354,19 @@ final class DictationController {
                 var fallbackNote: String?
                 if !transcript.isEmpty, !style.isRaw {
                     indicator.rewriteProgress = 0
-                    indicator.show(.rewriting(style.name))
+                    indicator.show(.rewriting(style.displayName))
                     let indicator = self.indicator
                     let rewriteStart = ContinuousClock.now
                     do {
                         text = try await rewrite(transcript, style) { progress in indicator.rewriteProgress = progress }
                         rewriteDuration = ContinuousClock.now - rewriteStart
-                        if text.isEmpty { text = transcript; fallbackNote = "Rewrite came back empty; pasted raw" }
+                        if text.isEmpty { text = transcript; fallbackNote = String(localized: "Rewrite came back empty; pasted raw") }
                     } catch is CancellationError {
                         return
                     } catch {
                         guard generation == self.generation else { return }
                         Log.dictation.error("Rewrite failed: \(error.localizedDescription, privacy: .public)")
-                        fallbackNote = "\(error.localizedDescription); pasted raw"
+                        fallbackNote = String(localized: "\(error.localizedDescription); pasted raw")
                     }
                     guard generation == self.generation else { return }
                 }
@@ -399,7 +399,7 @@ final class DictationController {
                 let delivered = ContinuousClock.now
                 lastReport = DictationReport(
                     finishedAt: Date(),
-                    styleName: style.name,
+                    styleName: style.displayName,
                     audioSeconds: audioSeconds,
                     stopToText: textReady - stoppedAt,
                     stopToDelivery: delivered - stoppedAt,
@@ -413,7 +413,7 @@ final class DictationController {
                 Log.dictation.notice("Dictation \(outcome, privacy: .public) [\(style.name, privacy: .public)]: \(audioSeconds, format: .fixed(precision: 1))s audio, stop→text \(textReady - stoppedAt, privacy: .public), rewrite \(rewriteDuration.map { "\($0)" } ?? "–", privacy: .public), stop→paste \(delivered - stoppedAt, privacy: .public)")
             } catch {
                 if generation == self.generation {
-                    fail("Transcription failed: \(error.localizedDescription)")
+                    fail(String(localized: "Transcription failed: \(error.localizedDescription)"))
                 }
             }
             if generation == self.generation {
@@ -445,15 +445,15 @@ final class DictationController {
                 } else if dryRun {
                     Log.dictation.notice("Dry-run long-form [\(style.name, privacy: .public)]: \(transcript.count) characters")
                     onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds))
-                    indicator.flash(.notice("Long recording: making a note"), seconds: 2.5)
+                    indicator.flash(.notice(String(localized: "Long recording: making a note")), seconds: 2.5)
                 } else {
                     onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds))
-                    indicator.flash(.notice("Long recording: making a note"), seconds: 2.5)
+                    indicator.flash(.notice(String(localized: "Long recording: making a note")), seconds: 2.5)
                 }
                 if TranscriptCleaner.hasSpeech(transcript) { onLanguageUsed?(language, targetApp) }
                 Log.dictation.notice("Long-form recording handed off: \(audioSeconds, format: .fixed(precision: 0))s")
             } catch {
-                if generation == self.generation { fail("Transcription failed: \(error.localizedDescription)") }
+                if generation == self.generation { fail(String(localized: "Transcription failed: \(error.localizedDescription)")) }
             }
             if generation == self.generation {
                 phase = .idle

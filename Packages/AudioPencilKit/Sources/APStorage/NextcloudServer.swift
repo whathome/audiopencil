@@ -56,10 +56,10 @@ public enum NextcloudServer {
         request.timeoutInterval = 15
         let (data, response) = try await load(request, session: session)
         guard response.statusCode == 200, let status = try? JSONDecoder().decode(Status.self, from: data), status.installed else {
-            throw StorageError.invalidServer("That address doesn't look like a Nextcloud server.")
+            throw StorageError.invalidServer(String(localized: "That address doesn't look like a Nextcloud server.", bundle: .module))
         }
         if status.maintenance == true {
-            throw StorageError.invalidServer("The server is in maintenance mode. Try again later.")
+            throw StorageError.invalidServer(String(localized: "The server is in maintenance mode. Try again later.", bundle: .module))
         }
         return status
     }
@@ -77,7 +77,7 @@ public enum NextcloudServer {
             var login: URL
         }
         guard let body = try? JSONDecoder().decode(Body.self, from: data) else {
-            throw StorageError.invalidServer("The server didn't start a sign-in.")
+            throw StorageError.invalidServer(String(localized: "The server didn't start a sign-in.", bundle: .module))
         }
         return LoginStart(loginURL: body.login, pollEndpoint: body.poll.endpoint, token: body.poll.token)
     }
@@ -105,13 +105,13 @@ public enum NextcloudServer {
             }
             try await Task.sleep(for: interval)
         }
-        throw StorageError.invalidServer("Sign-in timed out. Start again.")
+        throw StorageError.invalidServer(String(localized: "Sign-in timed out. Start again.", bundle: .module))
     }
 
     static func parseCredentials(_ data: Data) throws -> Credentials {
         struct Body: Decodable { var server: String; var loginName: String; var appPassword: String }
         guard let body = try? JSONDecoder().decode(Body.self, from: data), let server = normalise(body.server) else {
-            throw StorageError.invalidServer("The server's sign-in reply was unreadable.")
+            throw StorageError.invalidServer(String(localized: "The server's sign-in reply was unreadable.", bundle: .module))
         }
         return Credentials(account: NextcloudAccount(server: server, loginName: body.loginName), appPassword: body.appPassword)
     }

@@ -4,6 +4,7 @@ name: AudioPencil
 
 options:
   bundleIdPrefix: com.weshopkins
+  developmentLanguage: en
   deploymentTarget:
     macOS: "15.0"
   createIntermediateGroups: true
@@ -55,6 +56,8 @@ targets:
         PRODUCT_MODULE_NAME: AudioPencil
         PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil
         ENABLE_HARDENED_RUNTIME: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
         ENABLE_APP_SANDBOX: NO
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

@@ -33,8 +33,8 @@ public enum AudioRecorderError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .noInputDevice: "No microphone is available."
-        case .unsupportedFormat(let format): "The microphone format isn't supported (\(format))."
+        case .noInputDevice: String(localized: "No microphone is available.", bundle: .module)
+        case .unsupportedFormat(let format): String(localized: "The microphone format isn't supported (\(format)).", bundle: .module)
         }
     }
 }

@@ -63,9 +63,9 @@ public enum WritingModelDiscovery {
             let fit = Double(bytes) / Double(machine.writingModelBudget) // bigger (within budget) writes better
             let score = popularity + 1.5 * recency + 2 * fit
             let reason = [
-                model.createdAt.map { "released \($0.formatted(.dateTime.month(.abbreviated).year()))" },
-                model.downloads.map { "\($0.formatted(.number.notation(.compactName))) downloads last month" },
-                "fits \(machine.summary)",
+                model.createdAt.map { String(localized: "released \($0.formatted(.dateTime.month(.abbreviated).year()))", bundle: .module) },
+                model.downloads.map { String(localized: "\($0.formatted(.number.notation(.compactName))) downloads last month", bundle: .module) },
+                String(localized: "fits \(machine.summary)", bundle: .module),
             ].compactMap { $0 }.joined(separator: " · ")
             let name = model.id.replacingOccurrences(of: "mlx-community/", with: "")
             return (ModelSuggestion(id: model.id, kind: .writing, name: name, sizeBytes: bytes, downloads: model.downloads, created: model.createdAt, reason: reason), score)

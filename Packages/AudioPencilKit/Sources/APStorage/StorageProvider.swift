@@ -35,12 +35,12 @@ public enum StorageError: LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .notFound(let path): "\(path) doesn't exist."
-        case .conflict(let path): "\(path) was changed somewhere else."
-        case .unauthorized: "The server rejected the sign-in. Sign in again."
-        case .storageFull: "The storage is full."
+        case .notFound(let path): String(localized: "\(path) doesn't exist.", bundle: .module)
+        case .conflict(let path): String(localized: "\(path) was changed somewhere else.", bundle: .module)
+        case .unauthorized: String(localized: "The server rejected the sign-in. Sign in again.", bundle: .module)
+        case .storageFull: String(localized: "The storage is full.", bundle: .module)
         case .invalidServer(let detail): detail
-        case .server(let status): "The server returned an error (HTTP \(status))."
+        case .server(let status): String(localized: "The server returned an error (HTTP \(status)).", bundle: .module)
         case .transport(let detail): detail
         }
     }

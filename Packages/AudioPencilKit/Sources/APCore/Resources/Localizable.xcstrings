@@ -1,0 +1,406 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Decision": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décision"
+          }
+        }
+      }
+    },
+    "Describe a place you know well to someone who has never been there.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe un lugar que conozcas bien a alguien que nunca ha estado allí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décrivez un endroit que vous connaissez bien à quelqu’un qui n’y est jamais allé."
+          }
+        }
+      }
+    },
+    "Describe something that broke or went wrong recently and how you worked it out.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta algo que se rompió o salió mal hace poco y cómo lo resolviste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Racontez une chose qui s’est cassée ou a mal tourné récemment, et comment vous l’avez résolue."
+          }
+        }
+      }
+    },
+    "Diary": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal"
+          }
+        }
+      }
+    },
+    "Double-tap Fn": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsar Fn dos veces"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toucher deux fois Fn"
+          }
+        }
+      }
+    },
+    "Explain to a smart, non-technical friend why you run your own server instead of using cloud services.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explica a un amigo listo pero no técnico por qué tienes tu propio servidor en vez de usar servicios en la nube."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expliquez à un ami curieux mais pas technicien pourquoi vous avez votre propre serveur au lieu d’utiliser des services cloud."
+          }
+        }
+      }
+    },
+    "Feedback": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avis"
+          }
+        }
+      }
+    },
+    "Give honest feedback on someone's idea or piece of work, kind but direct.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da una opinión sincera sobre la idea o el trabajo de alguien, amable pero directa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donnez un avis honnête sur l’idée ou le travail de quelqu’un, bienveillant mais franc."
+          }
+        }
+      }
+    },
+    "Instructions": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions"
+          }
+        }
+      }
+    },
+    "Lay out a decision you're weighing, the options, and which way you're leaning.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expón una decisión que estés valorando, las opciones y hacia cuál te inclinas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exposez une décision que vous pesez, les options, et vers laquelle vous penchez."
+          }
+        }
+      }
+    },
+    "Opinion": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinion"
+          }
+        }
+      }
+    },
+    "Pick a tool, product or habit you feel strongly about and argue for or against it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una herramienta, un producto o un hábito que te importe y defiéndelo o critícalo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un outil, un produit ou une habitude qui vous tient à cœur et défendez-le ou critiquez-le."
+          }
+        }
+      }
+    },
+    "Place": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lugar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lieu"
+          }
+        }
+      }
+    },
+    "Problem story": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historia de un problema"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récit d’un problème"
+          }
+        }
+      }
+    },
+    "Recap": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resumen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte rendu"
+          }
+        }
+      }
+    },
+    "Short messages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensajes cortos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages courts"
+          }
+        }
+      }
+    },
+    "Single tap Fn": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsar Fn una vez"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toucher une fois Fn"
+          }
+        }
+      }
+    },
+    "Summarise a recent conversation or meeting for someone who missed it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume una conversación o reunión reciente para alguien que se la perdió."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Résumez une conversation ou une réunion récente pour quelqu’un qui l’a manquée."
+          }
+        }
+      }
+    },
+    "Technical explanation": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicación técnica"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explication technique"
+          }
+        }
+      }
+    },
+    "Tell a colleague or client that something is running late, why, and what happens next.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuéntale a un compañero o cliente que algo va con retraso, por qué y qué pasará ahora."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annoncez à un collègue ou un client qu’une chose est en retard, pourquoi, et la suite."
+          }
+        }
+      }
+    },
+    "Transcript": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription"
+          }
+        }
+      }
+    },
+    "Work email": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo de trabajo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail professionnel"
+          }
+        }
+      }
+    },
+    "Write a few honest paragraphs about how today actually went.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe unos párrafos sinceros sobre cómo ha ido de verdad tu día."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez quelques paragraphes sincères sur la façon dont s’est vraiment passée votre journée."
+          }
+        }
+      }
+    },
+    "Write step-by-step instructions for a task you know well, around the house or on a computer.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe paso a paso cómo hacer algo que conozcas bien, en casa o en el ordenador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez les étapes d’une tâche que vous connaissez bien, à la maison ou sur ordinateur."
+          }
+        }
+      }
+    },
+    "Write three quick texts: making plans, turning something down, and thanking someone.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe tres mensajes rápidos: para quedar, para rechazar algo y para dar las gracias."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez trois messages rapides : pour fixer un rendez-vous, décliner quelque chose et remercier quelqu’un."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

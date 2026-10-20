@@ -21,7 +21,7 @@ struct WritingPage: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(enough ? "Like me is ready" : "Write \(InterviewPrompt.minimumSamples - count) more to turn on Like me")
                                 .font(.headline)
-                            Text("\(count) sample\(count == 1 ? "" : "s"). For each note, Like me shows the model your two closest samples. More variety means a better match.")
+                            Text("\(count) samples. For each note, Like me shows the model your two closest samples. More variety means a better match.")
                                 .font(.callout).foregroundStyle(.secondary)
                         }
                     }
@@ -64,7 +64,7 @@ struct WritingPage: View {
                     }
                     ForEach(own) { sample in
                         HStack {
-                            Text(sample.kind).font(.caption.weight(.semibold))
+                            Text(verbatim: InterviewPrompt.all.first { $0.kind == sample.kind }?.title ?? sample.kind).font(.caption.weight(.semibold))
                                 .padding(.horizontal, 7).padding(.vertical, 2)
                                 .background(Capsule().fill(Color.secondary.opacity(0.15)))
                             if app.isMultilingual {

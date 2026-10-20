@@ -13,8 +13,8 @@ public enum SummaryEngineError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .notDownloaded(let id): "The writing model \(id) hasn't been downloaded."
-        case .notLoaded: "The writing model isn't loaded."
+        case .notDownloaded(let id): String(localized: "The writing model \(id) hasn't been downloaded.", bundle: .module)
+        case .notLoaded: String(localized: "The writing model isn't loaded.", bundle: .module)
         }
     }
 }

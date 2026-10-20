@@ -1,0 +1,70 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "The transcription model %@ hasn't been downloaded.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de transcripción %@ no se ha descargado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle de transcription %@ n’a pas été téléchargé."
+          }
+        }
+      }
+    },
+    "The transcription model isn't loaded.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de transcripción no está cargado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle de transcription n’est pas chargé."
+          }
+        }
+      }
+    },
+    "more accurate English than your current model; supported on %@; may be slower to keep up live": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inglés más preciso que tu modelo actual; compatible con %@; puede costarle seguir en directo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "anglais plus précis que votre modèle actuel ; pris en charge sur %@ ; peut avoir du mal à suivre en direct"
+          }
+        }
+      }
+    },
+    "more accurate for your other languages; supported on %@; may be slower to keep up live": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "más preciso para tus otros idiomas; compatible con %@; puede costarle seguir en directo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus précis pour vos autres langues ; pris en charge sur %@ ; peut avoir du mal à suivre en direct"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

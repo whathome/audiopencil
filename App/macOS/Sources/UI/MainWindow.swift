@@ -4,7 +4,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
     case dictation, styles, writing, notes, vault, settings
     var id: Self { self }
 
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
         case .dictation: "Dictation"
         case .styles: "Styles"
@@ -161,7 +161,7 @@ private struct Sidebar: View {
                         .overlay(alignment: .topTrailing) { railBadge(page) }
                 } else {
                     HStack {
-                        Label(page.title, systemImage: page.symbol)
+                        Label { Text(page.title) } icon: { Image(systemName: page.symbol) }
                         Spacer()
                         badge(page)
                     }
@@ -175,14 +175,14 @@ private struct Sidebar: View {
         }
         .buttonStyle(.plain)
         .focusEffectDisabled() // the filled highlight already shows the selection
-        .help(rail ? page.title : "")
-        .accessibilityLabel(page.title) // the rail shows only the icon
-        .accessibilityValue(attentionDescription(page) ?? "")
+        .help(rail ? Text(page.title) : Text(verbatim: ""))
+        .accessibilityLabel(Text(page.title)) // the rail shows only the icon
+        .accessibilityValue(attentionDescription(page).map { Text($0) } ?? Text(verbatim: ""))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     /// What the badge or rail dot says, in words, for VoiceOver.
-    private func attentionDescription(_ page: Page) -> String? {
+    private func attentionDescription(_ page: Page) -> LocalizedStringResource? {
         switch page {
         case .notes where !app.notes.pending.isEmpty: "\(app.notes.pending.count) waiting for review"
         case .vault where !app.vault.settings.isConfigured: "Not set up"

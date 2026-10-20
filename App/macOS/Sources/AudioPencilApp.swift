@@ -15,7 +15,7 @@ struct AudioPencilApp: App {
             CommandGroup(after: .sidebar) {
                 Divider()
                 ForEach(Array(Page.allCases.enumerated()), id: \.element) { index, page in
-                    Button(page.title) { delegate.app.page = page }
+                    Button { delegate.app.page = page } label: { Text(page.title) }
                         .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
                 }
             }
@@ -44,7 +44,7 @@ private struct MenuBarContent: View {
 
     var body: some View {
         Text(statusText)
-        Button(app.dictation.phase == .recording ? "Stop Dictation" : "Start Dictation") {
+        Button(app.dictation.phase == .recording ? String(localized: "Stop Dictation") : String(localized: "Start Dictation")) {
             app.toggleDictation()
         }
         .disabled(app.dictation.phase == .starting || app.dictation.phase == .finishing)
@@ -58,7 +58,7 @@ private struct MenuBarContent: View {
         Button("Quit Audio Pencil") { NSApp.terminate(nil) }
     }
 
-    private var statusText: String {
+    private var statusText: LocalizedStringResource {
         switch app.dictation.phase {
         case .recording: "Recording…"
         case .starting, .finishing: "Working…"

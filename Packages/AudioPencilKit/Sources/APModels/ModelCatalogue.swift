@@ -9,17 +9,17 @@ public struct TranscriptionModelOption: Identifiable, Hashable, Sendable {
     public let approximateDownloadMB: Int
 
     public static let catalogue: [TranscriptionModelOption] = [
-        .init(id: "openai_whisper-small.en", name: "Small (English)", note: "Recommended: keeps up live on any Apple silicon Mac", approximateDownloadMB: 480),
-        .init(id: "openai_whisper-base.en", name: "Base (English)", note: "Faster, less accurate", approximateDownloadMB: 140),
-        .init(id: "openai_whisper-tiny.en", name: "Tiny (English)", note: "Fastest; for testing", approximateDownloadMB: 75),
+        .init(id: "openai_whisper-small.en", name: String(localized: "Small (English)", bundle: .module), note: String(localized: "Recommended: keeps up live on any Apple silicon Mac", bundle: .module), approximateDownloadMB: 480),
+        .init(id: "openai_whisper-base.en", name: String(localized: "Base (English)", bundle: .module), note: String(localized: "Faster, less accurate", bundle: .module), approximateDownloadMB: 140),
+        .init(id: "openai_whisper-tiny.en", name: String(localized: "Tiny (English)", bundle: .module), note: String(localized: "Fastest; for testing", bundle: .module), approximateDownloadMB: 75),
     ]
 
     /// Models for languages other than English (any Whisper language). Notes from
     /// docs/benchmarks/multilingual-whisper.md.
     public static let multilingualCatalogue: [TranscriptionModelOption] = [
-        .init(id: "openai_whisper-large-v3-v20240930_turbo_632MB", name: "Large v3 Turbo (multilingual)", note: "Recommended: far more accurate, about as fast; first use prepares for ~12 min", approximateDownloadMB: 632),
-        .init(id: "openai_whisper-small", name: "Small (multilingual)", note: "Lighter; can drop words, especially in Spanish", approximateDownloadMB: 480),
-        .init(id: "openai_whisper-base", name: "Base (multilingual)", note: "Faster, less accurate", approximateDownloadMB: 140),
+        .init(id: "openai_whisper-large-v3-v20240930_turbo_632MB", name: String(localized: "Large v3 Turbo (multilingual)", bundle: .module), note: String(localized: "Recommended: far more accurate, about as fast; first use prepares for ~12 min", bundle: .module), approximateDownloadMB: 632),
+        .init(id: "openai_whisper-small", name: String(localized: "Small (multilingual)", bundle: .module), note: String(localized: "Lighter; can drop words, especially in Spanish", bundle: .module), approximateDownloadMB: 480),
+        .init(id: "openai_whisper-base", name: String(localized: "Base (multilingual)", bundle: .module), note: String(localized: "Faster, less accurate", bundle: .module), approximateDownloadMB: 140),
     ]
 
     public static func option(for id: String) -> TranscriptionModelOption? {
@@ -36,10 +36,10 @@ public struct WritingModelOption: Identifiable, Hashable, Sendable {
     public let approximateDownloadGB: Double
 
     public static let catalogue: [WritingModelOption] = [
-        .init(id: "mlx-community/SmolLM3-3B-4bit", name: "SmolLM3 3B", note: "Recommended: most faithful to what you said", approximateDownloadGB: 1.7),
-        .init(id: "mlx-community/Qwen3.5-2B-4bit", name: "Qwen3.5 2B", note: "Fastest and lightest; occasionally invents details", approximateDownloadGB: 1.7),
-        .init(id: "mlx-community/Llama-3.2-3B-Instruct-4bit", name: "Llama 3.2 3B", note: "Tends to add things you didn't say", approximateDownloadGB: 1.8),
-        .init(id: "mlx-community/Qwen3-4B-4bit", name: "Qwen3 4B", note: "Slowest and heaviest on 8 GB", approximateDownloadGB: 2.3),
+        .init(id: "mlx-community/SmolLM3-3B-4bit", name: "SmolLM3 3B", note: String(localized: "Recommended: most faithful to what you said", bundle: .module), approximateDownloadGB: 1.7),
+        .init(id: "mlx-community/Qwen3.5-2B-4bit", name: "Qwen3.5 2B", note: String(localized: "Fastest and lightest; occasionally invents details", bundle: .module), approximateDownloadGB: 1.7),
+        .init(id: "mlx-community/Llama-3.2-3B-Instruct-4bit", name: "Llama 3.2 3B", note: String(localized: "Tends to add things you didn't say", bundle: .module), approximateDownloadGB: 1.8),
+        .init(id: "mlx-community/Qwen3-4B-4bit", name: "Qwen3 4B", note: String(localized: "Slowest and heaviest on 8 GB", bundle: .module), approximateDownloadGB: 2.3),
     ]
 
     public static func option(for id: String) -> WritingModelOption? {

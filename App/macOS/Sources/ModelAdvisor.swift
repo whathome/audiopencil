@@ -74,7 +74,7 @@ final class ModelAdvisor {
             defaults.set(lastChecked, forKey: "modelSuggestionsChecked")
             Log.models.notice("Model discovery: \(found.count) suggestions for \(self.machine.summary, privacy: .public)")
         } catch {
-            checkError = "Couldn't reach Hugging Face: \(error.localizedDescription)"
+            checkError = String(localized: "Couldn't reach Hugging Face: \(error.localizedDescription)")
         }
     }
 
@@ -123,11 +123,11 @@ final class ModelAdvisor {
         let candidate = SummaryEngine(modelID: suggestion.id)
         if !candidate.isDownloaded { try await candidate.download(progress: progress(suggestion.id)) }
         let cases: [(String, String, Style)] = [
-            ("Quick note → Polished", BenchmarkFixtures.lateReport, .polished),
-            ("Diary → Diary", BenchmarkFixtures.diary, .diary),
+            (String(localized: "Quick note → Polished"), BenchmarkFixtures.lateReport, .polished),
+            (String(localized: "Diary → Diary"), BenchmarkFixtures.diary, .diary),
         ]
         func run(_ engine: SummaryEngine, name: String) async throws -> [(String, Double)] {
-            trials[suggestion.id] = .testing("Loading \(name)…")
+            trials[suggestion.id] = .testing(String(localized: "Loading \(name)…"))
             try await app.coordinator.ensureLoaded(engine)
             var results: [(String, Double)] = []
             for (label, transcript, style) in cases {
@@ -150,12 +150,12 @@ final class ModelAdvisor {
     private func tryTranscription(_ suggestion: ModelSuggestion) async throws -> [TrialLine] {
         let candidate = WhisperEngine(variant: suggestion.id)
         if !candidate.isDownloaded { try await candidate.download(progress: progress(suggestion.id)) }
-        trials[suggestion.id] = .testing("Recording a test sentence…")
+        trials[suggestion.id] = .testing(String(localized: "Recording a test sentence…"))
         let script = BenchmarkFixtures.speechScript
         let samples = try await Self.synthesise(script)
 
         func run(_ engine: WhisperEngine, name: String) async throws -> (String, Double) {
-            trials[suggestion.id] = .testing(engine.needsFirstTimePreparation ? "Preparing \(name) for this Mac (first time, can take a few minutes)…" : "Loading \(name)…")
+            trials[suggestion.id] = .testing(engine.needsFirstTimePreparation ? String(localized: "Preparing \(name) for this Mac (first time, can take a few minutes)…") : String(localized: "Loading \(name)…"))
             try await app.coordinator.ensureLoaded(engine)
             trials[suggestion.id] = .testing("\(name): transcribing…")
             let start = ContinuousClock.now

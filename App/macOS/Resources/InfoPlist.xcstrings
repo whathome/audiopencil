@@ -1,0 +1,37 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "shouldTranslate": false
+    },
+    "CFBundleName": {
+      "shouldTranslate": false
+    },
+    "NSHumanReadableCopyright": {
+      "shouldTranslate": false
+    },
+    "NSMicrophoneUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil listens while you dictate and transcribes on this Mac. Audio never leaves the device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil te escucha mientras dictas y transcribe en este Mac. El audio nunca sale del dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil vous écoute pendant la dictée et transcrit sur ce Mac. L’audio ne quitte jamais l’appareil."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

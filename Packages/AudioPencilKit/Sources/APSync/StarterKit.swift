@@ -146,7 +146,7 @@ public enum StarterKit {
         """,
     ]
 
-    public static let guide = """
+    static let englishGuide = """
         ---
         type: audio-pencil-guide
         tags:
@@ -183,6 +183,7 @@ public enum StarterKit {
         | `duration` | Length of the recording in seconds. |
         | `device` | `mac` or `iphone`. |
         | `mode` | `quick` (hotkey dictation), `long-form`, or `meeting`. |
+        | `language` | The language spoken, for example `en`. |
         | `tags` | From your tag list in `Audio Pencil/Settings.md`. |
         | `retention` | `regular` (audio kept a year), `archive` (kept forever) or `delete` (removed next check). |
         | `audio` | Link to the recording in `Audio Pencil/Recordings` (long recordings only). |
@@ -209,64 +210,29 @@ public enum StarterKit {
 
         """
 
-    /// Sample notes. Fixed content, recorded "now" so they show up at the top of the board.
+    /// Sample notes, in the interface language. Fixed content, recorded "now" so they show up at the top
+    /// of the board.
     public static func samples(now: Date = Date(), device: String = "mac") -> [Note] {
+        let text = SampleText.current
         let diary = Note(
-            title: "Sample: a good day with a run along the river", styleID: "diary", status: .reviewed,
+            title: text.diaryTitle, styleID: "diary", status: .reviewed,
             recorded: now.addingTimeInterval(-3 * 86_400), duration: 74, device: device, mode: .longForm,
-            tags: ["sample"], folder: samplesFolder,
-            body: """
-                Today was actually a pretty good day. I got up early and went for a run along the river, which I \
-                hadn't done in two weeks, and it felt really good.
-
-                Work was mostly meetings. The server migration finally finished, so that's a weight off. In the \
-                afternoon I picked up the kids and we made pizza, and Maya put way too much cheese on hers, which \
-                was funny.
-
-                I'm a bit tired now, but in a good way. I want to keep the running going, maybe three times a week.
-                """
+            tags: ["sample"], folder: samplesFolder, language: text.language,
+            body: text.diaryBody
         )
         let professional = Note(
-            title: "Sample: backup plan for the home server", styleID: "professional", status: .reviewed,
+            title: text.professionalTitle, styleID: "professional", status: .reviewed,
             recorded: now.addingTimeInterval(-2 * 86_400), duration: 141, device: device, mode: .longForm,
-            tags: ["sample"], folder: samplesFolder,
-            body: """
-                The home server is backed up nightly to a drive in the same room, which won't survive a fire. \
-                I'm choosing between a drive swapped at my parents' place, encrypted backups to the Nextcloud box \
-                at the cottage, or paid cloud storage, and leaning towards the cottage because it's automatic.
-
-                **Key points**
-                - Current backups share a room with the server: no protection from fire or theft.
-                - Cottage upload is about 10 Mbps, so the first sync could take a week.
-                - I've never tested a restore.
-
-                **Action items**
-                - [ ] Set up the cottage sync this weekend.
-                - [ ] Ask Dave whether the cottage router can have a static IP.
-                - [ ] Test-restore the photos folder next week.
-                """,
-            transcript: """
-                So I've been thinking about the backup situation for the home server. Right now everything goes to, \
-                uh, the external drive every night, and that's fine, but it's in the same room, so if there's a fire \
-                or whatever, it's all gone. I'm leaning towards the cottage because it's automatic, but the upload \
-                there is slow, like ten megabits, so the first sync would take, I don't know, a week maybe. I should \
-                test restoring too, I've never actually restored anything, which is bad.
-                """
+            tags: ["sample"], folder: samplesFolder, language: text.language,
+            body: text.professionalBody,
+            transcript: text.professionalTranscript
         )
         let needsReview = Note(
-            title: "Sample: ideas for the quarterly planning", styleID: "professional", status: .needsReview,
+            title: text.reviewTitle, styleID: "professional", status: .needsReview,
             recorded: now.addingTimeInterval(-3_600), duration: 392, device: device, mode: .longForm,
-            tags: ["sample"], folder: samplesFolder,
-            body: """
-                For the quarter we should focus on three things: finishing the backup migration, shipping the new \
-                onboarding flow, and hiring a second support person before the summer.
-
-                **Key points**
-                - Backup migration is the risk to clear first.
-                - Onboarding changes depend on the new sign-up page.
-                - Support load justifies a second hire.
-                """,
-            transcript: "So for the quarterly planning, I think we should focus on three things…"
+            tags: ["sample"], folder: samplesFolder, language: text.language,
+            body: text.reviewBody,
+            transcript: text.reviewTranscript
         )
         return [diary, professional, needsReview]
     }

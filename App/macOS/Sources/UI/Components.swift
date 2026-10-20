@@ -7,8 +7,8 @@ extension Color {
 
 /// Rounded card used across the main window.
 struct Card<Content: View>: View {
-    var title: String?
-    var trailing: String?
+    var title: LocalizedStringResource?
+    var trailing: LocalizedStringResource?
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -33,11 +33,11 @@ struct Card<Content: View>: View {
 
 /// Small uppercase section label, like a card heading.
 struct SectionLabel: View {
-    let text: String
-    init(_ text: String) { self.text = text }
+    let text: LocalizedStringResource
+    init(_ text: LocalizedStringResource) { self.text = text }
 
     var body: some View {
-        Text(text.uppercased())
+        Text(String(localized: text).uppercased(with: .current))
             .font(.caption.weight(.semibold))
             .tracking(0.6)
             .foregroundStyle(.secondary)
@@ -46,7 +46,7 @@ struct SectionLabel: View {
 
 /// A keyboard key, drawn like a keycap.
 struct KeyCap: View {
-    let label: String
+    let label: LocalizedStringResource
     var symbol: String?
 
     var body: some View {
@@ -66,7 +66,7 @@ struct KeyCap: View {
 
 /// Selectable chip, e.g. which hotkeys are active.
 struct Chip: View {
-    let label: String
+    let label: LocalizedStringResource
     var symbol: String?
     var isOn: Bool
 
@@ -82,14 +82,14 @@ struct Chip: View {
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(isOn ? Color.pencil.opacity(0.18) : Color.clear))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(isOn ? Color.pencil.opacity(0.8) : Color.secondary.opacity(0.35), lineWidth: 0.5))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(label)
-        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityLabel(Text(label))
+        .accessibilityValue(isOn ? Text("On") : Text("Off"))
     }
 }
 
 /// Small coloured status pill.
 struct StatusBadge: View {
-    let text: String
+    let text: LocalizedStringResource
     let color: Color
     var showsProgress = false
 
@@ -112,9 +112,9 @@ struct StatusBadge: View {
 
 /// Stat tile for the right-hand column.
 struct StatTile<Detail: View>: View {
-    let label: String
+    let label: LocalizedStringResource
     let value: String
-    var unit: String?
+    var unit: LocalizedStringResource?
     var accent = false
     @ViewBuilder var detail: Detail
 
@@ -122,7 +122,7 @@ struct StatTile<Detail: View>: View {
         VStack(alignment: .leading, spacing: 4) {
             SectionLabel(label)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(value)
+                Text(verbatim: value)
                     .font(.system(.title, design: .rounded).weight(.semibold)) // supporting figures, not the page's headline
                     .foregroundStyle(accent ? Color.pencil : Color.primary)
                     .contentTransition(.numericText())
@@ -141,7 +141,7 @@ struct StatTile<Detail: View>: View {
 }
 
 extension StatTile where Detail == EmptyView {
-    init(label: String, value: String, unit: String? = nil, accent: Bool = false) {
+    init(label: LocalizedStringResource, value: String, unit: LocalizedStringResource? = nil, accent: Bool = false) {
         self.init(label: label, value: value, unit: unit, accent: accent) { EmptyView() }
     }
 }
@@ -158,21 +158,21 @@ struct ActivityGrid: View {
                 RoundedRectangle(cornerRadius: 3.5, style: .continuous)
                     .fill(count == 0 ? Color.secondary.opacity(0.15) : Color.pencil.opacity(0.35 + 0.65 * Double(count) / Double(peak)))
                     .frame(width: 14, height: 14)
-                    .help("\(days[index].date.formatted(date: .abbreviated, time: .omitted)): \(count) dictation\(count == 1 ? "" : "s")")
+                    .help(Text("\(days[index].date.formatted(date: .abbreviated, time: .omitted)): \(count) dictations"))
             }
         }
         .frame(width: 7 * 14 + 6 * 5, alignment: .leading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Activity over the last five weeks")
-        .accessibilityValue("Dictated on \(days.filter { $0.count > 0 }.count) of \(days.count) days")
+        .accessibilityLabel(Text("Activity over the last five weeks"))
+        .accessibilityValue(Text("Dictated on \(days.filter { $0.count > 0 }.count) of \(days.count) days"))
     }
 }
 
 /// Orange call-to-action strip shown when setup is incomplete.
 struct Banner: View {
     let symbol: String
-    let message: String
-    let actionTitle: String
+    let message: LocalizedStringResource
+    let actionTitle: LocalizedStringResource
     let action: () -> Void
 
     var body: some View {
@@ -180,7 +180,7 @@ struct Banner: View {
             Image(systemName: symbol).foregroundStyle(.orange)
             Text(message).font(.callout)
             Spacer()
-            Button(actionTitle, action: action)
+            Button(action: action) { Text(actionTitle) }
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.orange.opacity(0.12)))

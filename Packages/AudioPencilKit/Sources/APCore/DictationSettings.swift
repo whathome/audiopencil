@@ -7,8 +7,8 @@ public enum StopGesture: String, Codable, CaseIterable, Sendable {
 
     public var label: String {
         switch self {
-        case .singleTapFn: "Single tap Fn"
-        case .doubleTapFn: "Double-tap Fn"
+        case .singleTapFn: String(localized: "Single tap Fn", bundle: .module)
+        case .doubleTapFn: String(localized: "Double-tap Fn", bundle: .module)
         }
     }
 }

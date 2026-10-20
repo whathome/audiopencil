@@ -28,7 +28,7 @@ struct SetupView: View {
                 PermissionRow(
                     title: "Fn key free",
                     detail: app.permissions.fnKeyIsFree
-                        ? "“Press 🌐 key to” is set to Do Nothing."
+                        ? "“Press 🌐 key to” is set to Do Nothing." as LocalizedStringResource
                         : "“Press 🌐 key to” is set to \(app.permissions.fnKeyActionDescription). Set it to Do Nothing so double-tapping Fn doesn't also trigger that. Also make sure the Dictation shortcut isn't “Press 🌐 twice”.",
                     granted: app.permissions.fnKeyIsFree,
                     action: ("Keyboard Settings…", { app.permissions.openKeyboardSettings() })
@@ -94,9 +94,9 @@ struct SetupView: View {
     }
 
     private var stopDescription: String {
-        var parts = [app.settings.stopGesture.label]
-        if app.settings.returnStops { parts.append("Return") }
-        return parts.joined(separator: " or ")
+        app.settings.returnStops
+            ? String(localized: "\(app.settings.stopGesture.label) or Return")
+            : app.settings.stopGesture.label
     }
 
     @ViewBuilder
@@ -124,10 +124,10 @@ struct SetupView: View {
 }
 
 private struct PermissionRow: View {
-    let title: String
-    let detail: String
+    let title: LocalizedStringResource
+    let detail: LocalizedStringResource
     let granted: Bool
-    let action: (String, () -> Void)
+    let action: (LocalizedStringResource, () -> Void)
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -139,7 +139,7 @@ private struct PermissionRow: View {
             }
             Spacer()
             if !granted {
-                Button(action.0, action: action.1)
+                Button(action: action.1) { Text(action.0) }
             }
         }
     }

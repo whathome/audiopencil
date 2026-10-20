@@ -9,8 +9,8 @@ public enum WhisperEngineError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .notDownloaded(let variant): "The transcription model \(variant) hasn't been downloaded."
-        case .notLoaded: "The transcription model isn't loaded."
+        case .notDownloaded(let variant): String(localized: "The transcription model \(variant) hasn't been downloaded.", bundle: .module)
+        case .notLoaded: String(localized: "The transcription model isn't loaded.", bundle: .module)
         }
     }
 }

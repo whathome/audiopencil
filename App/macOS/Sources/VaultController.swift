@@ -76,7 +76,7 @@ final class VaultController {
     /// Login Flow v2: Nextcloud opens in the browser; approving there hands back an app password.
     func signInWithBrowser() {
         guard let server = NextcloudServer.normalise(serverText) else {
-            connection = .failed("Enter your Nextcloud address, like cloud.example.com.")
+            connection = .failed(String(localized: "Enter your Nextcloud address, like cloud.example.com."))
             return
         }
         signInTask?.cancel()
@@ -101,7 +101,7 @@ final class VaultController {
     /// Manual alternative: an app password created under Settings › Security › Devices & sessions.
     func signIn(user: String, appPassword: String) {
         guard let server = NextcloudServer.normalise(serverText) else {
-            connection = .failed("Enter your Nextcloud address, like cloud.example.com.")
+            connection = .failed(String(localized: "Enter your Nextcloud address, like cloud.example.com."))
             return
         }
         let credentials = NextcloudServer.Credentials(
@@ -222,8 +222,8 @@ final class VaultController {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Use as vault"
-        panel.message = "Choose your Obsidian vault folder (the one that contains .obsidian)."
+        panel.prompt = String(localized: "Use as vault")
+        panel.message = String(localized: "Choose your Obsidian vault folder (the one that contains .obsidian).")
         panel.directoryURL = resolvedLocalFolder ?? LocalFolderStorage.obsidianICloudFolder ?? FileManager.default.homeDirectoryForCurrentUser
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }

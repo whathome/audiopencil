@@ -241,12 +241,12 @@ final class IndicatorPanelController: NSObject {
         guard let content = panel.contentView, openMenu == nil else { return }
         let menu = NSMenu()
         menu.autoenablesItems = false
-        let header = NSMenuItem(title: "Deliver this dictation as", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: String(localized: "Deliver this dictation as"), action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         for style in model.styleChoices {
             let item = NSMenuItem(
-                title: style.isRaw ? "Raw transcript" : style.name,
+                title: style.displayName,
                 action: #selector(choose(_:)),
                 keyEquivalent: style.shortcut.map(String.init) ?? ""
             )
@@ -259,7 +259,7 @@ final class IndicatorPanelController: NSObject {
         if model.mode == .listening, model.showsLanguage {
             // One language per recording: switching transcribes what you've said again in the new one.
             menu.addItem(.separator())
-            let languageHeader = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
+            let languageHeader = NSMenuItem(title: String(localized: "Language"), action: nil, keyEquivalent: "")
             languageHeader.isEnabled = false
             menu.addItem(languageHeader)
             for language in model.languageChoices {
@@ -271,7 +271,7 @@ final class IndicatorPanelController: NSObject {
             }
         }
         menu.addItem(.separator())
-        let tip = NSMenuItem(title: "Tip: press the number while you talk", action: nil, keyEquivalent: "")
+        let tip = NSMenuItem(title: String(localized: "Tip: press the number while you talk"), action: nil, keyEquivalent: "")
         tip.isEnabled = false
         menu.addItem(tip)
 
@@ -356,14 +356,14 @@ struct IndicatorView: View {
                 }
             case .rewriting(let name):
                 Image(systemName: "pencil.and.scribble")
-                Text(name).font(.callout.weight(.medium))
+                Text(verbatim: name).font(.callout.weight(.medium))
                 ProgressView(value: model.rewriteProgress)
                     .progressViewStyle(.linear)
                     .tint(Color.accentColor)
                     .frame(width: 90)
             case .preparingModel(let firstTime):
                 ProgressView().controlSize(.small).tint(.white)
-                Text(firstTime ? "Preparing the model for this Mac (first time only, up to 15 min)…" : "Preparing model…").font(.callout)
+                Text(firstTime ? "Preparing the model for this Mac (first time only, up to 15 min)…" as LocalizedStringResource : "Preparing model…").font(.callout)
             case .processing:
                 ProgressView().controlSize(.small).tint(.white)
             case .clipboard:
@@ -374,10 +374,10 @@ struct IndicatorView: View {
                 Text("Nothing heard").font(.callout)
             case .notice(let message):
                 Image(systemName: "doc.badge.clock")
-                Text(message).font(.callout).lineLimit(1)
+                Text(verbatim: message).font(.callout).lineLimit(1)
             case .error(let message):
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
-                Text(message).font(.callout).lineLimit(1)
+                Text(verbatim: message).font(.callout).lineLimit(1)
             }
         }
         .padding(.horizontal, 14)
@@ -426,17 +426,17 @@ private struct StyleChip: View {
         .background(Capsule().fill(fill))
         .foregroundStyle(style.isRaw ? Color.white : Color.black.opacity(0.8))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Style: \(name)")
+        .accessibilityLabel(Text("Style: \(name)"))
         .accessibilityHint(hint)
         .accessibilityAddTraits(.isButton)
     }
 
-    private var name: String { style.isRaw ? "Raw" : style.name }
+    private var name: String { style.shortDisplayName }
     private var fill: Color { style.isRaw ? Color.white.opacity(0.18) : Color.accentColor.opacity(0.9) }
     private var badgeFill: Color { style.isRaw ? Color.white.opacity(0.18) : Color.black.opacity(0.14) }
     private var hint: String {
-        if let shortcut = style.shortcut { return "Number key \(shortcut). Click to choose another style." }
-        return "Click to choose another style."
+        if let shortcut = style.shortcut { return String(localized: "Number key \(shortcut). Click to choose another style.") }
+        return String(localized: "Click to choose another style.")
     }
 }
 
@@ -511,7 +511,7 @@ private struct PickerRow: View {
                         .font(.caption2.monospacedDigit().weight(.bold))
                         .frame(width: 15, height: 15)
                         .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.18)))
-                    Text(style.isRaw ? "Raw" : style.name).font(.callout)
+                    Text(verbatim: style.shortDisplayName).font(.callout)
                 }
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)

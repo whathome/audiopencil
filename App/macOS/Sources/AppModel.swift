@@ -111,13 +111,13 @@ final class AppModel {
 
     /// Device name only, for tight spaces.
     var microphoneShortName: String {
-        currentMicrophone?.name ?? MicrophoneCatalog.systemDefault(among: microphones)?.name ?? "System default"
+        currentMicrophone?.name ?? MicrophoneCatalog.systemDefault(among: microphones)?.name ?? String(localized: "System default")
     }
 
     var currentMicrophoneName: String {
         if let currentMicrophone { return currentMicrophone.name }
         let fallback = MicrophoneCatalog.systemDefault(among: microphones)?.name ?? "unknown"
-        return "System default (\(fallback))"
+        return String(localized: "System default (\(fallback))")
     }
 
     @ObservationIgnored let coordinator = ModelCoordinator()
@@ -390,7 +390,7 @@ final class AppModel {
     /// Writes the main window (including title bar) to Application Support/AudioPencil/Debug/snapshot.png,
     /// so UI changes can be checked without screen-recording permission.
     private func snapshotMainWindow() {
-        if let review = NSApp.windows.first(where: { $0.isVisible && $0.title == "Review note" }),
+        if let review = NSApp.windows.first(where: { $0.isVisible && $0.identifier?.rawValue == "review" }),
            let view = review.contentView?.superview, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
             view.cacheDisplay(in: view.bounds, to: rep)
             let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Debug")
