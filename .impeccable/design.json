@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T02:11:59.053410+00:00",
+  "title": "Design System: Audio Pencil",
+  "extensions": {
+    "colorMeta": {
+      "pencil-amber": {
+        "role": "primary",
+        "displayName": "Pencil Amber",
+        "canonical": "AccentColor asset, light appearance (sRGB 0.729, 0.459, 0.090)",
+        "tonalRamp": [
+          "oklch(15% 0.063 65)",
+          "oklch(25% 0.105 65)",
+          "oklch(35% 0.14 65)",
+          "oklch(48% 0.14 65)",
+          "oklch(60% 0.14 65)",
+          "oklch(72% 0.14 65)",
+          "oklch(84% 0.105 65)",
+          "oklch(95% 0.063 65)"
+        ]
+      },
+      "pencil-amber-dark": {
+        "role": "primary",
+        "displayName": "Pencil Amber (dark appearance)",
+        "canonical": "AccentColor asset, dark appearance (sRGB 0.937, 0.624, 0.153)",
+        "tonalRamp": [
+          "oklch(15% 0.068 70)",
+          "oklch(25% 0.112 70)",
+          "oklch(35% 0.15 70)",
+          "oklch(48% 0.15 70)",
+          "oklch(60% 0.15 70)",
+          "oklch(72% 0.15 70)",
+          "oklch(84% 0.112 70)",
+          "oklch(95% 0.068 70)"
+        ]
+      },
+      "window-ground": {
+        "role": "neutral",
+        "displayName": "Window Ground",
+        "canonical": "System window background (dark rendering sampled)",
+        "tonalRamp": [
+          "oklch(15% 0.0 0)",
+          "oklch(25% 0.0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0.0 0)",
+          "oklch(95% 0.0 0)"
+        ]
+      },
+      "card-surface": {
+        "role": "neutral",
+        "displayName": "Card Surface",
+        "canonical": "background.secondary (dark rendering sampled)",
+        "tonalRamp": [
+          "oklch(15% 0.0 0)",
+          "oklch(25% 0.0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0.0 0)",
+          "oklch(95% 0.0 0)"
+        ]
+      },
+      "pill-ink": {
+        "role": "neutral",
+        "displayName": "Pill Ink",
+        "canonical": "black at 82% opacity, both appearances"
+      },
+      "status-ready": {
+        "role": "status",
+        "displayName": "Ready Green",
+        "canonical": "systemGreen"
+      },
+      "status-attention": {
+        "role": "status",
+        "displayName": "Attention Orange",
+        "canonical": "systemOrange"
+      },
+      "status-error": {
+        "role": "status",
+        "displayName": "Error Red",
+        "canonical": "systemRed"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles, one per page."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Sheet and walkthrough titles."
+      },
+      "written": {
+        "displayName": "Written",
+        "purpose": "The user's words: last dictation, note preview, writing samples."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "The one sentence under a page title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Item names inside cards."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Form rows and values."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "Descriptions and explanations, secondary colour."
+      },
+      "label": {
+        "displayName": "Card Label",
+        "purpose": "Uppercase card heading; the card's only heading."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Stat values and numbers; supporting, never headline."
+      }
+    },
+    "shadows": [
+      {
+        "name": "keycap-edge",
+        "value": "0 1px 0 rgba(0,0,0,0.12)",
+        "purpose": "The physical bottom edge of a keycap. The only shadow in the window."
+      }
+    ],
+    "motion": [
+      {
+        "name": "rail-toggle",
+        "value": "easeInOut 0.18s",
+        "purpose": "Sidebar collapsing to the icon rail."
+      },
+      {
+        "name": "pill-state",
+        "value": "easeOut 0.12s",
+        "purpose": "Recording pill switching state."
+      },
+      {
+        "name": "level-meter",
+        "value": "linear 0.08s",
+        "purpose": "Mic level bars following the voice."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "rail",
+        "value": "760px",
+        "purpose": "Below this window width the sidebar becomes an icon rail."
+      },
+      {
+        "name": "window-min",
+        "value": "520px",
+        "purpose": "Minimum window width."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "nav-item-selected",
+      "description": "Sidebar row; the selected page fills Pencil Amber.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item is-selected\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\"><rect x=\"1.5\" y=\"4\" width=\"13\" height=\"8\" rx=\"1.5\"/><path d=\"M4 7h1M7 7h1M10 7h1M5 9.5h6\"/></svg>Dictation</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\"><path d=\"M3 13l2-5 6-6 3 3-6 6z\"/></svg>Styles</a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:200px;padding:10px;background:#3a3a3a;font:13px -apple-system,system-ui,sans-serif}.ds-nav-item{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;border-radius:7px;color:rgba(255,255,255,.85);text-decoration:none}.ds-nav-item:hover{background:rgba(255,255,255,.06)}.ds-nav-item:focus-visible{outline:2px solid #EF9F27;outline-offset:1px}.ds-nav-item.is-selected{background:#EF9F27;color:#fff}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Groups one thing; uppercase label heading, tonal fill, hairline edge, no shadow.",
+      "html": "<section class=\"ds-card\"><header class=\"ds-card-label\">Last dictation</header><p class=\"ds-written\">Meet Dave at the cottage on Saturday and bring the spare drive.</p></section>",
+      "css": ".ds-card{background:#2D2D2D;border:.5px solid rgba(84,84,88,.6);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;color:rgba(255,255,255,.88);max-width:520px}.ds-card-label{font:600 10px -apple-system,system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:rgba(235,235,245,.6)}.ds-written{margin:0;font:15px/1.45 'New York',ui-serif,Georgia,serif}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Bordered prominent, Pencil Amber; once per decision.",
+      "html": "<button class=\"ds-btn-primary\">Open board</button>",
+      "css": ".ds-btn-primary{background:#EF9F27;color:#fff;border:none;border-radius:6px;padding:3px 10px;font:13px -apple-system,system-ui,sans-serif;cursor:default}.ds-btn-primary:hover{filter:brightness(1.06)}.ds-btn-primary:active{filter:brightness(.92)}.ds-btn-primary:focus-visible{outline:3px solid rgba(239,159,39,.5);outline-offset:1px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Standard bordered macOS button.",
+      "html": "<button class=\"ds-btn-secondary\">How it works</button>",
+      "css": ".ds-btn-secondary{background:rgba(255,255,255,.16);color:rgba(255,255,255,.9);border:none;border-radius:6px;padding:3px 10px;font:13px -apple-system,system-ui,sans-serif;box-shadow:0 .5px 0 rgba(0,0,0,.25)}.ds-btn-secondary:hover{background:rgba(255,255,255,.2)}.ds-btn-secondary:active{background:rgba(255,255,255,.26)}.ds-btn-secondary:focus-visible{outline:3px solid rgba(239,159,39,.5);outline-offset:1px}"
+    },
+    {
+      "name": "Hotkey Chip",
+      "kind": "chip",
+      "refersTo": "chip-on",
+      "description": "Shows which hotkeys are active.",
+      "html": "<span class=\"ds-chip is-on\">Fn</span><span class=\"ds-chip\">⌃⌥ Space</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:5px;margin-right:8px;padding:6px 12px;border-radius:8px;font:500 12px -apple-system,system-ui,sans-serif;color:rgba(235,235,245,.6);border:.5px solid rgba(235,235,245,.35)}.ds-chip.is-on{color:rgba(255,255,255,.9);background:rgba(239,159,39,.18);border-color:rgba(239,159,39,.8)}"
+    },
+    {
+      "name": "Keycap",
+      "kind": "custom",
+      "refersTo": "keycap",
+      "description": "Signature: how the app teaches its hotkeys.",
+      "html": "<span class=\"ds-key\">fn</span><span class=\"ds-key\">fn</span><span class=\"ds-key\">⏎ return</span>",
+      "css": ".ds-key{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;margin-right:4px;border-radius:6px;background:#252525;border:.5px solid rgba(84,84,88,1);box-shadow:0 1px 0 rgba(0,0,0,.12);font:500 12px ui-rounded,'SF Pro Rounded',system-ui,sans-serif;color:rgba(255,255,255,.88);white-space:nowrap}"
+    },
+    {
+      "name": "Recording Pill",
+      "kind": "custom",
+      "refersTo": "recording-pill",
+      "description": "Signature: the floating indicator, with level meter, clock and style chip.",
+      "html": "<div class=\"ds-pill\"><span class=\"ds-bars\"><i style=\"height:6px\"></i><i style=\"height:12px\"></i><i style=\"height:18px\"></i><i style=\"height:9px\"></i><i style=\"height:5px\"></i><i style=\"height:4px\"></i></span><span class=\"ds-clock\">Note in 0:25</span><span class=\"ds-style-chip\"><b>1</b>Polished<svg width=\"8\" height=\"8\" viewBox=\"0 0 8 8\"><path d=\"M1 5.5L4 2.5 7 5.5\" stroke=\"currentColor\" stroke-width=\"1.6\" fill=\"none\"/></svg></span></div>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:9999px;background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.12);color:#fff;font:-apple-system,system-ui,sans-serif}.ds-bars{display:flex;align-items:center;gap:3px;height:22px}.ds-bars i{display:block;width:3px;border-radius:2px;background:rgba(255,255,255,.9)}.ds-clock{font:500 10px -apple-system,system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#EF9F27}.ds-style-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 4px;border-radius:9999px;background:rgba(239,159,39,.9);color:rgba(0,0,0,.8);font:600 10px -apple-system,system-ui,sans-serif}.ds-style-chip b{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:rgba(0,0,0,.14);font-variant-numeric:tabular-nums}.ds-style-chip:hover{background:#EF9F27}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge-ready",
+      "description": "Capsule status with a dot; colour always paired with a word.",
+      "html": "<span class=\"ds-badge\"><i></i>Ready</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:9999px;background:rgba(50,215,75,.14);color:#32D74B;font:500 10px -apple-system,system-ui,sans-serif}.ds-badge i{width:6px;height:6px;border-radius:50%;background:currentColor}"
+    },
+    {
+      "name": "Banner",
+      "kind": "custom",
+      "refersTo": "banner",
+      "description": "Orange call to action when setup is incomplete.",
+      "html": "<div class=\"ds-banner\"><span class=\"ds-banner-icon\">!</span><span>Finish setup so the Fn key can start dictation.</span><button class=\"ds-btn-secondary\">Finish setup</button></div>",
+      "css": ".ds-banner{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;background:rgba(255,159,10,.12);border:.5px solid rgba(255,159,10,.35);color:rgba(255,255,255,.88);font:12px -apple-system,system-ui,sans-serif;max-width:560px}.ds-banner span:nth-child(2){flex:1}.ds-banner-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#FF9F0A;color:#000;font-weight:700;font-size:11px}.ds-btn-secondary{background:rgba(255,255,255,.16);color:rgba(255,255,255,.9);border:none;border-radius:6px;padding:3px 10px;font:13px -apple-system,system-ui,sans-serif}.ds-btn-secondary:hover{background:rgba(255,255,255,.2)}.ds-btn-secondary:focus-visible{outline:3px solid rgba(239,159,39,.5)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Pencil in the Margin",
+    "overview": "**Creative North Star: \"The Pencil in the Margin\"**\n\nAudio Pencil works in the margins. Its real interface is a hotkey and a small floating pill. Its job is done when your words land in someone else's app. The main window is where you configure and check things, not where you spend time, so it uses plain native macOS and saves its character for two marks: **Pencil Amber**, the trace the pencil leaves, and the **New York serif**, used for the written word. Everything else is a standard Mac control.\n\nDensity is calm and comfortable: generous 24 pt page margins, cards that group one thing each, and forms that read like System Settings. Depth comes from tonal layers, not shadows, so the window sits flat and quiet. The recording pill is the only element that floats, because it's the only one that has to sit above other apps.\n\nThe system rejects two looks outright. It must not look like a **SaaS dashboard** (rows of identical metric tiles and charts), and it must not look like **a web app on a Mac** (custom buttons, made-up navigation, hover-only actions). Where a stat or a card appears, it serves a decision. Where a control appears, it's the one macOS would use.",
+    "keyCharacteristics": [
+      "Native macOS controls, materials and semantic colours; brand shows through tint, type and a few signature components.",
+      "One accent, Pencil Amber, used sparingly for selection, primary actions and the pencil's own marks.",
+      "Serif for titles and for the user's words; SF for everything you operate.",
+      "Flat, tonal layers with hairline edges; nothing in the window casts a shadow.",
+      "Keycaps teach the hotkeys wherever gestures are explained."
+    ],
+    "rules": [
+      {
+        "name": "The Pencil Mark Rule",
+        "body": "Pencil Amber marks what is selected, primary or written by the pencil. It is never decoration, never a background wash behind content, and never more than a small fraction of any screen.",
+        "section": "colors"
+      },
+      {
+        "name": "The System Colour Rule",
+        "body": "Neutrals and status colours are the system's semantic colours, so Dark Mode and Increase Contrast work for free. Hex values in this file are reference renderings; code uses semantic colours.",
+        "section": "colors"
+      },
+      {
+        "name": "The Written Word Rule",
+        "body": "Serif is for titles and for what the user said or wrote. A control, label or system message in serif is wrong; a dictation preview in SF is also wrong.",
+        "section": "typography"
+      },
+      {
+        "name": "The System Size Rule",
+        "body": "Use system text styles (`.headline`, `.callout`, `.caption`) rather than point sizes, so text follows the platform's sizing. Fixed sizes are limited to the display title, headlines and the figure style.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Edge Rule",
+        "body": "Every page title, card and form section starts at the same 24 pt leading edge. A centred form or a page that starts elsewhere breaks the window into separate apps.",
+        "section": "layout"
+      },
+      {
+        "name": "The Two Containers Rule",
+        "body": "Preferences live in grouped forms; status and content live in cards. A toggle inside a card is a sign the setting belongs in Settings. The one exception is the Vault page's connection steps (storage, account, folder), which form a setup flow and stay in cards.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Window Rule",
+        "body": "Window content never casts a shadow. If something needs to stand apart, it gets a tonal step and a hairline, not a lift.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use native macOS controls and grouped forms for anything configurable, pinned to the 24 pt page edge.",
+      "**Do** reserve Pencil Amber for selection, primary actions and the pencil's own marks (the style chip, the long-form warning).",
+      "**Do** set the user's words in New York; set everything you operate in SF.",
+      "**Do** use system semantic colours and text styles so Dark Mode, Increase Contrast and text size work without extra code.",
+      "**Do** show hotkeys as keycaps, and give every keycap group a spoken label (\"Double-tap Fn\").",
+      "**Do** pair every status colour with a word or symbol."
+    ],
+    "donts": [
+      "**Don't** make it look like a SaaS dashboard: no rows of identical metric tiles, charts or KPI hero numbers leading a page. Figures support; they never headline.",
+      "**Don't** make it look like a web app on a Mac: no custom-drawn buttons, made-up navigation, hover-only actions or web-style link colours for primary actions.",
+      "**Don't** add shadows to window content; use a tonal step and a hairline.",
+      "**Don't** put toggles or settings inside content cards; they belong in Settings (the Vault connection flow is the one exception).",
+      "**Don't** centre forms or start a page anywhere but the shared leading edge.",
+      "**Don't** use Pencil Amber as a background wash, gradient or decorative fill."
+    ]
+  }
+}
