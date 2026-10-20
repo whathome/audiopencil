@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 6 (Like me, model discovery, retention). Phase 1 (Mac) feature-complete; phase 2 (iPhone) next. Milestone 5 (notes in Obsidian): Long recordings become reviewed notes with audio in your vault; a Bases board, guide and sample notes are created on first run. Milestone 4 (vault and sync): Connect your Obsidian vault on Nextcloud or in a folder on this Mac (e.g. iCloud Drive); styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` in the vault. Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
+**Status:** milestone 8 (guided setup, storage without Obsidian, models ready in the background). Phase 1 (Mac) is feature-complete in English, French and Spanish; phase 2 (iPhone) is next. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or this Mac, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
 
 ## Build and run
 
@@ -28,14 +28,18 @@ Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new
 
 ### First run
 
-The main window is a setup checklist:
+On a Mac that has never run Audio Pencil, a setup window opens instead of the main window. It has six steps:
 
-- **Microphone**: needed to record.
-- **Accessibility**: needed to watch the Fn key and to paste. After granting it, the hotkey starts within a second without a relaunch.
-- **Fn key free**: System Settings › Keyboard › "Press 🌐 key to" must be **Do Nothing**, and the Dictation shortcut must not be "Press 🌐 twice". Otherwise macOS acts on the same key.
-- **Model**: the first launch downloads Whisper small.en (~480 MB) to `~/Library/Application Support/AudioPencil/Models`. Core ML then compiles it for this Mac, which takes a minute or two once.
+1. **Welcome**.
+2. **Dictation key and permissions**: Fn, Right ⌥ or Right ⌘, double-tap or single tap; Microphone, Accessibility, and (for Fn) "Press 🌐 key to" set to **Do Nothing**. The model for your default language starts downloading and preparing here.
+3. **Languages**: English plus this Mac's own languages to tick, any other Whisper language to add, and which one new apps start in.
+4. **Storage**: Obsidian vaults found in Obsidian's own vault list, any folder (local, iCloud Drive), Nextcloud or WebDAV, or skip. Nothing is written to storage until setup ends. Vaults in iCloud Drive or other cloud folders aren't checked before you pick one, so macOS only asks for access when you choose it.
+5. **Models**: what this Mac needs for the chosen languages, with download sizes and preparation times, plus a switch for the writing model that powers styles and long-form notes.
+6. **Getting ready**: live download and preparation progress, and a "Try it here" box. You can close the window at any step; work carries on in the background, and a notification says when preparation is done.
 
-Input Monitoring is shown for diagnosis but isn't requested: the active event tap works under Accessibility.
+Settings › General › **Run Setup Again…** walks through it again without resetting anything. A Mac that already has Audio Pencil settings counts as set up. Models go to `~/Library/Application Support/AudioPencil/Models`, and Core ML prepares each one for this Mac once (about 1.5 min for Small, about 12 min for Large v3 Turbo on an M1).
+
+Input Monitoring is shown in Settings › Permissions for diagnosis but isn't requested: the active event tap works under Accessibility.
 
 ## Using it
 
@@ -170,4 +174,5 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 4. **Vault and sync** (done): Nextcloud (Login Flow v2) or a local/iCloud folder, folder selection, shared YAML settings file with three-way merge and ETag retries, offline upload queue.
 5. **Notes in Obsidian** (done): long-form promotion (5 min, configurable), m4a audio, sectioned summaries, suggested title and tags, review prompt and notification, notes and frontmatter via the offline queue, optional saving of quick dictations, Bases board, guide and samples. One-year audio retention moves to milestone 6.
 6. **Like me, discovery, retention** (done): My writing page and interview, machine-aware model suggestions with on-device trials, Retention board (regular / archive / delete) with one-year audio expiry, board and settings-file repair, sound themes.
-7. **Multilingual** (this): 7a spoken languages (per-app language memory, language badge and menu in the indicator, English and multilingual Whisper models, prompts and notes in the spoken language, per-language vocabulary, Like me samples by language, layout-aware paste); 7b the interface in French and Spanish (String Catalogs in the app and each package target; the vault guide and sample notes are written in the interface language when a vault is first set up; board view names and properties stay English).
+7. **Multilingual** (done): 7a spoken languages (per-app language memory, language badge and menu in the indicator, English and multilingual Whisper models, prompts and notes in the spoken language, per-language vocabulary, Like me samples by language, layout-aware paste); 7b the interface in French and Spanish (String Catalogs in the app and each package target; the vault guide and sample notes are written in the interface language when a vault is first set up; board view names and properties stay English).
+8. **Setup and storage** (done): 8a models prepared in the background (dictation never waits; Small first for other languages, then Large v3 Turbo), configurable dictation key (Fn, Right ⌥ or Right ⌘; double-tap or single tap; a recordable shortcut) and a Try it here box; 8b storage without Obsidian (plain Markdown in any folder, any WebDAV server, Keep forever and Delete on the Notes page, Vault renamed Storage); 8c the six-step setup window.

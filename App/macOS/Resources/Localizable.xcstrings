@@ -268,6 +268,28 @@
         }
       }
     },
+    "%@ · prepares in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · prepares in %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · se prepara en %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · préparé en %@"
+          }
+        }
+      }
+    },
     "%@ – %@": {
       "localizations": {
         "en": {
@@ -912,6 +934,44 @@
         }
       }
     },
+    "About %@ to download.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unos %@ para descargar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environ %@ à télécharger."
+          }
+        }
+      }
+    },
+    "About %@ to download. Preparing takes about %lld min the first time on this Mac (%@), and never again. English dictation works as soon as its own model is ready.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "About %1$@ to download. Preparing takes about %2$lld min the first time on this Mac (%3$@), and never again. English dictation works as soon as its own model is ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unos %@ para descargar. La preparación tarda unos %lld min la primera vez en este Mac (%@) y nunca más. El dictado en inglés funciona en cuanto su modelo está listo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environ %@ à télécharger. La préparation prend environ %lld min la première fois sur ce Mac (%@), et plus jamais ensuite. La dictée en anglais fonctionne dès que son modèle est prêt."
+          }
+        }
+      }
+    },
     "Accessibility": {
       "localizations": {
         "es": {
@@ -1008,6 +1068,22 @@
         }
       }
     },
+    "Add another language": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir otro idioma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une autre langue"
+          }
+        }
+      }
+    },
     "Add board": {
       "localizations": {
         "es": {
@@ -1056,6 +1132,22 @@
         }
       }
     },
+    "After that, each app remembers the language you last spoke in it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después, cada app recuerda el último idioma que hablaste en ella."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ensuite, chaque app retient la dernière langue que vous y avez parlée."
+          }
+        }
+      }
+    },
     "All languages": {
       "localizations": {
         "es": {
@@ -1072,6 +1164,22 @@
         }
       }
     },
+    "All set": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo listo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout est prêt"
+          }
+        }
+      }
+    },
     "Allow…": {
       "localizations": {
         "es": {
@@ -1084,6 +1192,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Autoriser…"
+          }
+        }
+      }
+    },
+    "Already downloaded. Preparing takes about %lld min the first time on this Mac (%@), and never again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Already downloaded. Preparing takes about %1$lld min the first time on this Mac (%2$@), and never again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya descargado. La preparación tarda unos %lld min la primera vez en este Mac (%@) y nunca más."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déjà téléchargé. La préparation prend environ %lld min la première fois sur ce Mac (%@), et plus jamais ensuite."
           }
         }
       }
@@ -1164,6 +1294,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Répondre…"
+          }
+        }
+      }
+    },
+    "Any folder works, Obsidian or not; iCloud Drive and other synced folders too. An Obsidian vault also gets a review board.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sirve cualquier carpeta, de Obsidian o no, también iCloud Drive y otras carpetas sincronizadas. Una bóveda de Obsidian recibe además un tablero de revisión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "N’importe quel dossier convient, Obsidian ou non, y compris iCloud Drive et les autres dossiers synchronisés. Un coffre Obsidian reçoit aussi un tableau de relecture."
           }
         }
       }
@@ -1328,6 +1474,38 @@
         }
       }
     },
+    "Audio Pencil adds an Audio Pencil folder here with a review board, a short guide, three sample notes and the settings file.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil añade aquí una carpeta Audio Pencil con un tablero de revisión, una guía breve, tres notas de ejemplo y el archivo de ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil ajoute ici un dossier Audio Pencil avec un tableau de relecture, un court guide, trois notes d’exemple et le fichier de réglages."
+          }
+        }
+      }
+    },
+    "Audio Pencil adds an Audio Pencil folder here with the settings file and a note explaining the files. Notes are plain Markdown.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil añade aquí una carpeta Audio Pencil con el archivo de ajustes y una nota que explica los archivos. Las notas son Markdown normal."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil ajoute ici un dossier Audio Pencil avec le fichier de réglages et une note qui explique les fichiers. Les notes sont en Markdown simple."
+          }
+        }
+      }
+    },
     "Audio Pencil checks Hugging Face weekly for transcription and writing models that fit this machine. Try one to compare it with your current model on this Mac; nothing changes until you choose Switch.": {
       "localizations": {
         "es": {
@@ -1436,6 +1614,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Audio supprimé le %@"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atrás"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour"
           }
         }
       }
@@ -1586,6 +1780,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vérification…"
+          }
+        }
+      }
+    },
+    "Choose a Folder…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una carpeta…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir un dossier…"
+          }
+        }
+      }
+    },
+    "Choose a place": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un lugar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir un emplacement"
           }
         }
       }
@@ -1794,6 +2020,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connecté en tant que %@"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
           }
         }
       }
@@ -2046,6 +2288,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Journal → Journal"
+          }
+        }
+      }
+    },
+    "Dictate into any app": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dicta en cualquier app"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictez dans n’importe quelle app"
           }
         }
       }
@@ -2328,6 +2586,22 @@
         }
       }
     },
+    "Double-tap to start, tap again to stop and paste. Esc cancels. More choices are in Settings.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doble toque para empezar, un toque para parar y pegar. Esc cancela. Hay más opciones en Ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez deux fois pour commencer, une fois pour arrêter et coller. Échap annule. D’autres choix sont dans les Réglages."
+          }
+        }
+      }
+    },
     "Double-tap; 1–9 picks a style while you talk": {
       "localizations": {
         "es": {
@@ -2472,6 +2746,22 @@
         }
       }
     },
+    "Each recording is in one language. Choose every language you'll dictate in; you can switch between them from the recording indicator.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada grabación está en un solo idioma. Elige todos los idiomas en los que dictarás; podrás cambiar entre ellos desde el indicador de grabación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque enregistrement est dans une seule langue. Choisissez toutes les langues dans lesquelles vous dicterez ; vous passerez de l’une à l’autre depuis l’indicateur d’enregistrement."
+          }
+        }
+      }
+    },
     "Edit": {
       "localizations": {
         "es": {
@@ -2536,6 +2826,22 @@
         }
       }
     },
+    "English dictation": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictado en inglés"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictée en anglais"
+          }
+        }
+      }
+    },
     "Enter the server's WebDAV address, like https://example.com/dav/.": {
       "localizations": {
         "es": {
@@ -2596,6 +2902,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chaque section encore lisible est conservée, y compris les modifications faites ailleurs. Seules les parties abîmées reprennent la dernière bonne version. Une copie du fichier dans son état actuel est d’abord placée dans Audio Pencil/Backups. Si vous êtes encore en train de le modifier dans Obsidian, terminez plutôt cela."
+          }
+        }
+      }
+    },
+    "Everything is already on this Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo está ya en este Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout est déjà sur ce Mac."
+          }
+        }
+      }
+    },
+    "Everything is downloaded and prepared. Try a dictation below.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo está descargado y preparado. Prueba un dictado abajo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout est téléchargé et préparé. Essayez une dictée ci-dessous."
+          }
+        }
+      }
+    },
+    "Everything runs on this Mac, so it needs a few models. They download once and get prepared for this Mac's chip, in the background.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo funciona en este Mac, así que necesita algunos modelos. Se descargan una vez y se preparan para el chip de este Mac, en segundo plano."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout fonctionne sur ce Mac, il lui faut donc quelques modèles. Ils se téléchargent une fois et sont préparés pour la puce de ce Mac, en arrière-plan."
           }
         }
       }
@@ -2788,6 +3142,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Général"
+          }
+        }
+      }
+    },
+    "Gesture": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geste"
+          }
+        }
+      }
+    },
+    "Get Ready": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparer"
+          }
+        }
+      }
+    },
+    "Get Started": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer"
+          }
+        }
+      }
+    },
+    "Getting ready": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation"
           }
         }
       }
@@ -3060,6 +3478,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Langue : %@"
+          }
+        }
+      }
+    },
+    "Languages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idiomas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langues"
+          }
+        }
+      }
+    },
+    "Languages other than English use a multilingual speech model. It downloads in the background; the next steps show how long it takes.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los idiomas distintos del inglés usan un modelo de voz multilingüe. Se descarga en segundo plano; los pasos siguientes muestran cuánto tarda."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les langues autres que l’anglais utilisent un modèle vocal multilingue. Il se télécharge en arrière-plan ; les étapes suivantes indiquent combien de temps cela prend."
           }
         }
       }
@@ -3400,6 +3850,38 @@
         }
       }
     },
+    "Long recordings become notes, and Audio Pencil keeps a small settings file next to them so your Macs share styles and vocabulary.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las grabaciones largas se convierten en notas, y Audio Pencil guarda junto a ellas un pequeño archivo de ajustes para que tus Mac compartan estilos y vocabulario."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les longs enregistrements deviennent des notes, et Audio Pencil garde à côté un petit fichier de réglages pour que vos Mac partagent styles et vocabulaire."
+          }
+        }
+      }
+    },
+    "Long thoughts become notes": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las ideas largas se convierten en notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les longues réflexions deviennent des notes"
+          }
+        }
+      }
+    },
     "Longer recordings are kept with their audio and filed with your notes for review.": {
       "localizations": {
         "es": {
@@ -3412,6 +3894,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Les enregistrements plus longs sont gardés avec leur audio et rangés avec vos notes pour relecture."
+          }
+        }
+      }
+    },
+    "Longer recordings are saved as Markdown notes with their audio, in Obsidian or any folder.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las grabaciones más largas se guardan como notas Markdown con su audio, en Obsidian o en cualquier carpeta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les enregistrements plus longs sont sauvegardés en notes Markdown avec leur audio, dans Obsidian ou n’importe quel dossier."
           }
         }
       }
@@ -3576,6 +4074,38 @@
         }
       }
     },
+    "Models for this Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelos para este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les modèles de ce Mac"
+          }
+        }
+      }
+    },
+    "More accurate in your other languages; takes over once it's ready": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más preciso en tus otros idiomas; toma el relevo cuando está listo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus précis dans vos autres langues ; prend le relais une fois prêt"
+          }
+        }
+      }
+    },
     "More for %@": {
       "localizations": {
         "es": {
@@ -3684,6 +4214,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Autorisation d’accessibilité requise"
+          }
+        }
+      }
+    },
+    "New apps start in": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las apps nuevas empiezan en"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les nouvelles apps commencent en"
           }
         }
       }
@@ -4264,6 +4810,22 @@
         }
       }
     },
+    "Obsidian vaults on this Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bóvedas de Obsidian en este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coffres Obsidian sur ce Mac"
+          }
+        }
+      }
+    },
     "Off": {
       "localizations": {
         "es": {
@@ -4712,6 +5274,22 @@
         }
       }
     },
+    "Pick how you start dictating, then let Audio Pencil hear you and type for you.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige cómo empezar a dictar y deja que Audio Pencil te oiga y escriba por ti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez comment lancer la dictée, puis autorisez Audio Pencil à vous entendre et à écrire pour vous."
+          }
+        }
+      }
+    },
     "Plain folder · can write": {
       "localizations": {
         "es": {
@@ -4756,6 +5334,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Soigné"
+          }
+        }
+      }
+    },
+    "Prepares in %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se prepara en %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparé en %@"
           }
         }
       }
@@ -4878,6 +5472,22 @@
         }
       }
     },
+    "Preparing…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation…"
+          }
+        }
+      }
+    },
     "Press Fn to test": {
       "localizations": {
         "es": {
@@ -4922,6 +5532,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Appuyez sur les touches…"
+          }
+        }
+      }
+    },
+    "Private by design": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privado por diseño"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privé par conception"
           }
         }
       }
@@ -5050,6 +5676,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Transcription brute"
+          }
+        }
+      }
+    },
+    "Raw transcripts only with %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo transcripción sin procesar con %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription brute seulement avec %@"
           }
         }
       }
@@ -5470,6 +6112,22 @@
         }
       }
     },
+    "Rewrite in styles with %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reescribir con estilos usando %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réécrire dans des styles avec %@"
+          }
+        }
+      }
+    },
     "Rewrites it as clear, natural written text: no filler or false starts, grammar fixed, meaning, details, voice and length kept. No headings or bullets.": {
       "localizations": {
         "es": {
@@ -5530,6 +6188,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Place pour les modèles"
+          }
+        }
+      }
+    },
+    "Run Setup Again…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a configurar…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relancer la configuration…"
           }
         }
       }
@@ -5626,6 +6300,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adresse du serveur"
+          }
+        }
+      }
+    },
+    "Set Up Audio Pencil": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurar Audio Pencil"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurer Audio Pencil"
           }
         }
       }
@@ -5744,6 +6434,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Configuration"
+          }
+        }
+      }
+    },
+    "Setup takes a couple of minutes. Models download and get ready while you go.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración lleva un par de minutos. Los modelos se descargan y se preparan mientras tanto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuration prend quelques minutes. Les modèles se téléchargent et se préparent pendant ce temps."
           }
         }
       }
@@ -5956,6 +6662,22 @@
         }
       }
     },
+    "Skip for Now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora no"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
     "Skipped notes are saved as “needs review” for your Obsidian board.": {
       "localizations": {
         "es": {
@@ -6016,6 +6738,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Espace"
+          }
+        }
+      }
+    },
+    "Speech": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voz"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voix"
+          }
+        }
+      }
+    },
+    "Speech recognition and writing happen on this Mac. What you say isn't sent anywhere.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz y la redacción ocurren en este Mac. Lo que dices no se envía a ningún sitio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnaissance vocale et la rédaction se font sur ce Mac. Ce que vous dites n’est envoyé nulle part."
           }
         }
       }
@@ -6084,6 +6838,38 @@
         }
       }
     },
+    "Start dictating with": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar a dictar con"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer la dictée avec"
+          }
+        }
+      }
+    },
+    "Start in": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar en"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer en"
+          }
+        }
+      }
+    },
     "Start new apps in": {
       "localizations": {
         "es": {
@@ -6144,6 +6930,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "État"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step %1$lld of %2$lld: %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso %lld de %lld: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étape %lld sur %lld : %@"
           }
         }
       }
@@ -6562,6 +7370,22 @@
         }
       }
     },
+    "Talk anywhere on your Mac. Your words land where you're typing, written by models that run on this Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habla en cualquier lugar de tu Mac. Tus palabras llegan donde estás escribiendo, redactadas por modelos que funcionan en este Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parlez n’importe où sur votre Mac. Vos mots arrivent là où vous écrivez, rédigés par des modèles qui tournent sur ce Mac."
+          }
+        }
+      }
+    },
     "Talk anywhere. Text lands where you're typing, transcribed on this Mac.": {
       "localizations": {
         "es": {
@@ -6626,6 +7450,22 @@
         }
       }
     },
+    "Tap a key, talk, and the text appears in whatever you're writing: tidied up, or rewritten in a style you choose.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa una tecla, habla y el texto aparece donde estés escribiendo: ordenado o reescrito en el estilo que elijas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez une touche, parlez, et le texte apparaît là où vous écrivez : mis au propre, ou réécrit dans le style de votre choix."
+          }
+        }
+      }
+    },
     "Tap or Return": {
       "localizations": {
         "es": {
@@ -6638,6 +7478,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toucher ou Retour"
+          }
+        }
+      }
+    },
+    "Tap to start, tap again to stop and paste. Esc cancels. More choices are in Settings.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un toque para empezar, otro para parar y pegar. Esc cancela. Hay más opciones en Ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez pour commencer, touchez à nouveau pour arrêter et coller. Échap annule. D’autres choix sont dans les Réglages."
           }
         }
       }
@@ -7042,6 +7898,22 @@
         }
       }
     },
+    "To notice the dictation key and paste into the app you're using.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para detectar la tecla de dictado y pegar en la app que estás usando."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour repérer la touche de dictée et coller dans l’app que vous utilisez."
+          }
+        }
+      }
+    },
     "To see the hotkey and paste into the active field.": {
       "localizations": {
         "es": {
@@ -7150,6 +8022,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Essayez ici"
+          }
+        }
+      }
+    },
+    "Turns dictation into polished text, emails or notes, and gives long recordings a title and summary. Without it, text is pasted as you said it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convierte el dictado en texto pulido, correos o notas, y da título y resumen a las grabaciones largas. Sin él, el texto se pega tal como lo dijiste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transforme la dictée en texte soigné, en e-mails ou en notes, et donne un titre et un résumé aux longs enregistrements. Sans lui, le texte est collé tel que vous l’avez dit."
           }
         }
       }
@@ -7426,6 +8314,22 @@
         }
       }
     },
+    "Waiting its turn": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En espera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente"
+          }
+        }
+      }
+    },
     "Waiting to upload": {
       "localizations": {
         "es": {
@@ -7438,6 +8342,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "En attente d’envoi"
+          }
+        }
+      }
+    },
+    "Walks through the dictation key, permissions, languages, storage and models. Nothing is reset.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repasa la tecla de dictado, los permisos, los idiomas, el almacenamiento y los modelos. No se restablece nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprend la touche de dictée, les autorisations, les langues, le stockage et les modèles. Rien n’est réinitialisé."
           }
         }
       }
@@ -7486,6 +8406,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Serveur WebDAV"
+          }
+        }
+      }
+    },
+    "Welcome": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenida"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenue"
+          }
+        }
+      }
+    },
+    "Welcome to Audio Pencil": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te damos la bienvenida a Audio Pencil"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenue dans Audio Pencil"
           }
         }
       }
@@ -7586,6 +8538,38 @@
         }
       }
     },
+    "Where should notes go?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Dónde van las notas?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Où ranger les notes ?"
+          }
+        }
+      }
+    },
+    "Which languages do you speak?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué idiomas hablas?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelles langues parlez-vous ?"
+          }
+        }
+      }
+    },
     "Whisper %@": {
       "localizations": {
         "es": {
@@ -7672,6 +8656,22 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Writes your styles and long-form notes": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe tus estilos y notas largas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédige vos styles et vos notes longues"
           }
         }
       }
@@ -7794,6 +8794,54 @@
         }
       }
     },
+    "You can carry on and finish these later in Settings › Permissions. Until then the key won't start dictation.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes seguir y terminarlo más tarde en Ajustes › Permisos. Hasta entonces, la tecla no iniciará el dictado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez continuer et terminer plus tard dans Réglages › Autorisations. D’ici là, la touche ne lancera pas la dictée."
+          }
+        }
+      }
+    },
+    "You can close this window: the rest carries on in the background, and you'll get a notification when it's done.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes cerrar esta ventana: el resto sigue en segundo plano y recibirás una notificación cuando termine."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez fermer cette fenêtre : la suite continue en arrière-plan, et une notification vous préviendra quand ce sera fini."
+          }
+        }
+      }
+    },
+    "You can skip this: notes wait on this Mac until you choose a place on the Storage page.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes saltarte esto: las notas esperan en este Mac hasta que elijas un lugar en la página Almacenamiento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez passer cette étape : les notes attendent sur ce Mac jusqu’à ce que vous choisissiez un emplacement dans la page Stockage."
+          }
+        }
+      }
+    },
     "Your board": {
       "localizations": {
         "es": {
@@ -7810,6 +8858,22 @@
         }
       }
     },
+    "Your dictation key": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu tecla de dictado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre touche de dictée"
+          }
+        }
+      }
+    },
     "Your notes folder": {
       "localizations": {
         "es": {
@@ -7822,6 +8886,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Votre dossier de notes"
+          }
+        }
+      }
+    },
+    "Your other languages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus otros idiomas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos autres langues"
+          }
+        }
+      }
+    },
+    "Your other languages, straight away": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus otros idiomas, desde el principio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos autres langues, tout de suite"
           }
         }
       }
@@ -7886,6 +8982,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vos vues et réglages encore lisibles sont conservés, et les vues dont Audio Pencil a besoin sont remises. Une copie du fichier dans son état actuel est d’abord placée dans Audio Pencil/Backups."
+          }
+        }
+      }
+    },
+    "about %lld min": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unos %lld min"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "environ %lld min"
+          }
+        }
+      }
+    },
+    "about %lld s": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unos %lld s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "environ %lld s"
           }
         }
       }
@@ -8164,6 +9292,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "« %@ » et son audio partent à la corbeille à la prochaine vérification."
+          }
+        }
+      }
+    },
+    "“Press 🌐 key to” is set to %@. Set it to Do Nothing so Fn only starts dictation.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Pulsar la tecla 🌐 para» está en %@. Elige No hacer nada para que Fn solo inicie el dictado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« Appuyer sur la touche 🌐 pour » est réglé sur %@. Choisissez Ne rien faire pour que Fn serve uniquement à dicter."
           }
         }
       }

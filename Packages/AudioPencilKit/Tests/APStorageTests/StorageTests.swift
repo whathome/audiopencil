@@ -244,3 +244,34 @@ struct LocalFolderStorageTests {
         #expect(StoragePath.parent(of: "/a") == "/")
     }
 }
+
+struct ObsidianVaultsTests {
+    @Test func listsObsidiansVaultsWithoutTouchingCloudFolders() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: "audiopencil-vaults-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fm = FileManager.default
+        let home = root.appending(path: "home")
+        let work = home.appending(path: "Work"), plain = home.appending(path: "Plain")
+        // Never created: a cloud folder is listed on Obsidian's word alone.
+        let iCloud = home.appending(path: "Library/Mobile Documents/iCloud~md~obsidian/Documents/Personal")
+        try fm.createDirectory(at: work.appending(path: ".obsidian"), withIntermediateDirectories: true)
+        try fm.createDirectory(at: plain, withIntermediateDirectories: true)
+        let config = root.appending(path: "obsidian.json")
+        let json = """
+            {"vaults": {
+              "a": {"path": "\(work.path)", "ts": 1700000000000},
+              "b": {"path": "\(iCloud.path)", "ts": 1800000000000, "open": true},
+              "c": {"path": "\(home.path)/Gone", "ts": 1900000000000},
+              "d": {"path": "\(plain.path)", "ts": 1600000000000}
+            }}
+            """
+        try Data(json.utf8).write(to: config)
+
+        let found = ObsidianVaults.find(config: config, home: home)
+        #expect(found.map(\.name) == ["Personal", "Work"]) // newest first; missing and non-vault folders left out
+        #expect(found.first?.lastOpened == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(ObsidianVaults.isCloudManaged(home.appending(path: "Library/CloudStorage/Dropbox/Notes"), home: home))
+        #expect(!ObsidianVaults.isCloudManaged(work, home: home))
+        #expect(ObsidianVaults.find(config: root.appending(path: "missing.json"), home: home).isEmpty)
+    }
+}

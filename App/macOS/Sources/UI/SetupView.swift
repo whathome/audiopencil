@@ -130,7 +130,7 @@ struct SetupView: View {
     }
 }
 
-private struct PermissionRow: View {
+struct PermissionRow: View {
     let title: LocalizedStringResource
     let detail: LocalizedStringResource
     let granted: Bool

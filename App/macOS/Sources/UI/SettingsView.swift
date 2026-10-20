@@ -273,6 +273,12 @@ private struct GeneralSettings: View {
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
+                LabeledContent {
+                    Button("Run Setup Again…") { app.showSetup(hidingMainWindow: false) }
+                } label: {
+                    Text("Setup")
+                    Text("Walks through the dictation key, permissions, languages, storage and models. Nothing is reset.")
+                }
             }
         }
         .formStyle(.grouped)

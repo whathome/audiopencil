@@ -28,35 +28,7 @@ struct VaultPage: View {
                         .foregroundStyle(.secondary)
                 }
 
-                if vault.settings.kind == .nextcloud {
-                    NextcloudAccountCard(vault: vault)
-                    if vault.connection == .signedIn {
-                        LocationCard(vault: vault) {
-                            Text(vault.settings.remoteVaultPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
-                                .font(.body.monospaced())
-                        } choose: {
-                            vault.openBrowser()
-                        }
-                    }
-                } else if vault.settings.kind == .webdav {
-                    WebDAVAccountCard(vault: vault)
-                    if vault.webdavConnection == .signedIn {
-                        LocationCard(vault: vault) {
-                            Text(vault.settings.webdavPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
-                                .font(.body.monospaced())
-                        } choose: {
-                            vault.openBrowser()
-                        }
-                    }
-                } else {
-                    LocationCard(vault: vault) {
-                        Text(vault.localPathDescription.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
-                            .font(.body.monospaced())
-                            .help(vault.settings.localPath ?? "")
-                    } choose: {
-                        vault.chooseLocalFolder()
-                    }
-                }
+                StorageLocationCards(vault: vault)
 
                 if vault.settings.isConfigured {
                     SyncCard(sync: sync)
@@ -65,9 +37,6 @@ struct VaultPage: View {
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
         }
-        .sheet(isPresented: $vault.isBrowsing) {
-            RemoteFolderBrowser(vault: vault)
-        }
     }
 
     private var kindDescription: LocalizedStringResource {
@@ -75,6 +44,48 @@ struct VaultPage: View {
         case .nextcloud: "Notes go to your Nextcloud over WebDAV, from any network. Nothing else leaves this Mac."
         case .webdav: "Any server that speaks WebDAV: a Synology, ownCloud, a hosting provider. Nothing else leaves this Mac."
         case .localFolder: "A folder on this Mac, or one synced to it such as iCloud Drive. Your sync service does the syncing."
+        }
+    }
+}
+
+/// The account and folder cards for the chosen kind of storage: the Storage page and setup share them.
+struct StorageLocationCards: View {
+    @Bindable var vault: VaultController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            if vault.settings.kind == .nextcloud {
+                NextcloudAccountCard(vault: vault)
+                if vault.connection == .signedIn {
+                    LocationCard(vault: vault) {
+                        Text(vault.settings.remoteVaultPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
+                            .font(.body.monospaced())
+                    } choose: {
+                        vault.openBrowser()
+                    }
+                }
+            } else if vault.settings.kind == .webdav {
+                WebDAVAccountCard(vault: vault)
+                if vault.webdavConnection == .signedIn {
+                    LocationCard(vault: vault) {
+                        Text(vault.settings.webdavPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
+                            .font(.body.monospaced())
+                    } choose: {
+                        vault.openBrowser()
+                    }
+                }
+            } else {
+                LocationCard(vault: vault) {
+                    Text(vault.localPathDescription.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
+                        .font(.body.monospaced())
+                        .help(vault.settings.localPath ?? "")
+                } choose: {
+                    vault.chooseLocalFolder()
+                }
+            }
+        }
+        .sheet(isPresented: $vault.isBrowsing) {
+            RemoteFolderBrowser(vault: vault)
         }
     }
 }

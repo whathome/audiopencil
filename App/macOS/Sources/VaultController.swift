@@ -307,6 +307,14 @@ final class VaultController {
         onLayoutChanged?()
     }
 
+    /// A folder on this Mac becomes the storage (setup's "vaults on this Mac", or the folder picker).
+    func useLocalFolder(_ url: URL) {
+        settings.kind = .localFolder
+        settings.localBookmark = try? url.bookmarkData()
+        settings.localPath = url.path
+        locationChanged()
+    }
+
     /// Folder picker for a vault on this Mac. Starts in Obsidian's iCloud folder when there is one.
     func chooseLocalFolder() {
         let panel = NSOpenPanel()
@@ -319,9 +327,7 @@ final class VaultController {
         panel.directoryURL = resolvedLocalFolder ?? LocalFolderStorage.obsidianICloudFolder ?? FileManager.default.homeDirectoryForCurrentUser
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        settings.localBookmark = try? url.bookmarkData()
-        settings.localPath = url.path
-        locationChanged()
+        useLocalFolder(url)
     }
 
     /// Confirms the folder exists, whether it's an Obsidian vault, and that we can write to it
@@ -334,11 +340,9 @@ final class VaultController {
         locationCheck = .checking
         Task {
             do {
-                guard try await provider.item(at: path) != nil else { throw StorageError.notFound(path) }
-                let isVault = try await provider.item(at: StoragePath.join(path, ".obsidian")) != nil
-                let probe = StoragePath.join(path, ".audiopencil-write-check")
-                try await provider.write(probe, data: Data("ok".utf8), ifMatch: nil, createOnly: false)
-                try await provider.delete(probe)
+                // Off the main thread: a folder in iCloud Drive can make macOS ask for access, and the
+                // file calls wait for the answer.
+                let isVault = try await Task.detached { try await Self.check(provider, path) }.value
                 locationCheck = .ok(isObsidianVault: isVault)
                 switch (settings.layout, isVault) {
                 case (nil, _):
@@ -356,6 +360,17 @@ final class VaultController {
         }
     }
 
+    /// The folder exists and takes writes (a small hidden file, written and removed). Returns whether
+    /// it's an Obsidian vault.
+    nonisolated private static func check(_ provider: any StorageProvider, _ path: String) async throws -> Bool {
+        guard try await provider.item(at: path) != nil else { throw StorageError.notFound(path) }
+        let isVault = try await provider.item(at: StoragePath.join(path, ".obsidian")) != nil
+        let probe = StoragePath.join(path, ".audiopencil-write-check")
+        try await provider.write(probe, data: Data("ok".utf8), ifMatch: nil, createOnly: false)
+        try await provider.delete(probe)
+        return isVault
+    }
+
     /// The Obsidian vault's name: its folder's name.
     var vaultName: String? {
         let path = switch settings.kind {
@@ -368,7 +383,10 @@ final class VaultController {
 
     /// "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/Work" → "iCloud Drive › Obsidian › Work"
     var localPathDescription: String? {
-        guard let path = settings.localPath else { return nil }
+        settings.localPath.map(Self.describe)
+    }
+
+    static func describe(_ path: String) -> String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let obsidian = home + "/Library/Mobile Documents/iCloud~md~obsidian/Documents"
         let iCloud = home + "/Library/Mobile Documents/com~apple~CloudDocs"

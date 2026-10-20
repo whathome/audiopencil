@@ -19,8 +19,8 @@ enum TranscriptionModelState: Equatable {
 /// App-wide state and wiring: settings, permissions, the Whisper model, hotkeys and the dictation loop.
 @Observable
 final class AppModel {
-    private static let settingsKey = "dictationSettings"
-    private static let statsKey = "usageStats"
+    static let settingsKey = "dictationSettings"
+    static let statsKey = "usageStats"
     static let stylesKey = "styles"
     static let styleMemoryKey = "styleMemory"
 
@@ -149,8 +149,14 @@ final class AppModel {
     @ObservationIgnored private var debugObserver: (any NSObjectProtocol)?
     @ObservationIgnored private var microphoneCatalog: MicrophoneCatalog?
     @ObservationIgnored var writingTask: Task<Void, Never>?
+    /// No sign of an earlier install when the app started: setup runs instead of the main window.
+    let isFirstLaunch: Bool
+    @ObservationIgnored var setupWindow: NSWindow?
+    var setupStep: SetupStep = .welcome
+    @ObservationIgnored var setupCloseObserver: (any NSObjectProtocol)?
 
     init() {
+        isFirstLaunch = Self.checkFirstLaunch() // before anything below saves settings
         let settings = Self.loadSettings()
         self.settings = settings
         let memory = Self.loadLanguageMemory()
@@ -219,11 +225,16 @@ final class AppModel {
         }
         applyAppPresence()
         prepareInBackground()
+        sync.isHeld = isFirstLaunch
         sync.start()
         permissions.refresh()
         startHotkeysIfPossible()
-        if needsSetup { openPermissions() }
-        prepareModel()
+        if isFirstLaunch {
+            showSetup(hidingMainWindow: true) // the English model starts on its Permissions step
+        } else {
+            if needsSetup { openPermissions() }
+            prepareModel()
+        }
         pollPermissions()
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(30)) // after startup settles
@@ -323,6 +334,15 @@ final class AppModel {
                         Log.dictation.notice("Simulated Obsidian edit (\(adding ? "add" : "remove") \(word, privacy: .public)): \(wrote ? "written" : "failed", privacy: .public)")
                     }
                 case "vault:sync": sync.syncSoon(after: .zero)
+                case "setup": showSetup(hidingMainWindow: false)
+                case "setup:close": setupWindow?.close()
+                case "report:windows":
+                    for window in NSApp.windows {
+                        Log.dictation.notice("Window \(window.identifier?.rawValue ?? "-", privacy: .public) “\(window.title, privacy: .public)” visible \(window.isVisible)")
+                    }
+                case let command where command.hasPrefix("setup:"):
+                    let name = command.dropFirst("setup:".count)
+                    if let step = SetupStep.allCases.first(where: { "\($0)" == name }) { setupStep = step }
                 case "vault:adopt": vault.adoptObsidianLayout()
                 case "note:keep", "note:delete": // the first recent note, as the Notes page's menu does
                     if let note = notes.recent.first { notes.setRetention(command == "note:keep" ? .archive : .delete, for: note) }
@@ -403,11 +423,13 @@ final class AppModel {
     /// Writes the main window (including title bar) to Application Support/AudioPencil/Debug/snapshot.png,
     /// so UI changes can be checked without screen-recording permission.
     private func snapshotMainWindow() {
-        if let review = NSApp.windows.first(where: { $0.isVisible && $0.identifier?.rawValue == "review" }),
-           let view = review.contentView?.superview, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+        for name in ["review", "setup"] {
+            guard let other = NSApp.windows.first(where: { $0.isVisible && $0.identifier?.rawValue == name }),
+                  let view = other.contentView?.superview, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds)
+            else { continue }
             view.cacheDisplay(in: view.bounds, to: rep)
             let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Debug")
-            try? rep.representation(using: .png, properties: [:])?.write(to: folder.appending(path: "review.png"))
+            try? rep.representation(using: .png, properties: [:])?.write(to: folder.appending(path: "\(name).png"))
         }
         guard let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }),
               let view = window.contentView?.superview ?? window.contentView,

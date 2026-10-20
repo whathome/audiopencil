@@ -112,7 +112,12 @@ final class SyncController {
         }
     }
 
+    /// First launch: nothing is written to storage until setup finishes, so trying a few places leaves
+    /// no files behind in the ones not chosen.
+    var isHeld = false
+
     func syncNow() async {
+        guard !isHeld else { return }
         if let running { await running.value; return } // one at a time
         let task = Task { await performSync() }
         running = task
