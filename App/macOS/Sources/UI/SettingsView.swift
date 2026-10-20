@@ -149,26 +149,58 @@ private struct GeneralSettings: View {
     var body: some View {
         Form {
             Section {
-                Picker("Stop with", selection: $app.settings.stopGesture) {
-                    ForEach(StopGesture.allCases, id: \.self) { Text($0.label).tag($0) }
+                let key = app.settings.gestureKey
+                Picker(selection: $app.settings.gestureKey) {
+                    ForEach(GestureKey.allCases, id: \.self) { Text(verbatim: $0.name).tag($0) }
+                } label: {
+                    Text("Key")
+                    Text("Right ⌥ or Right ⌘ suit keyboards without a usable Fn key.")
                 }
-                Toggle(isOn: $app.settings.holdFnForRaw) {
-                    Text("Hold Fn for a raw transcript")
-                    Text("Press and hold, talk, release to paste. Pressing another key while holding cancels, so Fn still works as a modifier.")
+                Picker("Start with", selection: $app.settings.startGesture) {
+                    ForEach(StartGesture.allCases, id: \.self) { Text(verbatim: $0.label(key)).tag($0) }
                 }
-                Toggle("Return also stops", isOn: $app.settings.returnStops)
-                Toggle("⌃⌥Space starts and stops (for keyboards without Fn)", isOn: $app.settings.fallbackShortcutEnabled)
-                LabeledContent("Double-tap speed") {
-                    HStack {
-                        Slider(value: $app.settings.doubleTapWindow, in: 0.25...0.7, step: 0.05)
-                        Text("\(Int(app.settings.doubleTapWindow * 1000)) ms")
-                            .monospacedDigit()
-                            .frame(width: 60, alignment: .trailing)
+                Picker(selection: Binding(get: { app.settings.effectiveStopGesture }, set: { app.settings.stopGesture = $0 })) {
+                    ForEach(StopGesture.allCases, id: \.self) { Text(verbatim: $0.label(key)).tag($0) }
+                } label: {
+                    Text("Stop with")
+                    if app.settings.startGesture == .singleTap {
+                        Text("A tap starts, so a tap stops.")
                     }
                 }
-                Toggle(isOn: $app.settings.warmMicOnFirstTap) {
-                    Text("Start the mic on the first Fn tap")
-                    Text("Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone Fn tap.")
+                .disabled(app.settings.startGesture == .singleTap)
+                Toggle(isOn: $app.settings.holdFnForRaw) {
+                    Text("Hold \(key.name) for a raw transcript")
+                    Text("Press and hold, talk, release to paste. Pressing another key while holding cancels, so \(key.name) still works as a modifier.")
+                }
+                Toggle("Return also stops", isOn: $app.settings.returnStops)
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        ShortcutRecorder(app: app)
+                            .disabled(!app.settings.fallbackShortcutEnabled)
+                        Toggle("", isOn: $app.settings.fallbackShortcutEnabled)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .accessibilityLabel(Text("Shortcut"))
+                    }
+                } label: {
+                    Text("Shortcut")
+                    Text("Also starts and stops dictation. Click it to record a different one.")
+                }
+                if app.settings.startGesture == .doubleTap || app.settings.effectiveStopGesture == .doubleTapFn {
+                    LabeledContent("Double-tap speed") {
+                        HStack {
+                            Slider(value: $app.settings.doubleTapWindow, in: 0.25...0.7, step: 0.05)
+                            Text("\(Int(app.settings.doubleTapWindow * 1000)) ms")
+                                .monospacedDigit()
+                                .frame(width: 60, alignment: .trailing)
+                        }
+                    }
+                }
+                if app.settings.startGesture == .doubleTap {
+                    Toggle(isOn: $app.settings.warmMicOnFirstTap) {
+                        Text("Start the mic on the first \(key.name) tap")
+                        Text("Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone \(key.name) tap.")
+                    }
                 }
             } header: {
                 FirstSectionHeader(app: app, embedded: embedded, title: "Dictation hotkey")
@@ -288,7 +320,7 @@ private struct DictationLanguagesSection: View {
                     ProgressView(value: fraction).frame(width: 160)
                 }
             } else if let preparation = app.preparation {
-                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation)
+                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation, blocking: app.isBlocking(preparation))
             }
             Picker("Add a language", selection: Binding<String>(get: { "" }, set: { add($0) })) {
                 Text("Choose…").tag("")

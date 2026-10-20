@@ -1,4 +1,5 @@
 import APCore
+import APModels
 import APTranscription
 import Foundation
 import UserNotifications
@@ -9,10 +10,8 @@ import UserNotifications
 extension AppModel {
     /// Which model is being prepared, for the person reading the status.
     func preparationTitle(_ preparation: ModelPreparation) -> String {
-        if preparation.variant == settings.multilingualTranscriptionModel, preparation.variant != settings.transcriptionModel {
-            return String(localized: "Preparing the multilingual model for this Mac")
-        }
-        return String(localized: "Preparing the transcription model for this Mac")
+        let name = TranscriptionModelOption.option(for: preparation.variant)?.name ?? preparation.variant
+        return String(localized: "Preparing Whisper \(name) for this Mac")
     }
 
     /// Hooks an engine's preparation progress up to the app. Call before loading it.
@@ -22,10 +21,15 @@ extension AppModel {
         }
     }
 
+    /// Dictation is waiting on this preparation (it's the model in use), rather than it running in the background.
+    func isBlocking(_ preparation: ModelPreparation) -> Bool {
+        preparation.variant == whisper.variant
+    }
+
     private func preparationChanged(_ new: ModelPreparation?) {
         let finished = preparation
         preparation = new
-        indicator.preparation = new
+        indicator.preparation = new.flatMap { isBlocking($0) ? $0 : nil }
         if new != nil, preparationActivity == nil {
             // Keep App Nap from slowing the app down while it waits on the compiler.
             preparationActivity = ProcessInfo.processInfo.beginActivity(

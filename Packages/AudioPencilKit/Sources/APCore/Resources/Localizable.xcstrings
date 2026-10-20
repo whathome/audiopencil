@@ -65,18 +65,18 @@
         }
       }
     },
-    "Double-tap Fn": {
+    "Double-tap %@": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pulsar Fn dos veces"
+            "value": "Pulsar %@ dos veces"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toucher deux fois Fn"
+            "value": "Toucher deux fois %@"
           }
         }
       }
@@ -241,6 +241,38 @@
         }
       }
     },
+    "Right ⌘": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘ derecha"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘ droite"
+          }
+        }
+      }
+    },
+    "Right ⌥": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ derecha"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ droite"
+          }
+        }
+      }
+    },
     "Short messages": {
       "localizations": {
         "es": {
@@ -257,22 +289,6 @@
         }
       }
     },
-    "Single tap Fn": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pulsar Fn una vez"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toucher une fois Fn"
-          }
-        }
-      }
-    },
     "Summarise a recent conversation or meeting for someone who missed it.": {
       "localizations": {
         "es": {
@@ -285,6 +301,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Résumez une conversation ou une réunion récente pour quelqu’un qui l’a manquée."
+          }
+        }
+      }
+    },
+    "Tap %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsar %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toucher %@"
           }
         }
       }
@@ -397,6 +429,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Écrivez trois messages rapides : pour fixer un rendez-vous, décliner quelque chose et remercier quelqu’un."
+          }
+        }
+      }
+    },
+    "right ⌘": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘ derecha"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘ droite"
+          }
+        }
+      }
+    },
+    "right ⌥": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ derecha"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ droite"
           }
         }
       }

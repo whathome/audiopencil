@@ -132,6 +132,10 @@ public struct DeviceSection: Codable, Equatable, Sendable {
 
     public var microphones: [Microphone] = []
     public var stop: String = "single-tap-fn"
+    public var key: String = "fn"
+    public var start: String = "double-tap"
+    /// e.g. "ctrl+opt+49": modifiers, then the virtual key code.
+    public var shortcut: String = "ctrl+opt+49"
     public var returnStops: Bool = true
     public var holdForRaw: Bool = true
     public var fallbackShortcut: Bool = true
@@ -150,7 +154,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public var soundVolume: Double = 0.35
 
     enum CodingKeys: String, CodingKey {
-        case microphones, stop
+        case microphones, stop, key, start, shortcut
         case returnStops = "return_stops", holdForRaw = "hold_for_raw", fallbackShortcut = "fallback_shortcut"
         case doubleTapWindow = "double_tap_window", warmMicOnFirstTap = "warm_mic_on_first_tap"
         case transcriptionModel = "transcription_model", writingModel = "writing_model"
@@ -165,6 +169,9 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public init(_ settings: DictationSettings) {
         microphones = settings.preferredMicrophones.map { Microphone(name: $0.name, uid: $0.uid) }
         stop = ConfigStyle.kebab(settings.stopGesture.rawValue)
+        key = ConfigStyle.kebab(settings.gestureKey.rawValue)
+        start = ConfigStyle.kebab(settings.startGesture.rawValue)
+        shortcut = Self.encode(settings.fallbackShortcut)
         returnStops = settings.returnStops
         holdForRaw = settings.holdFnForRaw
         fallbackShortcut = settings.fallbackShortcutEnabled
@@ -187,6 +194,9 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         microphones = try c.decodeIfPresent([Microphone].self, forKey: .microphones) ?? []
         stop = try c.decodeIfPresent(String.self, forKey: .stop) ?? defaults.stop
+        key = try c.decodeIfPresent(String.self, forKey: .key) ?? defaults.key
+        start = try c.decodeIfPresent(String.self, forKey: .start) ?? defaults.start
+        shortcut = try c.decodeIfPresent(String.self, forKey: .shortcut) ?? defaults.shortcut
         returnStops = try c.decodeIfPresent(Bool.self, forKey: .returnStops) ?? defaults.returnStops
         holdForRaw = try c.decodeIfPresent(Bool.self, forKey: .holdForRaw) ?? defaults.holdForRaw
         fallbackShortcut = try c.decodeIfPresent(Bool.self, forKey: .fallbackShortcut) ?? defaults.fallbackShortcut
@@ -204,10 +214,38 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         soundVolume = try c.decodeIfPresent(Double.self, forKey: .soundVolume) ?? defaults.soundVolume
     }
 
+    static func encode(_ shortcut: KeyShortcut) -> String {
+        var parts: [String] = []
+        if shortcut.modifiers & KeyShortcut.control != 0 { parts.append("ctrl") }
+        if shortcut.modifiers & KeyShortcut.option != 0 { parts.append("opt") }
+        if shortcut.modifiers & KeyShortcut.shift != 0 { parts.append("shift") }
+        if shortcut.modifiers & KeyShortcut.command != 0 { parts.append("cmd") }
+        return (parts + ["\(shortcut.keyCode)"]).joined(separator: "+")
+    }
+
+    static func decode(_ text: String) -> KeyShortcut? {
+        let parts = text.lowercased().split(separator: "+").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard let last = parts.last, let code = Int(last), (0..<128).contains(code) else { return nil }
+        var modifiers: UInt64 = 0
+        for part in parts.dropLast() {
+            switch part {
+            case "ctrl", "control": modifiers |= KeyShortcut.control
+            case "opt", "option", "alt": modifiers |= KeyShortcut.option
+            case "shift": modifiers |= KeyShortcut.shift
+            case "cmd", "command": modifiers |= KeyShortcut.command
+            default: return nil
+            }
+        }
+        return KeyShortcut(keyCode: code, modifiers: modifiers)
+    }
+
     /// Writes this section's values into the app's settings, leaving local-only fields alone.
     public func apply(to settings: inout DictationSettings) {
         settings.preferredMicrophones = microphones.map { MicrophonePreference(uid: $0.uid, name: $0.name) }
         settings.stopGesture = StopGesture(rawValue: ConfigStyle.camel(stop)) ?? settings.stopGesture
+        settings.gestureKey = GestureKey(rawValue: ConfigStyle.camel(key)) ?? settings.gestureKey
+        settings.startGesture = StartGesture(rawValue: ConfigStyle.camel(start)) ?? settings.startGesture
+        settings.fallbackShortcut = Self.decode(shortcut) ?? settings.fallbackShortcut
         settings.returnStops = returnStops
         settings.holdFnForRaw = holdForRaw
         settings.fallbackShortcutEnabled = fallbackShortcut

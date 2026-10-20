@@ -152,7 +152,10 @@ public enum ConfigDocument {
                         out += "      - name: \(scalar(mic.name))\n        uid: \(scalar(mic.uid))\n"
                     }
                 }
+                out += "    key: \(scalar(device.key))  # fn, right-option or right-command\n"
+                out += "    start: \(scalar(device.start))  # double-tap or single-tap\n"
                 out += "    stop: \(scalar(device.stop))\n"
+                out += "    shortcut: \(scalar(device.shortcut))  # modifiers + virtual key code; 49 is Space\n"
                 out += "    return_stops: \(device.returnStops)\n"
                 out += "    hold_for_raw: \(device.holdForRaw)\n"
                 out += "    fallback_shortcut: \(device.fallbackShortcut)\n"

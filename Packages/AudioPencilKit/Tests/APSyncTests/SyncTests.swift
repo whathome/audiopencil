@@ -18,6 +18,9 @@ private func sampleConfig() -> SharedConfig {
     var device = DeviceSection()
     device.microphones = [.init(name: "MacBook Air Microphone", uid: "BuiltInMicrophoneDevice")]
     device.languages = ["en", "fr", "no"]
+    device.key = "right-option"
+    device.start = "single-tap"
+    device.shortcut = "cmd+shift+2"
     device.multilingualModel = "openai_whisper-small"
     config.devices = ["Wes’s MacBook Air": device, "iPhone": DeviceSection()]
     config.writingSamples = [
@@ -100,6 +103,23 @@ struct ConfigDocumentTests {
 
 struct ConfigMergerTests {
     private let device = "Mac"
+
+    @Test func hotkeyFieldsSyncPerDevice() {
+        var settings = DictationSettings()
+        settings.gestureKey = .rightCommand
+        settings.startGesture = .singleTap
+        settings.fallbackShortcut = KeyShortcut(keyCode: 96, modifiers: 0) // F5
+        let section = DeviceSection(settings)
+        #expect(section.key == "right-command" && section.start == "single-tap" && section.shortcut == "96")
+        var restored = DictationSettings()
+        section.apply(to: &restored)
+        #expect(restored.gestureKey == .rightCommand && restored.startGesture == .singleTap)
+        #expect(restored.fallbackShortcut == KeyShortcut(keyCode: 96, modifiers: 0))
+        var garbled = section
+        garbled.shortcut = "hyper+space"
+        garbled.apply(to: &restored)
+        #expect(restored.fallbackShortcut == KeyShortcut(keyCode: 96, modifiers: 0)) // unreadable: kept
+    }
 
     @Test func languageVocabularyMergesPerLanguage() {
         var base = SharedConfig()

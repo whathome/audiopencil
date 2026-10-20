@@ -37,6 +37,8 @@ final class IndicatorModel {
     @ObservationIgnored var onSelectStyle: ((Style) -> Void)?
     /// A first-time model preparation in progress: shown while waiting, and as a heads-up while recording.
     var preparation: ModelPreparation?
+    /// A one-off note shown above the pill while recording, e.g. that a language is on its starter model.
+    var note: String?
     /// Language of the current recording, shown as a badge when more than one is in use.
     var currentLanguage: SpokenLanguage?
     /// Languages offered in the menu; one or none hides the badge and the menu section.
@@ -325,6 +327,15 @@ struct IndicatorView: View {
                         .frame(maxWidth: 460)
                         .background(RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.82)))
                 }
+            }
+            if model.mode == .listening, model.preparation == nil, let note = model.note {
+                Text(verbatim: note)
+                    .font(.callout)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: 460)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.82)))
             }
             if model.showLiveText, model.mode == .listening, !model.liveText.isEmpty {
                 Text(model.liveText)

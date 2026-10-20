@@ -38,8 +38,11 @@ final class AppModel {
 
     /// Something the hotkey needs is missing.
     var needsSetup: Bool {
-        !permissions.allRequiredGranted || !hotkeyActive || !permissions.fnKeyIsFree
+        !permissions.allRequiredGranted || !hotkeyActive || (settings.gestureKey == .fn && !permissions.fnKeyIsFree)
     }
+
+    /// How to start a dictation, e.g. "Double-tap Fn", for hints and status lines.
+    var startHint: String { settings.startGesture.label(settings.gestureKey) }
 
     var settings: DictationSettings {
         didSet { settingsChanged(from: oldValue) }
@@ -95,13 +98,15 @@ final class AppModel {
     var activeLanguage: SpokenLanguage = .english
     /// 0…1 while the multilingual model downloads in the background; nil otherwise.
     var multilingualDownload: Double?
-    /// The multilingual model is being prepared for this Mac (once per model, up to ~15 min on an M1).
-    var multilingualPreparing = false
     /// A first-time model preparation in progress (step, clock, estimate), for every status display.
     var preparation: ModelPreparation?
     @ObservationIgnored var preparationActivity: (any NSObjectProtocol)?
-    @ObservationIgnored var multilingualDownloadTask: Task<Void, Never>?
+    /// Background preparation of other languages' models, and the model it's working on.
+    @ObservationIgnored var multilingualQueue: Task<Void, Never>?
+    @ObservationIgnored var multilingualJob: Task<Void, Never>?
     @ObservationIgnored var multilingualDownloadVariant: String?
+    /// Languages already told (this run) that they're on the starter model.
+    @ObservationIgnored var starterNoteShown: Set<String> = []
     /// Connected input devices, kept current as devices come and go.
     private(set) var microphones: [Microphone] = MicrophoneCatalog.current()
     private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -138,7 +143,7 @@ final class AppModel {
     @ObservationIgnored private var debugSavedCursor: CGPoint?
     #endif
     @ObservationIgnored private var indicatorPanel: IndicatorPanelController?
-    @ObservationIgnored private var modelTask: Task<Void, any Error>?
+    @ObservationIgnored var modelTask: Task<Void, any Error>?
     @ObservationIgnored private var memoryMonitor: MemoryPressureMonitor?
     @ObservationIgnored private var permissionPoll: Task<Void, Never>?
     @ObservationIgnored private var debugObserver: (any NSObjectProtocol)?
@@ -151,7 +156,7 @@ final class AppModel {
         let memory = Self.loadLanguageMemory()
         self.languageMemory = memory
         self.activeLanguage = memory.language(forApp: nil)
-        self.whisper = WhisperEngine(variant: settings.transcriptionVariant(for: memory.language(forApp: nil)))
+        self.whisper = WhisperEngine(variant: Self.bestVariant(for: memory.language(forApp: nil), settings: settings))
         self.writing = SummaryEngine(modelID: settings.writingModel)
         self.styles = Self.loadStyles()
         self.styleMemory = Self.loadStyleMemory()
@@ -203,6 +208,7 @@ final class AppModel {
     func bootstrap() {
         indicatorPanel = IndicatorPanelController(model: indicator)
         hotkeys.handler = { [unowned self] event, time in handle(event, at: time) }
+        applyHotkeySettings()
         hotkeys.onDiagnostic = { [unowned self] text in trace(text) }
         memoryMonitor = MemoryPressureMonitor { level in
             Task { @MainActor [weak self] in self?.memoryPressure = level }
@@ -211,7 +217,7 @@ final class AppModel {
             Task { @MainActor [weak self] in self?.microphones = microphones }
         }
         applyAppPresence()
-        prefetchMultilingualModel()
+        prepareInBackground()
         sync.start()
         permissions.refresh()
         startHotkeysIfPossible()
@@ -447,7 +453,7 @@ final class AppModel {
         let vocabulary = settings.vocabulary(for: activeLanguage)
         let language = activeLanguage
         // Already fetching this model in the background: wait for that rather than fetch it twice.
-        let prefetch = multilingualDownloadVariant == engine.variant ? multilingualDownloadTask : nil
+        let prefetch = multilingualDownloadVariant == engine.variant ? multilingualJob : nil
         modelTask = Task {
             if let old { await coordinator.unload(old) }
             await observePreparation(of: engine)
@@ -566,11 +572,15 @@ final class AppModel {
     }
 
     private func handle(_ gesture: FnTapDetector.Gesture) {
-        switch (dictation.phase, gesture, settings.stopGesture) {
+        switch (dictation.phase, gesture, settings.effectiveStopGesture) {
+        case (.idle, .singleTap, _) where settings.startGesture == .singleTap:
+            trace("→ tap: start recording")
+            detector.reset()
+            startDictation()
         case (.idle, .singleTap, _) where settings.warmMicOnFirstTap && permissions.microphone == .granted:
             trace("→ tap: warming up the mic")
             dictation.warmUp(deviceID: currentMicrophone?.deviceID)
-        case (.idle, .doubleTap, _):
+        case (.idle, .doubleTap, _) where settings.startGesture == .doubleTap:
             trace("→ double-tap: start recording")
             detector.reset()
             startDictation()
@@ -596,6 +606,16 @@ final class AppModel {
             trace("→ Fn held: recording until release (raw)")
             startDictation(raw: true)
         }
+    }
+
+    private func applyHotkeySettings() {
+        hotkeys.gestureKey = settings.gestureKey
+        hotkeys.shortcut = settings.fallbackShortcut
+    }
+
+    /// Settings is recording a new shortcut: the event tap stands aside until it's done.
+    func pauseHotkeys(_ paused: Bool) {
+        hotkeys.isPaused = paused
     }
 
     private func trace(_ text: String) {
@@ -631,10 +651,11 @@ final class AppModel {
         let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         let style = raw ? Style.raw : styleMemory.defaultStyle(forApp: app, among: styles)
         let language = languageMemory.language(forApp: app)
-        if language != activeLanguage || whisper.variant != settings.transcriptionVariant(for: language) {
+        if language != activeLanguage || whisper.variant != transcriptionVariant(for: language) {
             useLanguage(language) // the mic starts meanwhile; transcription catches up once the model is in
         }
         indicator.languageChoices = offeredLanguages
+        indicator.note = starterNote(for: language)
         dictation.start(
             microphoneGranted: permissions.microphone == .granted,
             deviceID: currentMicrophone?.deviceID,
@@ -659,9 +680,10 @@ final class AppModel {
             UserDefaults.standard.set(data, forKey: Self.settingsKey)
         }
         detector.configuration.maxGapBetweenTaps = settings.doubleTapWindow
+        applyHotkeySettings()
         indicator.showLiveText = settings.showLiveText
-        if whisper.variant != settings.transcriptionVariant(for: activeLanguage) {
-            switchModel(to: settings.transcriptionVariant(for: activeLanguage))
+        if whisper.variant != transcriptionVariant(for: activeLanguage) {
+            switchModel(to: transcriptionVariant(for: activeLanguage))
         } else if settings.vocabulary(for: activeLanguage) != old.vocabulary(for: activeLanguage) {
             let engine = whisper
             let vocabulary = settings.vocabulary(for: activeLanguage)
@@ -669,7 +691,7 @@ final class AppModel {
         }
         indicator.languageChoices = offeredLanguages
         if settings.dictationLanguages != old.dictationLanguages || settings.multilingualTranscriptionModel != old.multilingualTranscriptionModel {
-            prefetchMultilingualModel()
+            prepareInBackground()
         }
         if settings.menuBarMode != old.menuBarMode {
             applyAppPresence()

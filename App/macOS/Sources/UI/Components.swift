@@ -195,6 +195,8 @@ struct Banner: View {
 struct PreparationStatus: View {
     let title: String
     let preparation: ModelPreparation
+    /// Dictation waits for it (the model in use) rather than it running in the background.
+    var blocking = true
 
     var body: some View {
         TimelineView(.periodic(from: preparation.startedAt, by: 1)) { context in
@@ -211,7 +213,9 @@ struct PreparationStatus: View {
                     .tint(Color.pencil)
                 Text(elapsed > preparation.estimatedSeconds * 1.2
                      ? "Step \(preparation.step) of \(preparation.steps): \(preparation.part). Taking longer than usual, still working. Happens once per model."
-                     : "Step \(preparation.step) of \(preparation.steps): \(preparation.part). Happens once per model; dictation waits until it's done.")
+                     : blocking
+                     ? "Step \(preparation.step) of \(preparation.steps): \(preparation.part). Happens once per model; dictation waits until it's done."
+                     : "Step \(preparation.step) of \(preparation.steps): \(preparation.part). Runs in the background; dictation keeps working.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

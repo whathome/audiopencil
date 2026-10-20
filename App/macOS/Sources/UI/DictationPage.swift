@@ -12,7 +12,7 @@ struct DictationPage: View {
                 PageHeader(title: "Dictation", subtitle: "Talk anywhere. Text lands where you're typing, transcribed on this Mac.")
 
                 if app.needsSetup {
-                    Banner(symbol: "exclamationmark.triangle.fill", message: "Finish setup so the Fn key can start dictation.", actionTitle: "Finish setup") {
+                    Banner(symbol: "exclamationmark.triangle.fill", message: "Finish setup so the hotkey can start dictation.", actionTitle: "Finish setup") {
                         app.openPermissions()
                     }
                 }
@@ -37,6 +37,7 @@ struct DictationPage: View {
     private var cards: some View {
         // What you said comes first; the reference and the machinery follow.
         VStack(spacing: 16) {
+            TryItCard(app: app)
             LastDictationCard(app: app)
             HotkeyCard(app: app)
             TranscriptionCard(app: app)
@@ -59,29 +60,36 @@ struct PageHeader: View {
 private struct HotkeyCard: View {
     let app: AppModel
 
+    private var key: GestureKey { app.settings.gestureKey }
+
     var body: some View {
         Card(title: "Hotkey") {
             HStack(spacing: 8) {
-                Chip(label: "Fn", symbol: "globe", isOn: true)
-                Chip(label: "⌃⌥ Space", isOn: app.settings.fallbackShortcutEnabled)
+                Chip(label: "\(key.name)", symbol: key == .fn ? "globe" : nil, isOn: true)
+                Chip(label: "\(app.settings.fallbackShortcut.displayText)", isOn: app.settings.fallbackShortcutEnabled)
                 Spacer()
-                Button("Change…") { app.page = .settings }
+                Button("Change…") { app.settingsTab = .general; app.page = .settings }
                     .buttonStyle(.link)
             }
             Divider().padding(.vertical, 2)
             // Gestures flow into as many columns as fit: 2 × 2 in a normal window, one column when tiny.
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 185), spacing: 12, alignment: .topLeading)], alignment: .leading, spacing: 14) {
                 if app.settings.holdFnForRaw {
-                    Gesture(title: "Push to talk", detail: "Hold, release to paste", keys: "Hold Fn") {
-                        KeyCap(label: "hold fn")
+                    Gesture(title: "Push to talk", detail: "Hold, release to paste", keys: "Hold \(key.name)") {
+                        KeyCap(label: "hold \(key.keycap)")
                     }
                 }
-                Gesture(title: "In a style", detail: "Double-tap; 1–9 to switch", keys: "Double-tap Fn") {
-                    KeyCap(label: "fn"); KeyCap(label: "fn")
+                Gesture(
+                    title: "In a style",
+                    detail: app.settings.startGesture == .doubleTap ? "Double-tap; 1–9 to switch" : "Tap; 1–9 to switch",
+                    keys: "\(app.settings.startGesture.label(key))"
+                ) {
+                    KeyCap(label: "\(key.keycap)")
+                    if app.settings.startGesture == .doubleTap { KeyCap(label: "\(key.keycap)") }
                 }
                 Gesture(title: "Stop and paste", detail: stopDetail, keys: stopKeys) {
-                    KeyCap(label: "fn")
-                    if app.settings.stopGesture == .doubleTapFn { KeyCap(label: "fn") }
+                    KeyCap(label: "\(key.keycap)")
+                    if app.settings.effectiveStopGesture == .doubleTapFn { KeyCap(label: "\(key.keycap)") }
                     if app.settings.returnStops { KeyCap(label: "return", symbol: "return") }
                 }
                 Gesture(title: "Cancel", detail: "Nothing is pasted", keys: "Escape") {
@@ -92,16 +100,12 @@ private struct HotkeyCard: View {
     }
 
     private var stopKeys: LocalizedStringResource {
-        switch (app.settings.stopGesture, app.settings.returnStops) {
-        case (.singleTapFn, true): "Tap Fn or Return"
-        case (.singleTapFn, false): "Tap Fn"
-        case (.doubleTapFn, true): "Double-tap Fn or Return"
-        case (.doubleTapFn, false): "Double-tap Fn"
-        }
+        let gesture = app.settings.effectiveStopGesture.label(key)
+        return app.settings.returnStops ? "\(gesture) or Return" : "\(gesture)"
     }
 
     private var stopDetail: LocalizedStringResource {
-        switch (app.settings.stopGesture, app.settings.returnStops) {
+        switch (app.settings.effectiveStopGesture, app.settings.returnStops) {
         case (.singleTapFn, true): "Tap or Return"
         case (.singleTapFn, false): "Tap"
         case (.doubleTapFn, true): "Double-tap or Return"
@@ -144,7 +148,7 @@ private struct TranscriptionCard: View {
                 modelBadge
             }
             if let preparation = app.preparation {
-                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation)
+                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation, blocking: app.isBlocking(preparation))
             }
             Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 6) {
                 if app.isMultilingual {
@@ -154,7 +158,7 @@ private struct TranscriptionCard: View {
                     }
                 }
                 GridRow {
-                    let variant = app.settings.transcriptionVariant(for: app.activeLanguage)
+                    let variant = app.transcriptionVariant(for: app.activeLanguage)
                     Label("Model", systemImage: "cpu").foregroundStyle(.secondary)
                     Text("Whisper \(TranscriptionModelOption.option(for: variant)?.name ?? variant)")
                 }
@@ -187,9 +191,84 @@ private struct TranscriptionCard: View {
         case .ready: StatusBadge(text: "Ready", color: .green)
         case .idle: StatusBadge(text: "Not loaded", color: .secondary)
         case .downloading(let fraction): StatusBadge(text: "Downloading \(Int(fraction * 100))%", color: .orange, showsProgress: true)
-        case .loading(let firstTime): StatusBadge(text: firstTime || app.preparation != nil ? "Preparing for this Mac" : "Loading", color: .orange, showsProgress: true)
+        case .loading(let firstTime): StatusBadge(text: firstTime || app.preparation.map(app.isBlocking) == true ? "Preparing for this Mac" : "Loading", color: .orange, showsProgress: true)
         case .failed: StatusBadge(text: "Failed", color: .red)
         }
+    }
+}
+
+/// A place to dictate without leaving the app: the real flow (pill, style, language, rewrite, paste)
+/// lands in this box like in any other app. It also shows what a dictation will use right now.
+struct TryItCard: View {
+    @Bindable var app: AppModel
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    /// This app's own entry in the per-app style and language memory.
+    private var bundleID: String? { Bundle.main.bundleIdentifier }
+
+    var body: some View {
+        Card(title: "Try it here") {
+            if app.needsSetup {
+                Banner(symbol: "exclamationmark.triangle.fill", message: "Finish setup so the hotkey can start dictation.", actionTitle: "Finish setup") {
+                    app.openPermissions()
+                }
+            }
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $text)
+                    .focused($focused)
+                    .font(.system(.title3, design: .serif))
+                    .lineSpacing(3)
+                    .scrollContentBackground(.hidden)
+                    .scrollIndicators(.hidden)
+                    .padding(8)
+                    .frame(minHeight: 96)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.background))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(focused ? Color.pencil.opacity(0.8) : Color.secondary.opacity(0.35), lineWidth: focused ? 1.5 : 0.5)
+                    )
+                    .accessibilityLabel(Text("Dictation test area"))
+                if text.isEmpty {
+                    Text(hint)
+                        .font(.system(.title3, design: .serif))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 8)
+                        .allowsHitTesting(false)
+                }
+            }
+            HStack {
+                Text(verbatim: usage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer()
+                if !text.isEmpty {
+                    Button("Clear") { text = "" }.buttonStyle(.link)
+                }
+            }
+        }
+    }
+
+    private var hint: LocalizedStringResource {
+        let key = app.settings.gestureKey.name
+        return switch (focused, app.settings.startGesture) {
+        case (false, .doubleTap): "Click here, double-tap \(key), and start talking."
+        case (false, .singleTap): "Click here, tap \(key), and start talking."
+        case (true, .doubleTap): "Double-tap \(key) and talk. Your text lands here."
+        case (true, .singleTap): "Tap \(key) and talk. Your text lands here."
+        }
+    }
+
+    /// "Polished · English · Whisper Small (English)": what a dictation here will use right now.
+    private var usage: String {
+        let style = app.styleMemory.defaultStyle(forApp: bundleID, among: app.styles).displayName
+        let language = app.languageMemory.language(forApp: bundleID)
+        let variant = app.transcriptionVariant(for: language)
+        let model = TranscriptionModelOption.option(for: variant)?.name ?? variant
+        return [style, language.name(), "Whisper \(model)"].joined(separator: " · ")
     }
 }
 
@@ -207,17 +286,6 @@ private struct LastDictationCard: View {
                     .lineSpacing(3)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        } else {
-            Card(title: "Last dictation") {
-                HStack(spacing: 10) {
-                    Image(systemName: "text.cursor").font(.title2).foregroundStyle(Color.pencil)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Try your first dictation").font(.headline)
-                        Text("Click into any text field, double-tap Fn, and start talking.")
-                            .font(.callout).foregroundStyle(.secondary)
-                    }
-                }
             }
         }
         if let error = app.dictation.lastError {

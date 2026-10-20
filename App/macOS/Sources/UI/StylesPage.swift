@@ -11,7 +11,7 @@ struct StylesPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Styles", subtitle: "Double-tap Fn to dictate in a style. Press its number while you talk to switch.")
+                PageHeader(title: "Styles", subtitle: "\(app.startHint) to dictate in a style. Press its number while you talk to switch.")
 
                 WritingModelBanner(app: app)
 

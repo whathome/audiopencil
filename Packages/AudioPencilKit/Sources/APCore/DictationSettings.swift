@@ -1,15 +1,86 @@
 import Foundation
 
-/// How a running quick dictation is stopped with the Fn key.
+/// The key the tap gestures use. Right Option and Right Command help on keyboards without a usable Fn.
+public enum GestureKey: String, Codable, CaseIterable, Sendable {
+    case fn
+    case rightOption
+    case rightCommand
+
+    /// Name in sentences and pickers: "Fn", "Right ⌥", "Right ⌘".
+    public var name: String {
+        switch self {
+        case .fn: "Fn"
+        case .rightOption: String(localized: "Right ⌥", bundle: .module)
+        case .rightCommand: String(localized: "Right ⌘", bundle: .module)
+        }
+    }
+
+    /// Text on a keycap: "fn", "right ⌥".
+    public var keycap: String {
+        switch self {
+        case .fn: "fn"
+        case .rightOption: String(localized: "right ⌥", bundle: .module)
+        case .rightCommand: String(localized: "right ⌘", bundle: .module)
+        }
+    }
+}
+
+/// How a dictation is started with the gesture key. Holding it always records raw (if enabled).
+public enum StartGesture: String, Codable, CaseIterable, Sendable {
+    case doubleTap
+    case singleTap
+
+    public func label(_ key: GestureKey) -> String {
+        switch self {
+        case .doubleTap: String(localized: "Double-tap \(key.name)", bundle: .module)
+        case .singleTap: String(localized: "Tap \(key.name)", bundle: .module)
+        }
+    }
+}
+
+/// How a running dictation is stopped with the gesture key (raw values predate other keys).
 public enum StopGesture: String, Codable, CaseIterable, Sendable {
     case singleTapFn
     case doubleTapFn
 
-    public var label: String {
+    public var label: String { label(.fn) }
+
+    public func label(_ key: GestureKey) -> String {
         switch self {
-        case .singleTapFn: String(localized: "Single tap Fn", bundle: .module)
-        case .doubleTapFn: String(localized: "Double-tap Fn", bundle: .module)
+        case .singleTapFn: String(localized: "Tap \(key.name)", bundle: .module)
+        case .doubleTapFn: String(localized: "Double-tap \(key.name)", bundle: .module)
         }
+    }
+}
+
+/// A key plus modifiers that starts and stops dictation, recorded in Settings. Default ⌃⌥Space.
+public struct KeyShortcut: Codable, Equatable, Hashable, Sendable {
+    /// Virtual key code (layout-independent position).
+    public var keyCode: Int
+    /// Modifier flags as CGEventFlags raw bits (⌘ ⌃ ⌥ ⇧ only).
+    public var modifiers: UInt64
+
+    public init(keyCode: Int, modifiers: UInt64) {
+        self.keyCode = keyCode
+        self.modifiers = modifiers
+    }
+
+    public static let command: UInt64 = 0x100000
+    public static let control: UInt64 = 0x40000
+    public static let option: UInt64 = 0x80000
+    public static let shift: UInt64 = 0x20000
+    public static let allModifiers: UInt64 = command | control | option | shift
+
+    public static let controlOptionSpace = KeyShortcut(keyCode: 49, modifiers: control | option)
+
+    /// "⌃⌥" etc., in Apple's order.
+    public var modifierSymbols: String {
+        var text = ""
+        if modifiers & Self.control != 0 { text += "⌃" }
+        if modifiers & Self.option != 0 { text += "⌥" }
+        if modifiers & Self.shift != 0 { text += "⇧" }
+        if modifiers & Self.command != 0 { text += "⌘" }
+        return text
     }
 }
 
@@ -28,14 +99,19 @@ public struct MicrophonePreference: Codable, Equatable, Hashable, Sendable, Iden
 /// Per-device dictation preferences. Stored locally for now; moves into the shared
 /// vault config file (per-device section) in milestone 4.
 public struct DictationSettings: Codable, Equatable, Sendable {
-    /// Gesture that stops a recording (starting is always a double-tap of Fn).
+    /// The key the tap, double-tap and hold gestures use.
+    public var gestureKey: GestureKey = .fn
+    /// Gesture that starts a recording.
+    public var startGesture: StartGesture = .doubleTap
+    /// Gesture that stops a recording. A single-tap start forces a single-tap stop (see `effectiveStopGesture`).
     public var stopGesture: StopGesture = .singleTapFn
     /// Press and hold Fn to talk; release to paste the raw transcript.
     public var holdFnForRaw: Bool = true
     /// Return / Enter also stops a recording (the key press is swallowed).
     public var returnStops: Bool = true
-    /// ⌃⌥Space toggles recording, for keyboards without a usable Fn key.
+    /// The recorded shortcut toggles recording.
     public var fallbackShortcutEnabled: Bool = true
+    public var fallbackShortcut: KeyShortcut = .controlOptionSpace
     /// Maximum gap between the two taps of a double-tap, in seconds.
     public var doubleTapWindow: Double = 0.40
     /// WhisperKit model folder name used for English, e.g. "openai_whisper-small.en".
@@ -75,6 +151,12 @@ public struct DictationSettings: Codable, Equatable, Sendable {
 
     public init() {}
 
+    /// Stop gesture in effect: a single-tap start can only be stopped with a single tap (the detector
+    /// reports a double-tap on the second press, which would stop a recording that just started).
+    public var effectiveStopGesture: StopGesture {
+        startGesture == .singleTap ? .singleTapFn : stopGesture
+    }
+
     /// The languages to offer, never empty, always including `current`.
     public func offeredLanguages(including current: SpokenLanguage? = nil) -> [SpokenLanguage] {
         var codes = dictationLanguages.isEmpty ? SpokenLanguage.defaultCodes() : dictationLanguages
@@ -105,6 +187,9 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         let defaults = DictationSettings()
         let c = try decoder.container(keyedBy: CodingKeys.self)
         stopGesture = try c.decodeIfPresent(StopGesture.self, forKey: .stopGesture) ?? defaults.stopGesture
+        gestureKey = try c.decodeIfPresent(GestureKey.self, forKey: .gestureKey) ?? defaults.gestureKey
+        startGesture = try c.decodeIfPresent(StartGesture.self, forKey: .startGesture) ?? defaults.startGesture
+        fallbackShortcut = try c.decodeIfPresent(KeyShortcut.self, forKey: .fallbackShortcut) ?? defaults.fallbackShortcut
         holdFnForRaw = try c.decodeIfPresent(Bool.self, forKey: .holdFnForRaw) ?? defaults.holdFnForRaw
         returnStops = try c.decodeIfPresent(Bool.self, forKey: .returnStops) ?? defaults.returnStops
         fallbackShortcutEnabled = try c.decodeIfPresent(Bool.self, forKey: .fallbackShortcutEnabled) ?? defaults.fallbackShortcutEnabled

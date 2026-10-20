@@ -21,18 +21,20 @@ struct SetupView: View {
                 )
                 PermissionRow(
                     title: "Accessibility",
-                    detail: "To see the Fn key and paste into the active field.",
+                    detail: "To see the hotkey and paste into the active field.",
                     granted: app.permissions.accessibility,
                     action: ("Open Settings…", { app.permissions.requestAccessibility() })
                 )
-                PermissionRow(
-                    title: "Fn key free",
-                    detail: app.permissions.fnKeyIsFree
-                        ? "“Press 🌐 key to” is set to Do Nothing." as LocalizedStringResource
-                        : "“Press 🌐 key to” is set to \(app.permissions.fnKeyActionDescription). Set it to Do Nothing so double-tapping Fn doesn't also trigger that. Also make sure the Dictation shortcut isn't “Press 🌐 twice”.",
-                    granted: app.permissions.fnKeyIsFree,
-                    action: ("Keyboard Settings…", { app.permissions.openKeyboardSettings() })
-                )
+                if app.settings.gestureKey == .fn {
+                    PermissionRow(
+                        title: "Fn key free",
+                        detail: app.permissions.fnKeyIsFree
+                            ? "“Press 🌐 key to” is set to Do Nothing." as LocalizedStringResource
+                            : "“Press 🌐 key to” is set to \(app.permissions.fnKeyActionDescription). Set it to Do Nothing so double-tapping Fn doesn't also trigger that. Also make sure the Dictation shortcut isn't “Press 🌐 twice”.",
+                        granted: app.permissions.fnKeyIsFree,
+                        action: ("Keyboard Settings…", { app.permissions.openKeyboardSettings() })
+                    )
+                }
                 LabeledContent("Input Monitoring") {
                     Text(app.permissions.inputMonitoring ? "Granted" : "Not needed so far")
                         .foregroundStyle(.secondary)
@@ -43,9 +45,9 @@ struct SetupView: View {
                         SettingsHeader(app: app)
                     }
                     if showsHeader {
-                        PageHeader(title: "Setup", subtitle: app.needsSetup ? "A few things to finish before the Fn key works." : "Everything's ready. Diagnostics are below.")
+                        PageHeader(title: "Setup", subtitle: app.needsSetup ? "A few things to finish before the hotkey works." : "Everything's ready. Diagnostics are below.")
                     }
-                    Text(app.needsSetup ? "Permissions: a few things to finish before the Fn key works" : "Permissions").font(.headline)
+                    Text(app.needsSetup ? "Permissions: a few things to finish before the hotkey works" : "Permissions").font(.headline)
                 }
                 .padding(.top, showsHeader ? 8 : 0)
             }
@@ -59,7 +61,7 @@ struct SetupView: View {
                     .foregroundStyle(app.hotkeyActive ? .green : .orange)
                 }
                 LabeledContent("Microphone", value: app.currentMicrophoneName)
-                LabeledContent("Start", value: "Double-tap Fn")
+                LabeledContent("Start", value: app.startHint)
                 LabeledContent("Stop", value: stopDescription)
                 LabeledContent("Cancel", value: "Esc")
                 VStack(alignment: .leading, spacing: 2) {
@@ -95,8 +97,8 @@ struct SetupView: View {
 
     private var stopDescription: String {
         app.settings.returnStops
-            ? String(localized: "\(app.settings.stopGesture.label) or Return")
-            : app.settings.stopGesture.label
+            ? String(localized: "\(app.settings.effectiveStopGesture.label(app.settings.gestureKey)) or Return")
+            : app.settings.effectiveStopGesture.label(app.settings.gestureKey)
     }
 
     @ViewBuilder
@@ -111,7 +113,7 @@ struct SetupView: View {
             }
         case .loading(let firstTime):
             if let preparation = app.preparation {
-                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation)
+                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation, blocking: app.isBlocking(preparation))
                     .frame(maxWidth: 360)
             } else {
                 HStack {

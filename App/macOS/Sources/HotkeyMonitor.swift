@@ -10,6 +10,7 @@ import CoreGraphics
 /// (password fields, Terminal's Secure Keyboard Entry).
 final class HotkeyMonitor {
     enum KeyEvent: Equatable {
+        /// The gesture key (Fn, Right ⌥ or Right ⌘) went down or up.
         case fnDown
         case fnUp
         case escape
@@ -31,6 +32,12 @@ final class HotkeyMonitor {
     var onDiagnostic: ((String) -> Void)?
 
     private(set) var isActive = false
+    /// Which key the tap gestures use.
+    var gestureKey: GestureKey = .fn
+    /// The shortcut that toggles dictation.
+    var shortcut: KeyShortcut = .controlOptionSpace
+    /// Settings is recording a new shortcut: report nothing, swallow nothing.
+    var isPaused = false
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var fnIsDown = false
@@ -97,7 +104,7 @@ final class HotkeyMonitor {
             break
         }
 
-        if event.getIntegerValueField(.eventSourceUserData) == Self.syntheticMarker { return false }
+        if event.getIntegerValueField(.eventSourceUserData) == Self.syntheticMarker || isPaused { return false }
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         // Not event.timestamp: on Apple silicon that's in Mach ticks, not nanoseconds.
         // The callback runs promptly on the main run loop, so uptime-now is accurate enough for taps.
@@ -105,9 +112,9 @@ final class HotkeyMonitor {
 
         switch type {
         case .flagsChanged:
-            // Fn state comes from the flags, whatever key code the event carries
-            // (the Globe key doesn't always report kVK_Function).
-            let down = event.flags.contains(.maskSecondaryFn)
+            // The key's state comes from the flags, whatever key code the event carries (the Globe key
+            // doesn't always report kVK_Function). Right ⌥ and ⌘ have their own device-dependent bits.
+            let down = isGestureKeyDown(event.flags)
             if down != fnIsDown {
                 fnIsDown = down
                 lastFnChange = time
@@ -139,7 +146,7 @@ final class HotkeyMonitor {
                 keyEvent = .escape
             } else if keyCode == KeyCode.returnKey || keyCode == KeyCode.keypadEnter, flags.intersection(commandLike).isEmpty {
                 keyEvent = .returnKey
-            } else if keyCode == KeyCode.space, flags.contains([.maskControl, .maskAlternate]), !flags.contains(.maskCommand) {
+            } else if Int(keyCode) == shortcut.keyCode, flags.rawValue & KeyShortcut.allModifiers == shortcut.modifiers {
                 keyEvent = .fallbackShortcut
             } else if let digit = KeyCode.digits[keyCode], flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
                 keyEvent = .digit(digit)
@@ -159,6 +166,14 @@ final class HotkeyMonitor {
 
         default:
             return false
+        }
+    }
+
+    private func isGestureKeyDown(_ flags: CGEventFlags) -> Bool {
+        switch gestureKey {
+        case .fn: flags.contains(.maskSecondaryFn)
+        case .rightOption: flags.rawValue & 0x40 != 0 // NX_DEVICERALTKEYMASK
+        case .rightCommand: flags.rawValue & 0x10 != 0 // NX_DEVICERCMDKEYMASK
         }
     }
 }

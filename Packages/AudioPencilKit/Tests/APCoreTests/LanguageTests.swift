@@ -77,4 +77,29 @@ struct LanguageTests {
         let both = WritingSampleSelector.pick(for: "The project is late", from: [english, french], language: SpokenLanguage(code: "fr"), limit: 2)
         #expect(both.map(\.id) == ["fr", "en"]) // others fill the gap
     }
+
 }
+
+struct HotkeySettingsTests {
+    @Test func aTapStartIsStoppedWithATap() {
+        var settings = DictationSettings()
+        settings.stopGesture = .doubleTapFn
+        #expect(settings.effectiveStopGesture == .doubleTapFn)
+        settings.startGesture = .singleTap
+        #expect(settings.effectiveStopGesture == .singleTapFn)
+    }
+
+    @Test func labelsFollowTheKey() {
+        #expect(StartGesture.doubleTap.label(.fn) == "Double-tap Fn")
+        #expect(StopGesture.singleTapFn.label(.rightOption) == "Tap Right ⌥")
+        #expect(KeyShortcut.controlOptionSpace.modifierSymbols == "⌃⌥")
+    }
+
+    @Test func oldSettingsKeepTheirHotkey() throws {
+        let old = #"{"stopGesture":"doubleTapFn","fallbackShortcutEnabled":true}"#
+        let settings = try JSONDecoder().decode(DictationSettings.self, from: Data(old.utf8))
+        #expect(settings.gestureKey == .fn && settings.startGesture == .doubleTap)
+        #expect(settings.fallbackShortcut == .controlOptionSpace && settings.stopGesture == .doubleTapFn)
+    }
+}
+

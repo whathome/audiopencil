@@ -62,7 +62,7 @@ private struct MenuBarContent: View {
         switch app.dictation.phase {
         case .recording: "Recording…"
         case .starting, .finishing: "Working…"
-        case .idle: app.hotkeyActive ? "Ready: double-tap Fn" : "Needs Accessibility permission"
+        case .idle: app.hotkeyActive ? "Ready: \(app.startHint)" : "Needs Accessibility permission"
         }
     }
 }

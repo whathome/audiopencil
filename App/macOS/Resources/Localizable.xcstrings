@@ -132,6 +132,60 @@
         }
       }
     },
+    "%@ to dictate in a style. Press its number while you talk to switch.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ para dictar con un estilo. Pulsa su número mientras hablas para cambiarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pour dicter dans un style. Appuyez sur son numéro pendant que vous parlez pour en changer."
+          }
+        }
+      }
+    },
+    "%@ uses a quicker starter model until the more accurate one is ready, in about %lld min.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ uses a quicker starter model until the more accurate one is ready, in about %2$lld min."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mientras se prepara el modelo más preciso (listo en unos %2$lld min), %1$@ usa un modelo inicial más rápido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attendant le modèle plus précis (prêt dans environ %2$lld min), %1$@ utilise un modèle de démarrage plus rapide."
+          }
+        }
+      }
+    },
+    "%@ uses a quicker starter model until the more accurate one is ready.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mientras se prepara el modelo más preciso, %@ usa un modelo inicial más rápido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attendant le modèle plus précis, %@ utilise un modèle de démarrage plus rapide."
+          }
+        }
+      }
+    },
     "%@ · %@": {
       "localizations": {
         "en": {
@@ -794,18 +848,18 @@
         }
       }
     },
-    "A few things to finish before the Fn key works.": {
+    "A few things to finish before the hotkey works.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Faltan algunas cosas para que funcione la tecla Fn."
+            "value": "Faltan algunas cosas para que funcione el atajo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quelques réglages à terminer pour que la touche Fn fonctionne."
+            "value": "Quelques réglages à terminer pour que le raccourci fonctionne."
           }
         }
       }
@@ -822,6 +876,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un court résumé, puis les points clés en liste, groupés par thème. Garde les faits, les noms, les chiffres et les décisions ; enlève les digressions."
+          }
+        }
+      }
+    },
+    "A tap starts, so a tap stops.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una pulsación empieza, así que una pulsación detiene."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un toucher démarre, donc un toucher arrête."
           }
         }
       }
@@ -922,6 +992,22 @@
         }
       }
     },
+    "Add ⌘, ⌃ or ⌥ (or use a function key)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade ⌘, ⌃ u ⌥ (o usa una tecla de función)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez ⌘, ⌃ ou ⌥ (ou utilisez une touche de fonction)"
+          }
+        }
+      }
+    },
     "After a few dictations": {
       "localizations": {
         "es": {
@@ -966,6 +1052,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Autoriser…"
+          }
+        }
+      }
+    },
+    "Also starts and stops dictation. Click it to record a different one.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También inicia y detiene el dictado. Haz clic para grabar otro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarre et arrête aussi la dictée. Cliquez dessus pour en enregistrer un autre."
           }
         }
       }
@@ -1472,18 +1574,50 @@
         }
       }
     },
-    "Click into any text field, double-tap Fn, and start talking.": {
+    "Clear": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haz clic en cualquier campo de texto, pulsa Fn dos veces y empieza a hablar."
+            "value": "Borrar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cliquez dans n’importe quel champ de texte, touchez deux fois Fn et parlez."
+            "value": "Effacer"
+          }
+        }
+      }
+    },
+    "Click here, double-tap %@, and start talking.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz clic aquí, pulsa %@ dos veces y empieza a hablar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez ici, touchez deux fois %@ et parlez."
+          }
+        }
+      }
+    },
+    "Click here, tap %@, and start talking.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz clic aquí, pulsa %@ y empieza a hablar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez ici, touchez %@ et parlez."
           }
         }
       }
@@ -1516,6 +1650,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cliquez pour choisir un autre style."
+          }
+        }
+      }
+    },
+    "Click, then press the keys to use. Escape cancels.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz clic y pulsa las teclas que quieras usar. Esc cancela."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez, puis appuyez sur les touches à utiliser. Échap annule."
           }
         }
       }
@@ -1884,6 +2034,22 @@
         }
       }
     },
+    "Dictation test area": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona de prueba del dictado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zone d’essai de la dictée"
+          }
+        }
+      }
+    },
     "Dictations": {
       "localizations": {
         "es": {
@@ -1980,50 +2146,18 @@
         }
       }
     },
-    "Double-tap Fn": {
+    "Double-tap %@ and talk. Your text lands here.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pulsar Fn dos veces"
+            "value": "Pulsa %@ dos veces y habla. Tu texto aparecerá aquí."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toucher deux fois Fn"
-          }
-        }
-      }
-    },
-    "Double-tap Fn or Return": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pulsar Fn dos veces o Intro"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toucher deux fois Fn ou Retour"
-          }
-        }
-      }
-    },
-    "Double-tap Fn to dictate in a style. Press its number while you talk to switch.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pulsa Fn dos veces para dictar con un estilo. Pulsa su número mientras hablas para cambiarlo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Touchez deux fois Fn pour dicter dans un style. Appuyez sur son numéro pendant que vous parlez pour en changer."
+            "value": "Touchez deux fois %@ et parlez. Votre texte arrive ici."
           }
         }
       }
@@ -2380,34 +2514,18 @@
         }
       }
     },
-    "Finish setup so the Fn key can start dictation.": {
+    "Finish setup so the hotkey can start dictation.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Termina la configuración para que la tecla Fn inicie el dictado."
+            "value": "Termina la configuración para que el atajo inicie el dictado."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminez la configuration pour que la touche Fn lance la dictée."
-          }
-        }
-      }
-    },
-    "Fn": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fn"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fn"
+            "value": "Terminez la configuration pour que le raccourci lance la dictée."
           }
         }
       }
@@ -2556,34 +2674,34 @@
         }
       }
     },
-    "Hold Fn": {
+    "Hold %@": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantener Fn"
+            "value": "Mantener %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maintenir Fn"
+            "value": "Maintenir %@"
           }
         }
       }
     },
-    "Hold Fn for a raw transcript": {
+    "Hold %@ for a raw transcript": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantener Fn para una transcripción sin procesar"
+            "value": "Mantener %@ para una transcripción sin procesar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maintenir Fn pour une transcription brute"
+            "value": "Maintenir %@ pour une transcription brute"
           }
         }
       }
@@ -2712,6 +2830,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Garder pour toujours"
+          }
+        }
+      }
+    },
+    "Key": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tecla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche"
           }
         }
       }
@@ -4284,18 +4418,18 @@
         }
       }
     },
-    "Permissions: a few things to finish before the Fn key works": {
+    "Permissions: a few things to finish before the hotkey works": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permisos: faltan algunas cosas para que funcione la tecla Fn"
+            "value": "Permisos: faltan algunas cosas para que funcione el atajo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autorisations : quelques réglages à terminer pour que la touche Fn fonctionne"
+            "value": "Autorisations : quelques réglages à terminer pour que le raccourci fonctionne"
           }
         }
       }
@@ -4360,6 +4494,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Préparation de %@ pour ce Mac (la première fois, cela peut prendre quelques minutes)…"
+          }
+        }
+      }
+    },
+    "Preparing Whisper %@ for this Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando Whisper %@ para este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation de Whisper %@ pour ce Mac"
           }
         }
       }
@@ -4450,38 +4600,6 @@
         }
       }
     },
-    "Preparing the multilingual model for this Mac": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando el modelo multilingüe para este Mac"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préparation du modèle multilingue pour ce Mac"
-          }
-        }
-      }
-    },
-    "Preparing the transcription model for this Mac": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparando el modelo de transcripción para este Mac"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préparation du modèle de transcription pour ce Mac"
-          }
-        }
-      }
-    },
     "Press Fn to test": {
       "localizations": {
         "es": {
@@ -4498,18 +4616,34 @@
         }
       }
     },
-    "Press and hold, talk, release to paste. Pressing another key while holding cancels, so Fn still works as a modifier.": {
+    "Press and hold, talk, release to paste. Pressing another key while holding cancels, so %@ still works as a modifier.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantén pulsada, habla y suelta para pegar. Pulsar otra tecla mientras la mantienes cancela, así que Fn sigue funcionando como tecla modificadora."
+            "value": "Mantén pulsada, habla y suelta para pegar. Pulsar otra tecla mientras la mantienes cancela, así que %@ sigue funcionando como tecla modificadora."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maintenez, parlez, relâchez pour coller. Appuyer sur une autre touche pendant le maintien annule, donc Fn reste utilisable comme touche de modification."
+            "value": "Maintenez, parlez, relâchez pour coller. Appuyer sur une autre touche pendant le maintien annule, donc %@ reste utilisable comme touche de modification."
+          }
+        }
+      }
+    },
+    "Press keys…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa las teclas…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyez sur les touches…"
           }
         }
       }
@@ -4658,18 +4792,18 @@
         }
       }
     },
-    "Ready: double-tap Fn": {
+    "Ready: %@": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Listo: pulsa Fn dos veces"
+            "value": "Listo: %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prêt : touchez deux fois Fn"
+            "value": "Prêt : %@"
           }
         }
       }
@@ -4722,18 +4856,18 @@
         }
       }
     },
-    "Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone Fn tap.": {
+    "Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone %@ tap.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La grabación empieza al instante con la segunda pulsación. El indicador del micrófono parpadea un momento si pulsas Fn una sola vez."
+            "value": "La grabación empieza al instante con la segunda pulsación. El indicador del micrófono parpadea un momento si pulsas %@ una sola vez."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’enregistrement démarre dès le second toucher. Le témoin du micro clignote brièvement si vous ne touchez Fn qu’une fois."
+            "value": "L’enregistrement démarre dès le second toucher. Le témoin du micro clignote brièvement si vous ne touchez %@ qu’une fois."
           }
         }
       }
@@ -5090,6 +5224,22 @@
         }
       }
     },
+    "Right ⌥ or Right ⌘ suit keyboards without a usable Fn key.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ derecha o ⌘ derecha van bien en teclados sin una tecla Fn útil."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥ droite ou ⌘ droite conviennent aux claviers sans touche Fn utilisable."
+          }
+        }
+      }
+    },
     "Room for models": {
       "localizations": {
         "es": {
@@ -5336,6 +5486,22 @@
         }
       }
     },
+    "Shortcut": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atajo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccourci"
+          }
+        }
+      }
+    },
     "Shorter": {
       "localizations": {
         "es": {
@@ -5544,6 +5710,22 @@
         }
       }
     },
+    "Space": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espace"
+          }
+        }
+      }
+    },
     "Start": {
       "localizations": {
         "es": {
@@ -5608,18 +5790,34 @@
         }
       }
     },
-    "Start the mic on the first Fn tap": {
+    "Start the mic on the first %@ tap": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encender el micrófono con la primera pulsación de Fn"
+            "value": "Encender el micrófono con la primera pulsación de %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allumer le micro dès le premier toucher de Fn"
+            "value": "Allumer le micro dès le premier toucher de %@"
+          }
+        }
+      }
+    },
+    "Start with": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar con"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrer avec"
           }
         }
       }
@@ -5658,6 +5856,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Étape %lld sur %lld : %@. Une seule fois par modèle ; la dictée attend la fin."
+          }
+        }
+      }
+    },
+    "Step %lld of %lld: %@. Runs in the background; dictation keeps working.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step %1$lld of %2$lld: %3$@. Runs in the background; dictation keeps working."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso %lld de %lld: %@. En segundo plano; el dictado sigue funcionando."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étape %lld sur %lld : %@. En arrière-plan ; la dictée continue de fonctionner."
           }
         }
       }
@@ -6080,34 +6300,18 @@
         }
       }
     },
-    "Tap Fn": {
+    "Tap %@ and talk. Your text lands here.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pulsar Fn"
+            "value": "Pulsa %@ y habla. Tu texto aparecerá aquí."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toucher Fn"
-          }
-        }
-      }
-    },
-    "Tap Fn or Return": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pulsar Fn o Intro"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toucher Fn ou Retour"
+            "value": "Touchez %@ et parlez. Votre texte arrive ici."
           }
         }
       }
@@ -6124,6 +6328,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toucher ou Retour"
+          }
+        }
+      }
+    },
+    "Tap; 1–9 to switch": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsar; 1–9 para cambiar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toucher ; 1–9 pour changer"
           }
         }
       }
@@ -6480,18 +6700,18 @@
         }
       }
     },
-    "To see the Fn key and paste into the active field.": {
+    "To see the hotkey and paste into the active field.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para detectar la tecla Fn y pegar en el campo activo."
+            "value": "Para detectar el atajo y pegar en el campo activo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour détecter la touche Fn et coller dans le champ actif."
+            "value": "Pour détecter le raccourci et coller dans le champ actif."
           }
         }
       }
@@ -6576,18 +6796,18 @@
         }
       }
     },
-    "Try your first dictation": {
+    "Try it here": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haz tu primer dictado"
+            "value": "Pruébalo aquí"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Faites votre première dictée"
+            "value": "Essayez ici"
           }
         }
       }
@@ -7360,34 +7580,18 @@
         }
       }
     },
-    "fn": {
+    "hold %@": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "fn"
+            "value": "mantener %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "fn"
-          }
-        }
-      }
-    },
-    "hold fn": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "mantener fn"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "maintenir fn"
+            "value": "maintenir %@"
           }
         }
       }
@@ -7602,38 +7806,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "« Appuyer sur la touche 🌐 pour » est réglé sur Ne rien faire."
-          }
-        }
-      }
-    },
-    "⌃⌥ Space": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⌃⌥ Space"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⌃⌥ Space"
-          }
-        }
-      }
-    },
-    "⌃⌥Space starts and stops (for keyboards without Fn)": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⌃⌥Espacio inicia y detiene (teclados sin Fn)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⌃⌥Espace démarre et arrête (claviers sans Fn)"
           }
         }
       }

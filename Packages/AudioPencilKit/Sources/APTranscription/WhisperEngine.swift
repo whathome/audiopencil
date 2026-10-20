@@ -120,6 +120,20 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
         kit = try await WhisperKit(config)
     }
 
+    /// True once this model is downloaded and prepared for this Mac: loading it takes seconds.
+    public nonisolated var isReady: Bool { isDownloaded && !needsFirstTimePreparation }
+
+    /// Prepares the model for this Mac without loading it for use, so it can run in the background
+    /// while another model is loaded. The compiling happens in a system process; nothing stays resident.
+    public func prepareIfNeeded() async throws {
+        guard isDownloaded, needsFirstTimePreparation else { return }
+        try await lock.withLock {
+            guard needsFirstTimePreparation else { return }
+            try await prepare()
+            FileManager.default.createFile(atPath: prewarmMarker.path, contents: nil)
+        }
+    }
+
     /// Called as each part of a first-time preparation starts. Set before loading.
     private var onPreparation: (@Sendable (ModelPreparation?) -> Void)?
 
@@ -144,7 +158,8 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
             _ = try await MLModel.load(contentsOf: url, configuration: configuration) // compiled, cached, released
         }
         let seconds = Date().timeIntervalSince(start)
-        PreparationEstimate.record(seconds, variant: variant)
+        // Seconds mean Core ML already had it compiled (a cache hit), which says nothing about a real run.
+        if seconds > 10 { PreparationEstimate.record(seconds, variant: variant) }
         Log.models.notice("Prepared \(self.variant, privacy: .public) for this Mac in \(Int(seconds)) s (estimated \(Int(estimate)) s)")
         onPreparation?(nil)
     }
