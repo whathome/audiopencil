@@ -42,7 +42,11 @@ public enum PromptBuilder {
         case .brief: rules.append("A few sentences at most.")
         }
 
-        if context == .longForm, style.extractActionItems {
+        // Summaries of long recordings: summary, themed key points, action items.
+        let sectioned = context == .longForm && style.extractActionItems && style.intensity == .heavy
+        if sectioned {
+            rules.append("End with an \"Action items\" list of what I committed to.")
+        } else if context == .longForm, style.extractActionItems {
             rules.append("End with an \"Action items\" list of what the speaker committed to, if anything.")
         } else {
             rules.append("No action items list.")
@@ -54,7 +58,19 @@ public enum PromptBuilder {
         if let rule = languageRule(language) { rules.append(rule) }
 
         let instructions = style.instructions + "\n\nRules:\n" + rules.map { "- " + $0 }.joined(separator: "\n")
-        let input = "<transcript>\n\(transcript)\n</transcript>"
+        var input = "<transcript>\n\(transcript)\n</transcript>"
+        if sectioned {
+            // After the transcript, not in the rules: there, SmolLM3 writes one summary paragraph and stops.
+            // "None" keeps it from stopping before the list or making items up to fill it.
+            input += """
+
+
+                Write it as me, in three sections, in this order:
+                **Summary**: 2–3 sentences.
+                **Key points**: bullets, grouped under a bold heading per theme.
+                **Action items**: a bullet for each thing I said I'd do, or just "None".
+                """
+        }
 
         // Roughly 1.4 tokens per English word; light cleanup returns about as much as it gets.
         let transcriptTokens = Int(Double(UsageStats.wordCount(transcript)) * 1.4)
