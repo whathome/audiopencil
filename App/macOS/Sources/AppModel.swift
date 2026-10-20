@@ -26,6 +26,13 @@ final class AppModel {
 
     /// Page shown in the main window.
     var page: Page = .dictation
+    var settingsTab: SettingsTab = .general
+
+    /// Settings › Permissions (what used to be the Setup page).
+    func openPermissions() {
+        settingsTab = .permissions
+        page = .settings
+    }
     /// Counts only, for the stats column.
     private(set) var stats: UsageStats = AppModel.loadStats()
 
@@ -187,7 +194,7 @@ final class AppModel {
         sync.start()
         permissions.refresh()
         startHotkeysIfPossible()
-        if needsSetup { page = .setup }
+        if needsSetup { openPermissions() }
         prepareModel()
         pollPermissions()
         Task { [weak self] in

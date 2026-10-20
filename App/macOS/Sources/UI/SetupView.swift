@@ -5,6 +5,10 @@ import SwiftUI
 /// Setup checklist (doubles as onboarding) and diagnostics for the dictation loop.
 struct SetupView: View {
     @Bindable var app: AppModel
+    /// False inside Settings, which has its own title.
+    var showsHeader = true
+    /// Inside the Settings page: show its title and tab switcher above the first section.
+    var settingsHeader = false
 
     var body: some View {
         Form {
@@ -35,10 +39,15 @@ struct SetupView: View {
                 }
             } header: {
                 VStack(alignment: .leading, spacing: 18) {
-                    PageHeader(title: "Setup", subtitle: app.needsSetup ? "A few things to finish before the Fn key works." : "Everything's ready. Diagnostics are below.")
-                    Text("Permissions").font(.headline)
+                    if settingsHeader {
+                        SettingsHeader(app: app)
+                    }
+                    if showsHeader {
+                        PageHeader(title: "Setup", subtitle: app.needsSetup ? "A few things to finish before the Fn key works." : "Everything's ready. Diagnostics are below.")
+                    }
+                    Text(app.needsSetup ? "Permissions: a few things to finish before the Fn key works" : "Permissions").font(.headline)
                 }
-                .padding(.top, 8)
+                .padding(.top, showsHeader ? 8 : 0)
             }
 
             Section("Hotkey") {

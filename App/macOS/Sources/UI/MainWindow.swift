@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum Page: String, CaseIterable, Identifiable, Hashable {
-    case dictation, styles, writing, notes, vault, setup, settings
+    case dictation, styles, writing, notes, vault, settings
     var id: Self { self }
 
     var title: String {
@@ -11,7 +11,6 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .writing: "My writing"
         case .notes: "Notes"
         case .vault: "Vault"
-        case .setup: "Setup"
         case .settings: "Settings"
         }
     }
@@ -23,7 +22,6 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .writing: "text.quote"
         case .notes: "book.closed"
         case .vault: "externaldrive.connected.to.line.below"
-        case .setup: "checkmark.shield"
         case .settings: "gearshape"
         }
     }
@@ -75,7 +73,6 @@ struct MainWindow: View {
         case .writing: WritingPage(app: app)
         case .notes: NotesPage(app: app, notes: app.notes)
         case .vault: VaultPage(vault: app.vault, sync: app.sync)
-        case .setup: SetupView(app: app)
         case .settings: SettingsView(app: app, embedded: true)
         }
     }
@@ -99,7 +96,7 @@ private struct Sidebar: View {
     let rail: Bool
 
     private let mainPages: [Page] = [.dictation, .styles, .writing, .notes]
-    private let setupPages: [Page] = [.vault, .setup, .settings]
+    private let setupPages: [Page] = [.vault, .settings]
 
     var body: some View {
         VStack(alignment: rail ? .center : .leading, spacing: 2) {
@@ -188,7 +185,7 @@ private struct Sidebar: View {
                 .foregroundStyle(app.page == page ? Color.white : Color.black.opacity(0.8))
         } else if page == .vault, !app.vault.settings.isConfigured {
             Text("Set up").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
-        } else if page == .setup, app.needsSetup {
+        } else if page == .settings, app.needsSetup {
             Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
         }
     }
@@ -198,10 +195,10 @@ private struct Sidebar: View {
     private func railBadge(_ page: Page) -> some View {
         let needsAttention = (page == .notes && !app.notes.pending.isEmpty)
             || (page == .vault && !app.vault.settings.isConfigured)
-            || (page == .setup && app.needsSetup)
+            || (page == .settings && app.needsSetup)
         if needsAttention {
             Circle()
-                .fill(page == .setup ? Color.orange : Color.pencil)
+                .fill(page == .settings ? Color.orange : Color.pencil)
                 .frame(width: 8, height: 8)
                 .offset(x: -3, y: 3)
         }

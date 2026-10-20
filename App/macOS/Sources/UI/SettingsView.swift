@@ -3,9 +3,102 @@ import APCore
 import APModels
 import SwiftUI
 
+enum SettingsTab: String, CaseIterable, Identifiable {
+    case general, models, permissions
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .general: "General"
+        case .models: "Models"
+        case .permissions: "Permissions"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .general: "gearshape"
+        case .models: "cpu"
+        case .permissions: "checkmark.shield"
+        }
+    }
+}
+
+/// Settings in three tabs: General, Models, Permissions (which used to be the Setup page).
+/// A page in the main window (segmented tabs under the title) or the ⌘, window (tab bar).
 struct SettingsView: View {
     @Bindable var app: AppModel
     /// Shown as a page in the main window rather than the ⌘, Settings window.
+    var embedded = false
+
+    var body: some View {
+        if embedded {
+            content(app.settingsTab)
+        } else {
+            TabView(selection: $app.settingsTab) {
+                ForEach(SettingsTab.allCases) { tab in
+                    content(tab)
+                        .tabItem { Label(tab.title, systemImage: tab.symbol) }
+                        .tag(tab)
+                }
+            }
+            .frame(width: 560, height: 660)
+        }
+    }
+
+    @ViewBuilder
+    private func content(_ tab: SettingsTab) -> some View {
+        switch tab {
+        case .general: GeneralSettings(app: app, embedded: embedded)
+        case .models: ModelSettings(app: app, embedded: embedded)
+        case .permissions: SetupView(app: app, showsHeader: false, settingsHeader: embedded)
+        }
+    }
+}
+
+/// Page title and tab switcher, placed in each tab's first section header so it lines up with the form.
+struct SettingsHeader: View {
+    @Bindable var app: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            PageHeader(title: "Settings", subtitle: "Hotkey and sounds, the models on this Mac, and permissions.")
+            HStack(spacing: 8) {
+                Picker("", selection: $app.settingsTab) {
+                    ForEach(SettingsTab.allCases) { tab in
+                        Text(tab.title).tag(tab)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: 380)
+                if app.needsSetup {
+                    Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                        .help("Permissions need attention")
+                }
+            }
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+    }
+}
+
+/// A section title, preceded by the Settings header when shown as a page.
+private struct FirstSectionHeader: View {
+    let app: AppModel
+    let embedded: Bool
+    let title: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if embedded { SettingsHeader(app: app) }
+            Text(title).font(.headline)
+        }
+    }
+}
+
+private struct GeneralSettings: View {
+    @Bindable var app: AppModel
     var embedded = false
     @State private var vocabularyText = ""
 
@@ -34,14 +127,9 @@ struct SettingsView: View {
                     Text("Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone Fn tap.")
                 }
             } header: {
-                VStack(alignment: .leading, spacing: 18) {
-                    if embedded {
-                        PageHeader(title: "Settings", subtitle: "Hotkey, microphones, vocabulary, and how the app shows up.")
-                    }
-                    Text("Dictation hotkey").font(.headline)
-                }
-                .padding(.top, embedded ? 8 : 0)
+                FirstSectionHeader(app: app, embedded: embedded, title: "Dictation hotkey")
             }
+
 
             Section("Sounds") {
                 HStack {
@@ -87,6 +175,30 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            Section("App") {
+                Toggle(isOn: $app.settings.menuBarMode) {
+                    Text("Menu bar only")
+                    Text("Hide the Dock icon and show Audio Pencil in the menu bar.")
+                }
+                Toggle("Launch at login", isOn: Binding(get: { app.launchAtLogin }, set: { app.setLaunchAtLogin($0) }))
+                if app.launchAtLoginNeedsApproval {
+                    Text("Approve Audio Pencil in System Settings › General › Login Items.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .onAppear { vocabularyText = app.settings.customVocabulary.joined(separator: "\n") }
+    }
+}
+
+private struct ModelSettings: View {
+    @Bindable var app: AppModel
+    var embedded = false
+
+    var body: some View {
+        Form {
             Section {
                 Picker("Writing model", selection: $app.settings.writingModel) {
                     ForEach(WritingModelOption.catalogue) { option in
@@ -122,7 +234,7 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Styles")
+                FirstSectionHeader(app: app, embedded: embedded, title: "Styles")
             } footer: {
                 Text("The writing model runs on this Mac. On 8 GB it swaps with the transcription model, so a styled dictation takes a few seconds longer than raw.")
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,24 +254,8 @@ struct SettingsView: View {
             }
 
             ModelSuggestionsSection(advisor: app.advisor)
-
-            Section("App") {
-                Toggle(isOn: $app.settings.menuBarMode) {
-                    Text("Menu bar only")
-                    Text("Hide the Dock icon and show Audio Pencil in the menu bar.")
-                }
-                Toggle("Launch at login", isOn: Binding(get: { app.launchAtLogin }, set: { app.setLaunchAtLogin($0) }))
-                if app.launchAtLoginNeedsApproval {
-                    Text("Approve Audio Pencil in System Settings › General › Login Items.")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
-            }
         }
         .formStyle(.grouped)
-        .frame(width: embedded ? nil : 540)
-        .frame(minHeight: embedded ? nil : 600)
-        .onAppear { vocabularyText = app.settings.customVocabulary.joined(separator: "\n") }
     }
 }
 

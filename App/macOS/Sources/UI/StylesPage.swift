@@ -75,6 +75,8 @@ struct StylesPage: View {
 }
 
 private struct StyleCard: View {
+    static let height: CGFloat = 158
+
     let style: Style
     let isDefault: Bool
     var sampleCount = 0
@@ -101,8 +103,9 @@ private struct StyleCard: View {
             Text(style.isRaw ? "Pastes exactly what you said. Holding Fn always gives you this." : style.instructions)
                 .font(.callout)
                 .foregroundStyle(.secondary)
-                .lineLimit(3)
+                .lineLimit(3, reservesSpace: true) // every card keeps room for three lines
                 .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer(minLength: 0)
             HStack(spacing: 6) {
                 if style.isRaw {
                     Tag("No writing model")
@@ -112,7 +115,8 @@ private struct StyleCard: View {
                     if style.length != .asSpoken { Tag(style.length.label) }
                 }
                 if style.tone == .likeMe {
-                    Tag(sampleCount < InterviewPrompt.minimumSamples ? "Needs \(InterviewPrompt.minimumSamples) writing samples (My writing)" : "\(sampleCount) writing samples")
+                    Tag(sampleCount < InterviewPrompt.minimumSamples ? "Needs \(InterviewPrompt.minimumSamples) samples" : "\(sampleCount) samples")
+                        .help("Writing samples on the My writing page")
                 }
                 Spacer()
                 if !style.isRaw {
@@ -121,6 +125,7 @@ private struct StyleCard: View {
             }
         }
         .padding(16)
+        .frame(height: Self.height, alignment: .top) // uniform cards, whatever the content
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.background.secondary))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.separator.opacity(0.6), lineWidth: 0.5))
         .opacity(style.isEnabled ? 1 : 0.6)
@@ -133,6 +138,7 @@ private struct Tag: View {
 
     var body: some View {
         Text(text)
+            .lineLimit(1)
             .font(.caption)
             .padding(.horizontal, 7)
             .padding(.vertical, 2)

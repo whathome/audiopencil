@@ -13,7 +13,7 @@ struct DictationPage: View {
 
                 if app.needsSetup {
                     Banner(symbol: "exclamationmark.triangle.fill", message: "Finish setup so the Fn key can start dictation.", actionTitle: "Finish setup") {
-                        app.page = .setup
+                        app.openPermissions()
                     }
                 }
 
@@ -192,7 +192,7 @@ private struct LastDictationCard: View {
             }
         }
         if let error = app.dictation.lastError {
-            Banner(symbol: "exclamationmark.triangle.fill", message: error, actionTitle: "Open setup") { app.page = .setup }
+            Banner(symbol: "exclamationmark.triangle.fill", message: error, actionTitle: "Open settings") { app.openPermissions() }
         }
     }
 
