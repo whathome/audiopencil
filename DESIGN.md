@@ -4,8 +4,10 @@ description: Private, on-device dictation for macOS, a pencil mark in the margin
 colors:
   pencil-amber: "#BA7517"
   pencil-amber-dark: "#EF9F27"
-  window-ground: "#252525"
-  card-surface: "#2D2D2D"
+  window-ground: "#FFFFFF"
+  window-ground-dark: "#252525"
+  card-surface: "#F9F9F9"
+  card-surface-dark: "#2D2D2D"
   pill-ink: "rgba(0, 0, 0, 0.82)"
   status-ready: "#32D74B"
   status-attention: "#FF9F0A"
@@ -152,8 +154,8 @@ The palette is a single warm accent over neutral, appearance-aware system greys,
 - **Pencil Amber** (light #BA7517, dark #EF9F27): the app's `AccentColor` asset, referenced in code as `Color.pencil`. Used for the selected sidebar row, switches, primary buttons, the current style chip in the recording pill, the "Note in 0:25" warning, card icons, and the one accented stat (Time saved). It's deeper in light mode to keep contrast against white, and brighter in dark mode against charcoal.
 
 ### Neutral
-- **Window Ground** (#252525 in dark appearance): the window and page background. In code it's the system background, never a hard-coded hex. The value here is the dark-mode rendering, for reference.
-- **Card Surface** (#2D2D2D in dark appearance): `background.secondary`, the fill for cards and stat tiles, one tonal step above the ground. Paired with a hairline `separator` edge at 60% opacity.
+- **Window Ground** (#FFFFFF light, #252525 dark): the window and page background. In code it's the system background, never a hard-coded hex. Both values are renderings measured from the app, for reference.
+- **Card Surface** (#F9F9F9 light, #2D2D2D dark): `background.secondary`, the fill for cards and stat tiles, one tonal step off the ground (darker in light mode, lighter in dark). Paired with a hairline `separator` edge at 60% opacity.
 - **Pill Ink** (black at 82%): the recording pill's fill. It's the same in both appearances, because the pill floats over arbitrary content in other apps and must always read as a dark object.
 - **Text:** the system `primary`, `secondary` and `tertiary` label colours. Secondary carries all descriptions and footers; tertiary is reserved for version strings and dismiss glyphs.
 
@@ -257,7 +259,7 @@ Native and restrained: the macOS button styles, tinted by the accent.
 - **Style cards** are a fixed 158 pt tall. Descriptions reserve three lines and tags stay on one line, so the grid stays even. The whole card opens the editor, and a disabled style drops to 60% opacity.
 
 ### Inputs / Fields
-These are the system controls inside grouped forms: switches, pop-up pickers, steppers, sliders with value read-outs in monospaced digits, and the text editor for vocabulary. Fields aren't restyled.
+These are the system controls inside grouped forms: switches, pop-up pickers, steppers, sliders with value read-outs in monospaced digits, and the text editor for vocabulary. Fields aren't restyled. A setting's explanation sits under its label as the second line of the control's label. A section's footer is callout size, secondary and left-aligned, so it reads as a note on the rows above rather than another setting.
 
 ### Navigation
 - **Sidebar:** 30 pt rows with an SF Symbol and title. The selected row fills Pencil Amber with white text and icon.

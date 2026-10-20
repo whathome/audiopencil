@@ -26,6 +26,12 @@ public enum TranscriptCleaner {
         clean(segments.map(\.text).joined(separator: " "))
     }
 
+    /// Whether a cleaned transcript holds any actual words. Silence can leave a stray "." or "-",
+    /// which must count as nothing heard rather than go to the writing model.
+    public static func hasSpeech(_ text: String) -> Bool {
+        text.contains { $0.isLetter || $0.isNumber }
+    }
+
     public static func clean(_ text: String) -> String {
         var result = text
         // [BLANK_AUDIO], *sigh*, and short lowercase sound tags like (beep) or (keyboard clicking).

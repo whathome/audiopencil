@@ -113,6 +113,21 @@ private struct PageAlignedForm: ViewModifier {
     }
 }
 
+/// Explanatory text under a form section: small, secondary and left-aligned, so it reads as a note
+/// on the rows above rather than another setting.
+private struct FormFooter: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 /// A section title, preceded by the Settings header when shown as a page.
 private struct FirstSectionHeader: View {
     let app: AppModel
@@ -201,8 +216,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Custom vocabulary")
             } footer: {
-                Text("One name, place or term per line. Whisper gets them as spelling hints.")
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                FormFooter("One name, place or term per line. Whisper gets them as spelling hints.")
             }
 
             Section {
@@ -226,8 +240,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Notes")
             } footer: {
-                Text("Notes go to each style's folder (set on the Styles page), or \(NoteMaker.defaultFolder.dropFirst()). Audio goes to \(NoteMaker.recordingsFolder.dropFirst()).")
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                FormFooter("Notes go to each style's folder (set on the Styles page), or \(NoteMaker.defaultFolder.dropFirst()). Audio goes to \(NoteMaker.recordingsFolder.dropFirst()).")
             }
 
             Section("App") {
@@ -292,8 +305,7 @@ private struct ModelSettings: View {
             } header: {
                 FirstSectionHeader(app: app, embedded: embedded, title: "Styles")
             } footer: {
-                Text("The writing model runs on this Mac. On 8 GB it swaps with the transcription model, so a styled dictation takes a few seconds longer than raw.")
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                FormFooter("The writing model runs on this Mac. On 8 GB it swaps with the transcription model, so a styled dictation takes a few seconds longer than raw.")
             }
 
             Section("Transcription") {
@@ -364,9 +376,7 @@ private struct MicrophonePriorityList: View {
         } header: {
             Text("Microphones")
         } footer: {
-            Text("Uses the first connected microphone in this list, otherwise the system default. Now: \(app.currentMicrophoneName).")
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .multilineTextAlignment(.leading)
+            FormFooter("Uses the first connected microphone in this list, otherwise the system default. Now: \(app.currentMicrophoneName).")
         }
     }
 
@@ -417,8 +427,7 @@ private struct ModelSuggestionsSection: View {
         } header: {
             Text("Model suggestions")
         } footer: {
-            Text("Audio Pencil checks Hugging Face weekly for transcription and writing models that fit this machine. Try one to compare it with your current model on this Mac; nothing changes until you choose Switch.")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            FormFooter("Audio Pencil checks Hugging Face weekly for transcription and writing models that fit this machine. Try one to compare it with your current model on this Mac; nothing changes until you choose Switch.")
         }
     }
 

@@ -304,7 +304,8 @@ final class DictationController {
                 }
 
                 if !(await engine.isLoaded) { indicator.show(.preparingModel) }
-                let transcript = try await transcription.value
+                let heard = try await transcription.value
+                let transcript = TranscriptCleaner.hasSpeech(heard) ? heard : ""
                 let textReady = ContinuousClock.now
                 guard generation == self.generation else { return } // cancelled while finishing
 
@@ -395,7 +396,8 @@ final class DictationController {
                 }
                 let transcript = try await streamer.finish()
                 guard generation == self.generation else { return }
-                if transcript.isEmpty {
+                if !TranscriptCleaner.hasSpeech(transcript) {
+                    // Nothing to summarise: a stray "." must not become a note written by the model.
                     indicator.flash(.nothingHeard)
                 } else if dryRun {
                     Log.dictation.notice("Dry-run long-form [\(style.name, privacy: .public)]: \(transcript.count) characters")

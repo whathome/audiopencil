@@ -237,6 +237,29 @@ final class AppModel {
                         frame.size.height = 760
                         window.setFrame(frame, display: true)
                     }
+                case "scroll:end", "scroll:top":
+                    // Scrolls the main window's page, so captures can reach content below the fold.
+                    if let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }),
+                       let content = window.contentView {
+                        func scrollViews(in view: NSView) -> [NSScrollView] {
+                            (view as? NSScrollView).map { [$0] } ?? [] + view.subviews.flatMap(scrollViews)
+                        }
+                        if let page = scrollViews(in: content).max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }),
+                           let document = page.documentView {
+                            let clip = page.contentView
+                            let bottom = document.isFlipped ? max(0, document.frame.height - clip.bounds.height) : 0
+                            let top = document.isFlipped ? 0 : max(0, document.frame.height - clip.bounds.height)
+                            clip.scroll(to: NSPoint(x: 0, y: command == "scroll:end" ? bottom : top))
+                            page.reflectScrolledClipView(clip)
+                        }
+                    }
+                case "appearance:light", "appearance:dark", "appearance:system":
+                    // This app only; the system appearance is left alone.
+                    NSApp.appearance = switch command {
+                    case "appearance:light": NSAppearance(named: .aqua)
+                    case "appearance:dark": NSAppearance(named: .darkAqua)
+                    default: nil
+                    }
                 case "sidebar:toggle":
                     UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: "sidebarCollapsed"), forKey: "sidebarCollapsed")
                 case let command where command == "vault:read" || command.hasPrefix("vault:read:"):

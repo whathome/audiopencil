@@ -5,6 +5,7 @@
 #   debug-dictation.sh start | tap-start | warm | stop | cancel
 #   debug-dictation.sh key:fnDown 0.6 key:fnUp          # simulated keys through the real gesture logic
 #   debug-dictation.sh page:settings snapshot           # switch page, snapshot the window
+#   debug-dictation.sh scroll:end | scroll:top | appearance:light|dark|system
 set -euo pipefail
 cd "$(dirname "$0")/.."
 binary=build/debug-dictation

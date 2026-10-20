@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T02:11:59.053410+00:00",
+  "generatedAt": "2026-10-20T02:25:57.050299+00:00",
   "title": "Design System: Audio Pencil",
   "extensions": {
     "colorMeta": {
@@ -37,7 +37,7 @@
       "window-ground": {
         "role": "neutral",
         "displayName": "Window Ground",
-        "canonical": "System window background (dark rendering sampled)",
+        "canonical": "System window background (light rendering measured)",
         "tonalRamp": [
           "oklch(15% 0.0 0)",
           "oklch(25% 0.0 0)",
@@ -52,7 +52,7 @@
       "card-surface": {
         "role": "neutral",
         "displayName": "Card Surface",
-        "canonical": "background.secondary (dark rendering sampled)",
+        "canonical": "background.secondary (light rendering measured)",
         "tonalRamp": [
           "oklch(15% 0.0 0)",
           "oklch(25% 0.0 0)",
@@ -83,6 +83,36 @@
         "role": "status",
         "displayName": "Error Red",
         "canonical": "systemRed"
+      },
+      "window-ground-dark": {
+        "role": "neutral",
+        "displayName": "Window Ground (dark appearance)",
+        "canonical": "System window background (dark rendering measured)",
+        "tonalRamp": [
+          "oklch(15% 0.0 0)",
+          "oklch(25% 0.0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0.0 0)",
+          "oklch(95% 0.0 0)"
+        ]
+      },
+      "card-surface-dark": {
+        "role": "neutral",
+        "displayName": "Card Surface (dark appearance)",
+        "canonical": "background.secondary (dark rendering measured)",
+        "tonalRamp": [
+          "oklch(15% 0.0 0)",
+          "oklch(25% 0.0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0.0 0)",
+          "oklch(95% 0.0 0)"
+        ]
       }
     },
     "typographyMeta": {

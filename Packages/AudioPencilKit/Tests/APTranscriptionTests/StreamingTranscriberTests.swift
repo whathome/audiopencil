@@ -84,6 +84,14 @@ struct TranscriptCleanerTests {
         #expect(TranscriptCleaner.clean("Meet at noon (Thursday) please.") == "Meet at noon (Thursday) please.")
     }
 
+    @Test func punctuationAloneIsNotSpeech() {
+        #expect(!TranscriptCleaner.hasSpeech(""))
+        #expect(!TranscriptCleaner.hasSpeech("."))
+        #expect(!TranscriptCleaner.hasSpeech(" - ... "))
+        #expect(TranscriptCleaner.hasSpeech("OK."))
+        #expect(TranscriptCleaner.hasSpeech("42"))
+    }
+
     @Test func joinsSegments() {
         let segments = [
             TranscriptSegment(start: 0, end: 1, text: " First part."),
