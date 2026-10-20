@@ -17,20 +17,28 @@ struct DictationPage: View {
                     }
                 }
 
-                HStack(alignment: .top, spacing: 16) {
-                    VStack(spacing: 16) {
-                        HotkeyCard(app: app)
-                        TranscriptionCard(app: app)
-                        LastDictationCard(app: app)
+                // Side by side when there's room; stats move underneath, in a grid, when narrow.
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 16) {
+                        cards.frame(minWidth: 460, maxWidth: .infinity)
+                        StatsColumn(stats: app.stats).frame(width: 210)
                     }
-                    .frame(maxWidth: .infinity)
-
-                    StatsColumn(stats: app.stats)
-                        .frame(width: 210)
+                    VStack(spacing: 16) {
+                        cards
+                        StatsColumn(stats: app.stats, columns: 2)
+                    }
                 }
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
+        }
+    }
+
+    private var cards: some View {
+        VStack(spacing: 16) {
+            HotkeyCard(app: app)
+            TranscriptionCard(app: app)
+            LastDictationCard(app: app)
         }
     }
 }
@@ -60,7 +68,8 @@ private struct HotkeyCard: View {
                     .buttonStyle(.link)
             }
             Divider().padding(.vertical, 2)
-            HStack(alignment: .top, spacing: 12) {
+            // Gestures flow into as many columns as fit: 2 × 2 in a normal window, one column when tiny.
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 185), spacing: 12, alignment: .topLeading)], alignment: .leading, spacing: 14) {
                 if app.settings.holdFnForRaw {
                     Gesture(title: "Push to talk", detail: "Hold, release to paste") {
                         KeyCap(label: "hold fn")
@@ -94,9 +103,10 @@ private struct Gesture<Keys: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 4) { keys }
+            HStack(spacing: 4) { keys }.fixedSize()
             Text(title).font(.headline)
             Text(detail).font(.callout).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -199,9 +209,10 @@ private struct LastDictationCard: View {
 
 private struct StatsColumn: View {
     let stats: UsageStats
+    var columns = 1
 
     var body: some View {
-        VStack(spacing: 12) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .top), count: columns), spacing: 12) {
             StatTile(label: "Dictations", value: stats.dictations.formatted()) {
                 HStack(spacing: 14) {
                     VStack(alignment: .leading) {

@@ -222,6 +222,16 @@ final class AppModel {
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
                 case "snapshot": snapshotMainWindow()
+                case let command where command.hasPrefix("window:width:"):
+                    if let width = Double(command.dropFirst("window:width:".count)),
+                       let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }) {
+                        var frame = window.frame
+                        frame.size.width = width
+                        frame.size.height = 760
+                        window.setFrame(frame, display: true)
+                    }
+                case "sidebar:toggle":
+                    UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: "sidebarCollapsed"), forKey: "sidebarCollapsed")
                 case let command where command == "vault:read" || command.hasPrefix("vault:read:"):
                     // Logs the vault settings file (or vault:read:<vault-relative path>) as the app sees it.
                     Task {

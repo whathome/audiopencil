@@ -52,8 +52,9 @@ struct KeyCap: View {
     var body: some View {
         HStack(spacing: 3) {
             if let symbol { Image(systemName: symbol).imageScale(.small) }
-            Text(label)
+            Text(label).lineLimit(1)
         }
+        .fixedSize() // a keycap never wraps or squeezes
         .font(.system(.callout, design: .rounded).weight(.medium))
         .padding(.horizontal, 8)
         .frame(minWidth: 30, minHeight: 24)
