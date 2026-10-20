@@ -3,11 +3,11 @@ import Security
 
 /// Nextcloud app passwords in the login Keychain (Internet password items).
 public enum Keychain {
-    public static func savePassword(_ password: String, for account: NextcloudAccount) throws {
+    public static func savePassword(_ password: String, for account: NextcloudAccount, service: String = "Nextcloud") throws {
         deletePassword(for: account)
         var query = baseQuery(account)
         query[kSecValueData as String] = Data(password.utf8)
-        query[kSecAttrLabel as String] = "Audio Pencil – Nextcloud (\(account.server.host() ?? ""))"
+        query[kSecAttrLabel as String] = "Audio Pencil – \(service) (\(account.server.host() ?? ""))"
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
             throw StorageError.transport("Couldn't save to the Keychain (\(status)).")

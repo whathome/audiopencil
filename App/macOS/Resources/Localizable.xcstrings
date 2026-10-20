@@ -864,6 +864,22 @@
         }
       }
     },
+    "A folder on this Mac, or one synced to it such as iCloud Drive. Your sync service does the syncing.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una carpeta de este Mac, o sincronizada con él, como iCloud Drive. Tu servicio de sincronización se encarga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dossier sur ce Mac, ou synchronisé avec lui comme iCloud Drive. Votre service de synchronisation s’en charge."
+          }
+        }
+      }
+    },
     "A short summary paragraph, then the key points as bullets grouped by theme. Keeps facts, names, numbers and decisions; drops rambling.": {
       "localizations": {
         "es": {
@@ -992,6 +1008,22 @@
         }
       }
     },
+    "Add board": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir tablero"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter le tableau"
+          }
+        }
+      }
+    },
     "Add ⌘, ⌃ or ⌥ (or use a function key)": {
       "localizations": {
         "es": {
@@ -1056,6 +1088,22 @@
         }
       }
     },
+    "Also starts and stops": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También empieza y para"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarre et arrête aussi"
+          }
+        }
+      }
+    },
     "Also starts and stops dictation. Click it to record a different one.": {
       "localizations": {
         "es": {
@@ -1116,6 +1164,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Répondre…"
+          }
+        }
+      }
+    },
+    "Any server that speaks WebDAV: a Synology, ownCloud, a hosting provider. Nothing else leaves this Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cualquier servidor WebDAV: un Synology, ownCloud, un proveedor de alojamiento. Nada más sale de este Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout serveur WebDAV : un Synology, ownCloud, un hébergeur. Rien d’autre ne quitte ce Mac."
           }
         }
       }
@@ -1430,22 +1494,6 @@
         }
       }
     },
-    "Can write here, but there's no .obsidian folder. Is this the vault's top folder?": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se puede escribir aquí, pero no hay carpeta .obsidian. ¿Es la carpeta principal de la bóveda?"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Écriture possible ici, mais il n’y a pas de dossier .obsidian. Est-ce bien le dossier principal du coffre ?"
-          }
-        }
-      }
-    },
     "Cancel": {
       "localizations": {
         "es": {
@@ -1542,18 +1590,34 @@
         }
       }
     },
-    "Choose your Obsidian vault folder (the one that contains .obsidian).": {
+    "Choose the folder for your notes. An Obsidian vault (with a .obsidian folder) also gets a review board.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige la carpeta de tu bóveda de Obsidian (la que contiene .obsidian)."
+            "value": "Elige la carpeta de tus notas. Una bóveda de Obsidian (con una carpeta .obsidian) también recibe un tablero de revisión."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez le dossier de votre coffre Obsidian (celui qui contient .obsidian)."
+            "value": "Choisissez le dossier de vos notes. Un coffre Obsidian (avec un dossier .obsidian) reçoit aussi un tableau de relecture."
+          }
+        }
+      }
+    },
+    "Choose where notes go. Until then they wait on this Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige adónde van las notas. Hasta entonces esperan en este Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez où vont les notes. D’ici là, elles attendent sur ce Mac."
           }
         }
       }
@@ -1718,18 +1782,18 @@
         }
       }
     },
-    "Connect your vault so notes have somewhere to go. Until then they wait on this Mac.": {
+    "Connected as %@": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conecta tu bóveda para que las notas tengan adónde ir. Mientras tanto esperan en este Mac."
+            "value": "Conectado como %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connectez votre coffre pour que les notes aient une destination. D’ici là, elles attendent sur ce Mac."
+            "value": "Connecté en tant que %@"
           }
         }
       }
@@ -1800,6 +1864,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Synchronisation impossible"
+          }
+        }
+      }
+    },
+    "Couldn't update %@: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Couldn't update %1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar %@: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de mettre à jour %@ : %@"
           }
         }
       }
@@ -1880,6 +1966,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Supprimer le style"
+          }
+        }
+      }
+    },
+    "Delete this note and its recording?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar esta nota y su grabación?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer cette note et son enregistrement ?"
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer…"
           }
         }
       }
@@ -2066,6 +2184,22 @@
         }
       }
     },
+    "Disconnect": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecter"
+          }
+        }
+      }
+    },
     "Dismiss": {
       "localizations": {
         "es": {
@@ -2194,18 +2328,18 @@
         }
       }
     },
-    "Double-tap; 1–9 to switch": {
+    "Double-tap; 1–9 picks a style while you talk": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doble pulsación; 1–9 para cambiar"
+            "value": "Doble toque; 1–9 elige un estilo mientras hablas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Double toucher ; 1–9 pour changer"
+            "value": "Toucher deux fois ; 1–9 choisit un style pendant que vous parlez"
           }
         }
       }
@@ -2402,6 +2536,22 @@
         }
       }
     },
+    "Enter the server's WebDAV address, like https://example.com/dav/.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe la dirección WebDAV del servidor, por ejemplo https://example.com/dav/."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez l’adresse WebDAV du serveur, par exemple https://example.com/dav/."
+          }
+        }
+      }
+    },
     "Enter your Nextcloud address, like cloud.example.com.": {
       "localizations": {
         "es": {
@@ -2578,18 +2728,18 @@
         }
       }
     },
-    "Folder in the vault": {
+    "Folder for notes": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carpeta en la bóveda"
+            "value": "Carpeta de notas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dossier dans le coffre"
+            "value": "Dossier des notes"
           }
         }
       }
@@ -2706,18 +2856,18 @@
         }
       }
     },
-    "Hold, release to paste": {
+    "Hold, release to paste the raw transcript": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantén, suelta para pegar"
+            "value": "Mantén y suelta para pegar la transcripción sin procesar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maintenez, relâchez pour coller"
+            "value": "Maintenir, relâcher pour coller la transcription brute"
           }
         }
       }
@@ -2770,22 +2920,6 @@
         }
       }
     },
-    "In a style": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Con un estilo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dans un style"
-          }
-        }
-      }
-    },
     "Input Monitoring": {
       "localizations": {
         "es": {
@@ -2830,6 +2964,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Garder pour toujours"
+          }
+        }
+      }
+    },
+    "Kept forever": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada para siempre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservée pour toujours"
           }
         }
       }
@@ -3218,6 +3368,22 @@
         }
       }
     },
+    "Long recordings become Markdown notes in your notes folder, readable in any editor.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las grabaciones largas se convierten en notas Markdown en tu carpeta de notas, legibles en cualquier editor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les longs enregistrements deviennent des notes Markdown dans votre dossier de notes, lisibles dans n’importe quel éditeur."
+          }
+        }
+      }
+    },
     "Long recordings become notes in your vault. Obsidian is where you read and organise them.": {
       "localizations": {
         "es": {
@@ -3234,18 +3400,18 @@
         }
       }
     },
-    "Longer recordings are kept with their audio and filed in the vault for review.": {
+    "Longer recordings are kept with their audio and filed with your notes for review.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las grabaciones más largas se guardan con su audio en la bóveda para revisarlas."
+            "value": "Las grabaciones más largas se guardan con su audio y se archivan con tus notas para revisarlas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les enregistrements plus longs sont gardés avec leur audio et classés dans le coffre pour relecture."
+            "value": "Les enregistrements plus longs sont gardés avec leur audio et rangés avec vos notes pour relecture."
           }
         }
       }
@@ -3406,6 +3572,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modèles"
+          }
+        }
+      }
+    },
+    "More for %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más opciones para %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus d’options pour %@"
           }
         }
       }
@@ -3826,6 +4008,54 @@
         }
       }
     },
+    "Notes and recordings are in the Audio Pencil folder, with About these notes.md explaining them.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notas y las grabaciones están en la carpeta Audio Pencil, con el archivo About these notes.md que las explica."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notes et les enregistrements sont dans le dossier Audio Pencil, avec le fichier About these notes.md qui les explique."
+          }
+        }
+      }
+    },
+    "Notes are standard Markdown with a link to their recording. If this is meant to be an Obsidian vault, choose its top folder, the one holding .obsidian.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notas son Markdown estándar con un enlace a su grabación. Si es una bóveda de Obsidian, elige su carpeta principal, la que contiene .obsidian."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notes sont en Markdown standard avec un lien vers leur enregistrement. S’il s’agit d’un coffre Obsidian, choisissez son dossier racine, celui qui contient .obsidian."
+          }
+        }
+      }
+    },
+    "Notes folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carpeta de notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dossier des notes"
+          }
+        }
+      }
+    },
     "Notes go to each style's folder (set on the Styles page), or %@. Audio goes to %@.": {
       "localizations": {
         "en": {
@@ -3928,7 +4158,7 @@
         }
       }
     },
-    "Nothing saved yet. Recordings longer than %lld minutes become notes here and in your vault.": {
+    "Nothing saved yet. Recordings longer than %lld minutes become notes and show up here.": {
       "localizations": {
         "en": {
           "variations": {
@@ -3936,13 +4166,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Nothing saved yet. Recordings longer than %lld minute become notes here and in your vault."
+                  "value": "Nothing saved yet. Recordings longer than %lld minute become notes and show up here."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Nothing saved yet. Recordings longer than %lld minutes become notes here and in your vault."
+                  "value": "Nothing saved yet. Recordings longer than %lld minutes become notes and show up here."
                 }
               }
             }
@@ -3954,13 +4184,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Aún no hay nada guardado. Las grabaciones de más de %lld minuto se convierten en notas, aquí y en tu bóveda."
+                  "value": "Aún no hay nada guardado. Las grabaciones de más de %lld minuto se convierten en notas y aparecen aquí."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Aún no hay nada guardado. Las grabaciones de más de %lld minutos se convierten en notas, aquí y en tu bóveda."
+                  "value": "Aún no hay nada guardado. Las grabaciones de más de %lld minutos se convierten en notas y aparecen aquí."
                 }
               }
             }
@@ -3972,13 +4202,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Rien d’enregistré pour l’instant. Les enregistrements de plus de %lld minute deviennent des notes, ici et dans votre coffre."
+                  "value": "Rien d’enregistré pour l’instant. Les enregistrements de plus de %lld minute deviennent des notes et apparaissent ici."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Rien d’enregistré pour l’instant. Les enregistrements de plus de %lld minutes deviennent des notes, ici et dans votre coffre."
+                  "value": "Rien d’enregistré pour l’instant. Les enregistrements de plus de %lld minutes deviennent des notes et apparaissent ici."
                 }
               }
             }
@@ -4162,6 +4392,22 @@
         }
       }
     },
+    "Open": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir"
+          }
+        }
+      }
+    },
     "Open Audio Pencil": {
       "localizations": {
         "es": {
@@ -4306,6 +4552,22 @@
         }
       }
     },
+    "Password": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe"
+          }
+        }
+      }
+    },
     "Paste in emails, posts or notes you've written. Pick the kind so the right ones get matched.": {
       "localizations": {
         "es": {
@@ -4446,6 +4708,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choisir automatiquement après"
+          }
+        }
+      }
+    },
+    "Plain folder · can write": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carpeta normal · se puede escribir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dossier simple · écriture possible"
           }
         }
       }
@@ -5368,18 +5646,18 @@
         }
       }
     },
-    "Set up vault": {
+    "Set up storage": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configurar la bóveda"
+            "value": "Configurar almacenamiento"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configurer le coffre"
+            "value": "Choisir le stockage"
           }
         }
       }
@@ -5546,6 +5824,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Proposer un choix de style après l’arrêt"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en el Finder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher dans le Finder"
           }
         }
       }
@@ -5770,6 +6064,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sons de début et de fin"
+          }
+        }
+      }
+    },
+    "Start dictating": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar a dictar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer la dictée"
           }
         }
       }
@@ -6332,18 +6642,18 @@
         }
       }
     },
-    "Tap; 1–9 to switch": {
+    "Tap; 1–9 picks a style while you talk": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pulsar; 1–9 para cambiar"
+            "value": "Un toque; 1–9 elige un estilo mientras hablas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toucher ; 1–9 pour changer"
+            "value": "Toucher une fois ; 1–9 choisit un style pendant que vous parlez"
           }
         }
       }
@@ -6376,6 +6686,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La note reste. Les notes déplacées vers Archive sur le tableau gardent leur audio. Les fichiers supprimés vont dans la corbeille."
+          }
+        }
+      }
+    },
+    "The password stays in this Mac's Keychain. Use an app-specific password if your server offers one.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La contraseña se queda en el llavero de este Mac. Usa una contraseña de aplicación si tu servidor lo permite."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe reste dans le trousseau de ce Mac. Utilisez un mot de passe d’application si votre serveur le permet."
           }
         }
       }
@@ -6524,18 +6850,18 @@
         }
       }
     },
-    "They still paste as usual; a copy is filed in the vault.": {
+    "They still paste as usual; a copy is filed with your notes.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se siguen pegando como siempre; se guarda una copia en la bóveda."
+            "value": "Se siguen pegando como siempre; se archiva una copia con tus notas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elles sont toujours collées ; une copie est classée dans le coffre."
+            "value": "Ils se collent toujours comme d’habitude ; une copie est rangée avec vos notes."
           }
         }
       }
@@ -6584,6 +6910,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ce dossier est un coffre Obsidian"
+          }
+        }
+      }
+    },
+    "This folder is now an Obsidian vault. Add the review board and guide?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta carpeta ya es una bóveda de Obsidian. ¿Añadir el tablero de revisión y la guía?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce dossier est maintenant un coffre Obsidian. Ajouter le tableau de relecture et le guide ?"
           }
         }
       }
@@ -6908,22 +7250,6 @@
         }
       }
     },
-    "Use a vault already synced to this Mac, such as an Obsidian vault in iCloud Drive. iCloud does the syncing.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa una bóveda que ya se sincronice con este Mac, como una bóveda de Obsidian en iCloud Drive. iCloud se encarga de sincronizar."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisez un coffre déjà synchronisé sur ce Mac, comme un coffre Obsidian dans iCloud Drive. iCloud s’occupe de la synchronisation."
-          }
-        }
-      }
-    },
     "Use an app password instead": {
       "localizations": {
         "es": {
@@ -6940,18 +7266,18 @@
         }
       }
     },
-    "Use as vault": {
+    "Use this folder": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usar como bóveda"
+            "value": "Usar esta carpeta"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utiliser comme coffre"
+            "value": "Utiliser ce dossier"
           }
         }
       }
@@ -7020,38 +7346,6 @@
         }
       }
     },
-    "Vault": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bóveda"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coffre"
-          }
-        }
-      }
-    },
-    "Vault folder": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Carpeta de la bóveda"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dossier du coffre"
-          }
-        }
-      }
-    },
     "Version %@": {
       "localizations": {
         "es": {
@@ -7116,18 +7410,18 @@
         }
       }
     },
-    "Waiting for the vault": {
+    "Waiting for storage": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esperando la bóveda"
+            "value": "Esperando al almacenamiento"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En attente du coffre"
+            "value": "En attente du stockage"
           }
         }
       }
@@ -7144,6 +7438,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "En attente d’envoi"
+          }
+        }
+      }
+    },
+    "WebDAV": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WebDAV"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WebDAV"
+          }
+        }
+      }
+    },
+    "WebDAV address": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirección WebDAV"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse WebDAV"
+          }
+        }
+      }
+    },
+    "WebDAV server": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidor WebDAV"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveur WebDAV"
           }
         }
       }
@@ -7196,6 +7538,22 @@
         }
       }
     },
+    "Where": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubicación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emplacement"
+          }
+        }
+      }
+    },
     "Where long recordings (and saved quick dictations) in this style land.": {
       "localizations": {
         "es": {
@@ -7208,6 +7566,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "L’endroit où arrivent les longs enregistrements (et les dictées rapides enregistrées) dans ce style."
+          }
+        }
+      }
+    },
+    "Where notes and Audio Pencil's settings live: an Obsidian vault, or any folder.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donde viven las notas y los ajustes de Audio Pencil: una bóveda de Obsidian o cualquier carpeta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Là où vivent les notes et les réglages d’Audio Pencil : un coffre Obsidian ou n’importe quel dossier."
           }
         }
       }
@@ -7420,22 +7794,6 @@
         }
       }
     },
-    "Your Obsidian vault: where notes and Audio Pencil's settings will live.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu bóveda de Obsidian: donde vivirán las notas y los ajustes de Audio Pencil."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre coffre Obsidian : là où vivront les notes et les réglages d’Audio Pencil."
-          }
-        }
-      }
-    },
     "Your board": {
       "localizations": {
         "es": {
@@ -7448,6 +7806,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Votre tableau"
+          }
+        }
+      }
+    },
+    "Your notes folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu carpeta de notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre dossier de notes"
           }
         }
       }
@@ -7774,6 +8148,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "–"
+          }
+        }
+      }
+    },
+    "“%@” and its audio go to the trash at the next check.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«%@» y su audio irán a la papelera en la próxima comprobación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %@ » et son audio partent à la corbeille à la prochaine vérification."
           }
         }
       }

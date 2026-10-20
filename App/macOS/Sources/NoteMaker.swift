@@ -24,6 +24,8 @@ struct RecentNote: Codable, Identifiable, Equatable {
     var recorded: Date
     var path: String
     var status: Note.Status
+    /// Set from the Notes page: kept forever (archive) or on its way out (delete).
+    var retention: Note.Retention?
 }
 
 /// Turns dictations into vault notes (PRD "Vault layout", "Review flow").
@@ -147,7 +149,10 @@ final class NoteMaker {
                 try? FileManager.default.removeItem(at: audio)
             }
             let path = NoteRenderer.notePath(for: note)
-            try await app.sync.outbox.enqueue(path: path, data: Data(NoteRenderer.markdown(for: note).utf8))
+            // Plain until the folder is known to be an Obsidian vault: standard Markdown reads everywhere,
+            // Obsidian included.
+            let layout = app.vault.layout ?? .plain
+            try await app.sync.outbox.enqueue(path: path, data: Data(NoteRenderer.markdown(for: note, layout: layout).utf8))
             recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: path, status: note.status), at: 0)
             recent = Array(recent.prefix(50))
             saveRecent()
@@ -208,6 +213,28 @@ final class NoteMaker {
     }
 
     /// obsidian:// link to a note, assuming the Obsidian vault is named after its folder.
+    /// Where "Open" goes for a note or file: Obsidian for a vault, the file itself for a plain folder on
+    /// this Mac, nothing for a plain folder on a server.
+    func openURL(for path: String) -> URL? {
+        switch app.vault.layout {
+        case .obsidian?: obsidianURL(for: path)
+        default: app.vault.localFileURL(for: path)
+        }
+    }
+
+    /// Keep forever or Delete, from the Notes page.
+    func setRetention(_ value: Note.Retention, for note: RecentNote) {
+        Task {
+            guard await app.sync.setRetention(value, notePath: note.path) else { return }
+            if value == .delete {
+                recent.removeAll { $0.id == note.id }
+            } else if let index = recent.firstIndex(where: { $0.id == note.id }) {
+                recent[index].retention = value
+            }
+            saveRecent()
+        }
+    }
+
     func obsidianURL(for path: String) -> URL? {
         guard let vaultName = app.vault.vaultName else { return nil }
         var components = URLComponents(string: "obsidian://open")

@@ -19,6 +19,90 @@ extension StarterKit {
         }
     }
 
+    /// Plain layout's "About these notes", in the interface language.
+    public static var about: String {
+        switch starterLanguage {
+        case "fr": frenchAbout
+        case "es": spanishAbout
+        default: englishAbout
+        }
+    }
+
+    static let englishAbout = """
+        # About these notes
+
+        Audio Pencil saves long recordings (and, if you turn it on, quick dictations) here as Markdown notes:
+
+        - **Audio Pencil/Notes**, or the folder you set for a style: one note per recording.
+        - **Audio Pencil/Recordings**: the audio of long recordings, linked from each note.
+        - **Audio Pencil/Settings.md**: styles, vocabulary and tags, shared by your devices. You can edit it in any text editor.
+
+        Each note starts with properties between `---` lines:
+
+        | Property | What it means |
+        | --- | --- |
+        | `style` | How it was written up: `raw`, `polished`, `diary`, `professional` or your own styles. |
+        | `status` | `needs-review`, `reviewed` or `actioned`. |
+        | `recorded`, `duration` | When you started talking, and for how long (seconds). |
+        | `language` | The language spoken. |
+        | `tags` | From your tag list in Settings.md. |
+        | `retention` | `regular` (audio kept a year), `archive` (kept forever) or `delete` (removed at the next check). Change it here or with Keep forever and Delete on the app's Notes page. |
+        | `audio` | The recording, for long recordings. |
+
+        This folder works with Obsidian too. If you open it as an Obsidian vault, Audio Pencil offers to add a review board.
+
+        """
+
+    static let frenchAbout = """
+        # À propos de ces notes
+
+        Audio Pencil enregistre ici les longs enregistrements (et, si vous l’activez, les dictées rapides) sous forme de notes Markdown :
+
+        - **Audio Pencil/Notes**, ou le dossier choisi pour un style : une note par enregistrement.
+        - **Audio Pencil/Recordings** : l’audio des longs enregistrements, lié depuis chaque note.
+        - **Audio Pencil/Settings.md** : styles, vocabulaire et tags, partagés entre vos appareils. Modifiable dans n’importe quel éditeur de texte.
+
+        Chaque note commence par des propriétés entre deux lignes `---` :
+
+        | Propriété | Signification |
+        | --- | --- |
+        | `style` | La façon dont elle a été rédigée : `raw`, `polished`, `diary`, `professional` ou vos propres styles. |
+        | `status` | `needs-review`, `reviewed` ou `actioned`. |
+        | `recorded`, `duration` | Le moment où vous avez commencé à parler, et la durée (en secondes). |
+        | `language` | La langue parlée. |
+        | `tags` | Tirés de votre liste de tags dans Settings.md. |
+        | `retention` | `regular` (audio gardé un an), `archive` (gardé pour toujours) ou `delete` (supprimé à la prochaine vérification). Modifiez-la ici ou avec Garder pour toujours et Supprimer dans la page Notes de l’app. |
+        | `audio` | L’enregistrement, pour les longs enregistrements. |
+
+        Ce dossier fonctionne aussi avec Obsidian. Si vous l’ouvrez comme coffre Obsidian, Audio Pencil propose d’ajouter un tableau de relecture.
+
+        """
+
+    static let spanishAbout = """
+        # Sobre estas notas
+
+        Audio Pencil guarda aquí las grabaciones largas (y, si lo activas, los dictados rápidos) como notas en Markdown:
+
+        - **Audio Pencil/Notes**, o la carpeta que elijas para un estilo: una nota por grabación.
+        - **Audio Pencil/Recordings**: el audio de las grabaciones largas, enlazado desde cada nota.
+        - **Audio Pencil/Settings.md**: estilos, vocabulario y etiquetas, compartidos entre tus dispositivos. Puedes editarlo con cualquier editor de texto.
+
+        Cada nota empieza con propiedades entre dos líneas `---`:
+
+        | Propiedad | Qué significa |
+        | --- | --- |
+        | `style` | Cómo se redactó: `raw`, `polished`, `diary`, `professional` o tus propios estilos. |
+        | `status` | `needs-review`, `reviewed` o `actioned`. |
+        | `recorded`, `duration` | Cuándo empezaste a hablar y cuánto duró (segundos). |
+        | `language` | El idioma hablado. |
+        | `tags` | De tu lista de etiquetas en Settings.md. |
+        | `retention` | `regular` (audio guardado un año), `archive` (para siempre) o `delete` (se borra en la siguiente comprobación). Cámbialo aquí o con Conservar siempre y Eliminar en la página Notas de la app. |
+        | `audio` | La grabación, en las grabaciones largas. |
+
+        Esta carpeta también funciona con Obsidian. Si la abres como bóveda de Obsidian, Audio Pencil te ofrecerá añadir un tablero de revisión.
+
+        """
+
     static let frenchGuide = """
         ---
         type: audio-pencil-guide

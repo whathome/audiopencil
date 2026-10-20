@@ -9,6 +9,8 @@ public enum StarterKit {
     public static let basePath = "/Audio Pencil/Audio Pencil.base"
     public static let guidePath = "/Audio Pencil/Audio Pencil guide.md"
     public static let samplesFolder = "/Audio Pencil/Samples"
+    /// Plain layout's only starter file: what the folder holds and what the properties mean.
+    public static let aboutPath = "/Audio Pencil/About these notes.md"
 
     /// Obsidian Bases file: Kanban of professional notes by status, a diary list, everything, and retention.
     public static let base = """
@@ -246,7 +248,7 @@ public enum StarterKit {
 
     /// Creates the board and guide if missing; samples only when `includeSamples` (first run for this vault).
     /// Never overwrites anything.
-    public static func ensure(in provider: any StorageProvider, vaultPath: String, includeSamples: Bool, now: Date = Date(), timeZone: TimeZone = .current) async throws -> Outcome {
+    public static func ensure(in provider: any StorageProvider, vaultPath: String, includeSamples: Bool, layout: NoteLayout = .obsidian, now: Date = Date(), timeZone: TimeZone = .current) async throws -> Outcome {
         var created: [String] = []
         var boardCustomised = false
         func create(_ relative: String, _ text: String) async throws {
@@ -259,6 +261,11 @@ public enum StarterKit {
             } catch StorageError.conflict {
                 // Created elsewhere in the meantime: leave it.
             }
+        }
+        guard layout == .obsidian else {
+            // No board, guide or samples outside Obsidian: just a note explaining the folder.
+            try await create(aboutPath, about)
+            return created.isEmpty ? .alreadyThere : .created(files: created)
         }
         try await create(basePath, base)
         let board = StoragePath.join(vaultPath, basePath)

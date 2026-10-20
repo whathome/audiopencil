@@ -21,15 +21,26 @@ public struct NextcloudAccount: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Nextcloud files over WebDAV. Paths are relative to the user's files root ("/" = Files home).
+/// Files over WebDAV: Nextcloud (paths relative to the user's files root) or any WebDAV server (paths
+/// relative to the URL given).
 public final class WebDAVStorage: StorageProvider {
-    public let account: NextcloudAccount
+    public let davRoot: URL
+    private let loginName: String
     private let password: String
     private let session: URLSession
 
-    public init(account: NextcloudAccount, appPassword: String, session: URLSession = .shared) {
-        self.account = account
-        self.password = appPassword
+    /// Nextcloud: the user's files under remote.php/dav.
+    public convenience init(account: NextcloudAccount, appPassword: String, session: URLSession = .shared) {
+        self.init(davRoot: account.davRoot, loginName: account.loginName, password: appPassword, session: session)
+    }
+
+    /// Any WebDAV server, rooted at `davRoot`.
+    public init(davRoot: URL, loginName: String, password: String, session: URLSession = .shared) {
+        // "https://nas/dav" and "https://nas/dav/" are the same root; without the slash, appending would
+        // replace "dav" (or, with appending(path: ""), double the slash).
+        self.davRoot = davRoot.hasDirectoryPath ? davRoot : URL(string: davRoot.absoluteString + "/") ?? davRoot
+        self.loginName = loginName
+        self.password = password
         self.session = session
     }
 
@@ -81,7 +92,7 @@ public final class WebDAVStorage: StorageProvider {
     // MARK: Requests
 
     func url(for path: String, folder: Bool = false) -> URL {
-        var url = account.davRoot
+        var url = davRoot
         let components = path.split(separator: "/").map(String.init)
         for (index, component) in components.enumerated() {
             let isLast = index == components.count - 1
@@ -93,7 +104,7 @@ public final class WebDAVStorage: StorageProvider {
     private func request(_ path: String, method: String, folder: Bool = false) -> URLRequest {
         var request = URLRequest(url: url(for: path, folder: folder))
         request.httpMethod = method
-        let credentials = Data("\(account.loginName):\(password)".utf8).base64EncodedString()
+        let credentials = Data("\(loginName):\(password)".utf8).base64EncodedString()
         request.setValue("Basic \(credentials)", forHTTPHeaderField: "Authorization")
         request.setValue(NextcloudServer.userAgent, forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 30
@@ -109,7 +120,7 @@ public final class WebDAVStorage: StorageProvider {
             <d:propfind xmlns:d="DAV:"><d:prop><d:resourcetype/><d:getetag/><d:getlastmodified/><d:getcontentlength/></d:prop></d:propfind>
             """.utf8)
         let (data, _) = try await send(request, path: path)
-        return try MultistatusParser.parse(data, davRootPath: account.davRoot.path(percentEncoded: false))
+        return try MultistatusParser.parse(data, davRootPath: davRoot.path(percentEncoded: false))
     }
 
     private func send(_ request: URLRequest, path: String) async throws -> (Data, HTTPURLResponse) {

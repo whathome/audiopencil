@@ -36,6 +36,21 @@ struct NoteTests {
         #expect(markdown.contains("> [!quote]- Transcript\n> So I've been thinking.\n>\n> About backups.\n"))
     }
 
+    @Test func plainLayoutUsesStandardMarkdown() {
+        let markdown = NoteRenderer.markdown(for: note(), timeZone: toronto, layout: .plain)
+        #expect(markdown.contains("audio: Audio Pencil/Recordings/2026-10-19 1430 Backup plan for the home server.m4a\n---"))
+        #expect(markdown.contains("\n[Audio](../../Audio%20Pencil/Recordings/2026-10-19%201430%20Backup%20plan%20for%20the%20home%20server.m4a)\n"))
+        #expect(markdown.contains("\n## Transcript\n\nSo I've been thinking.\n\nAbout backups.\n"))
+        #expect(!markdown.contains("[["))
+        #expect(!markdown.contains("[!quote]"))
+    }
+
+    @Test func relativeLinksClimbOnlyAsFarAsNeeded() {
+        #expect(NoteRenderer.relativeLink(from: "/Audio Pencil/Notes", to: "/Audio Pencil/Recordings/a b.m4a") == "../Recordings/a%20b.m4a")
+        #expect(NoteRenderer.relativeLink(from: "/", to: "/Audio Pencil/Recordings/x (2).m4a") == "Audio%20Pencil/Recordings/x%20%282%29.m4a")
+        #expect(NoteRenderer.relativeLink(from: "/Audio Pencil/Recordings", to: "/Audio Pencil/Recordings/a.m4a") == "a.m4a")
+    }
+
     @Test func quickRawNoteIsMinimal() {
         var quick = note(style: "raw")
         quick.mode = .quick

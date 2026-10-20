@@ -68,6 +68,14 @@ public struct Note: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
+/// How notes are written. Obsidian layout uses Obsidian's embeds and callouts and gets the review board;
+/// plain layout is standard Markdown any editor reads (and Obsidian too, so a plain folder can become a
+/// vault later without rewriting notes).
+public enum NoteLayout: String, Codable, Sendable, CaseIterable {
+    case obsidian
+    case plain
+}
+
 public enum NoteRenderer {
     /// "2026-10-19 1430 Suggested title" (no extension). PRD filename rule; "-2" on collision is
     /// added at upload time.
@@ -107,7 +115,7 @@ public enum NoteRenderer {
         return safeTitle(words.trimmingCharacters(in: CharacterSet(charactersIn: ",;:.!?")))
     }
 
-    public static func markdown(for note: Note, timeZone: TimeZone = .current) -> String {
+    public static func markdown(for note: Note, timeZone: TimeZone = .current, layout: NoteLayout = .obsidian) -> String {
         let formatter = ISO8601DateFormatter()
         formatter.timeZone = timeZone
         formatter.formatOptions = [.withInternetDateTime]
@@ -129,21 +137,46 @@ public enum NoteRenderer {
             lines += note.tags.map { "  - \(YAMLText.scalar($0))" }
         }
         if let audio = note.audioPath {
-            lines.append("audio: \(YAMLText.scalar("[[\(linkTarget(audio))]]"))")
+            switch layout {
+            case .obsidian: lines.append("audio: \(YAMLText.scalar("[[\(linkTarget(audio))]]"))")
+            case .plain: lines.append("audio: \(YAMLText.scalar(linkTarget(audio)))")
+            }
         }
         lines.append("---")
         lines.append("")
         if let audio = note.audioPath {
-            lines.append("![[\(linkTarget(audio))]]")
+            switch layout {
+            case .obsidian: lines.append("![[\(linkTarget(audio))]]")
+            case .plain: lines.append("[" + String(localized: "Audio", bundle: .module) + "](\(relativeLink(from: note.folder, to: audio)))")
+            }
             lines.append("")
         }
         lines.append(note.body.trimmingCharacters(in: .whitespacesAndNewlines))
         if let transcript = note.transcript?.trimmingCharacters(in: .whitespacesAndNewlines), !transcript.isEmpty {
             lines.append("")
-            lines.append("> [!quote]- " + String(localized: "Transcript", bundle: .module))
-            lines += transcript.components(separatedBy: "\n").map { $0.isEmpty ? ">" : "> \($0)" }
+            switch layout {
+            case .obsidian:
+                lines.append("> [!quote]- " + String(localized: "Transcript", bundle: .module))
+                lines += transcript.components(separatedBy: "\n").map { $0.isEmpty ? ">" : "> \($0)" }
+            case .plain:
+                lines.append("## " + String(localized: "Transcript", bundle: .module))
+                lines.append("")
+                lines.append(transcript)
+            }
         }
         return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// A standard Markdown link from a note in `folder` to a vault file: relative, spaces encoded.
+    /// "/Audio Pencil/Notes" → "/Audio Pencil/Recordings/a b.m4a" gives "../Recordings/a%20b.m4a".
+    public static func relativeLink(from folder: String, to path: String) -> String {
+        let from = folder.split(separator: "/").map(String.init)
+        let to = path.split(separator: "/").map(String.init)
+        var common = 0
+        while common < min(from.count, to.count - 1), from[common] == to[common] { common += 1 }
+        let parts = Array(repeating: "..", count: from.count - common) + to[common...]
+        return parts.map { $0.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "()"))) ?? $0 }
+            .joined(separator: "/")
     }
 
     /// Obsidian links use vault-relative paths without a leading slash.

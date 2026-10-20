@@ -10,7 +10,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .styles: "Styles"
         case .writing: "My writing"
         case .notes: "Notes"
-        case .vault: "Vault"
+        case .vault: "Storage"
         case .settings: "Settings"
         }
     }

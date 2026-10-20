@@ -1,3 +1,4 @@
+import APCore
 import Foundation
 import Yams
 
@@ -65,18 +66,27 @@ public enum NoteFrontmatter {
     public static func removingEmbeds(of target: String, in text: String) -> String {
         guard let (lines, end) = bounds(text) else { return text }
         let name = target.hasPrefix("/") ? String(target.dropFirst()) : target
+        // Same encoding as NoteRenderer.relativeLink, so the file name matches the link's last part.
+        let encoded = NoteRenderer.relativeLink(from: "/", to: name).split(separator: "/").last.map(String.init)
         let body = lines[(end + 1)...].filter { line in
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            return !(trimmed.hasPrefix("![[") && trimmed.contains(name))
+            let obsidianEmbed = trimmed.hasPrefix("![[") && trimmed.contains(name)
+            // Plain layout: "[Audio](../Recordings/2026-10-19%201430%20x.m4a)"
+            let markdownLink = trimmed.hasPrefix("[") && trimmed.contains("](") && encoded.map { trimmed.contains($0) } == true
+            return !(obsidianEmbed || markdownLink)
         }
         return (lines[...end] + body).joined(separator: "\n")
     }
 
-    /// "[[Audio Pencil/Recordings/x.m4a]]" → "/Audio Pencil/Recordings/x.m4a"
+    /// "[[Audio Pencil/Recordings/x.m4a]]" (Obsidian layout) or "Audio Pencil/Recordings/x.m4a" (plain)
+    /// → "/Audio Pencil/Recordings/x.m4a"
     public static func linkTarget(_ link: String) -> String? {
         var value = link.trimmingCharacters(in: .whitespaces)
-        guard value.hasPrefix("[["), value.hasSuffix("]]") else { return nil }
-        value = String(value.dropFirst(2).dropLast(2))
+        if value.hasPrefix("[["), value.hasSuffix("]]") {
+            value = String(value.dropFirst(2).dropLast(2))
+        } else if value.hasPrefix("[") || value.contains("://") {
+            return nil
+        }
         if let bar = value.firstIndex(of: "|") { value = String(value[..<bar]) }
         return value.isEmpty ? nil : "/" + value
     }

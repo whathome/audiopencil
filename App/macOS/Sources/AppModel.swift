@@ -181,6 +181,7 @@ final class AppModel {
         }
         sync.expireRegularAudio = { [unowned self] in expireRegularAudio }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
+        vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         notes = NoteMaker(app: self)
         advisor = ModelAdvisor(app: self)
         dictation.onLongForm = { [unowned self] capture in notes.makeLongFormNote(capture) }
@@ -322,6 +323,9 @@ final class AppModel {
                         Log.dictation.notice("Simulated Obsidian edit (\(adding ? "add" : "remove") \(word, privacy: .public)): \(wrote ? "written" : "failed", privacy: .public)")
                     }
                 case "vault:sync": sync.syncSoon(after: .zero)
+                case "vault:adopt": vault.adoptObsidianLayout()
+                case "note:keep", "note:delete": // the first recent note, as the Notes page's menu does
+                    if let note = notes.recent.first { notes.setRetention(command == "note:keep" ? .archive : .delete, for: note) }
                 case let command where command.hasPrefix("longform-threshold:"):
                     debugLongFormThreshold = Double(command.dropFirst("longform-threshold:".count))
                     applyNoteSettings()

@@ -2,7 +2,8 @@ import APStorage
 import APSync
 import SwiftUI
 
-/// Where notes and settings will live: Nextcloud or a folder on this Mac (e.g. iCloud Drive).
+/// Where notes and settings live: Nextcloud, any WebDAV server, or a folder on this Mac (e.g. iCloud Drive).
+/// An Obsidian vault gets the extras (board, guide); any other folder gets plain Markdown.
 struct VaultPage: View {
     @Bindable var vault: VaultController
     let sync: SyncController
@@ -10,20 +11,19 @@ struct VaultPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Vault", subtitle: "Your Obsidian vault: where notes and Audio Pencil's settings will live.")
+                PageHeader(title: "Storage", subtitle: "Where notes and Audio Pencil's settings live: an Obsidian vault, or any folder.")
 
-                Card(title: "Storage") {
+                Card(title: "Where") {
                     Picker("", selection: $vault.settings.kind) {
                         Label("Nextcloud", systemImage: "cloud").tag(VaultSettings.Kind.nextcloud)
+                        Label("WebDAV", systemImage: "server.rack").tag(VaultSettings.Kind.webdav)
                         Label("Folder on this Mac", systemImage: "folder").tag(VaultSettings.Kind.localFolder)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    .fixedSize() // a choice of two, not a tab bar across the card
-                    .onChange(of: vault.settings.kind) { vault.verifyLocation() }
-                    Text(vault.settings.kind == .nextcloud
-                        ? "Notes go to your Nextcloud over WebDAV, from any network. Nothing else leaves this Mac."
-                        : "Use a vault already synced to this Mac, such as an Obsidian vault in iCloud Drive. iCloud does the syncing.")
+                    .fixedSize() // a short choice, not a tab bar across the card
+                    .onChange(of: vault.settings.kind) { vault.locationChanged() }
+                    Text(kindDescription)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -33,6 +33,16 @@ struct VaultPage: View {
                     if vault.connection == .signedIn {
                         LocationCard(vault: vault) {
                             Text(vault.settings.remoteVaultPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
+                                .font(.body.monospaced())
+                        } choose: {
+                            vault.openBrowser()
+                        }
+                    }
+                } else if vault.settings.kind == .webdav {
+                    WebDAVAccountCard(vault: vault)
+                    if vault.webdavConnection == .signedIn {
+                        LocationCard(vault: vault) {
+                            Text(vault.settings.webdavPath.map { "\($0)" } ?? "Not chosen" as LocalizedStringResource)
                                 .font(.body.monospaced())
                         } choose: {
                             vault.openBrowser()
@@ -56,7 +66,15 @@ struct VaultPage: View {
             .frame(maxWidth: 980, alignment: .leading)
         }
         .sheet(isPresented: $vault.isBrowsing) {
-            NextcloudFolderBrowser(vault: vault)
+            RemoteFolderBrowser(vault: vault)
+        }
+    }
+
+    private var kindDescription: LocalizedStringResource {
+        switch vault.settings.kind {
+        case .nextcloud: "Notes go to your Nextcloud over WebDAV, from any network. Nothing else leaves this Mac."
+        case .webdav: "Any server that speaks WebDAV: a Synology, ownCloud, a hosting provider. Nothing else leaves this Mac."
+        case .localFolder: "A folder on this Mac, or one synced to it such as iCloud Drive. Your sync service does the syncing."
         }
     }
 }
@@ -137,7 +155,7 @@ private struct SyncCard: View {
         case .offline: "Offline: changes wait here and sync when you're back"
         case .paused: "Paused: fix the settings file in Obsidian"
         case .failed: "Couldn't sync"
-        case .notConfigured: "Waiting for the vault"
+        case .notConfigured: "Waiting for storage"
         }
     }
 
@@ -231,13 +249,64 @@ private struct NextcloudAccountCard: View {
     }
 }
 
+private struct WebDAVAccountCard: View {
+    let vault: VaultController
+    @State private var address = ""
+    @State private var user = ""
+    @State private var password = ""
+
+    var body: some View {
+        Card(title: "WebDAV server") {
+            if vault.webdavConnection == .signedIn, let account = vault.settings.webdav {
+                HStack(spacing: 10) {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Connected as \(account.loginName)").font(.headline)
+                        Text(verbatim: account.server.absoluteString).font(.callout).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Disconnect", role: .destructive) { vault.disconnectWebDAV() }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    TextField("WebDAV address", text: $address, prompt: Text(verbatim: "https://example.com/dav/"))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 360)
+                    HStack {
+                        TextField("Username", text: $user).textFieldStyle(.roundedBorder).frame(maxWidth: 170)
+                        SecureField("Password", text: $password).textFieldStyle(.roundedBorder).frame(maxWidth: 182)
+                        Button("Connect") { vault.connectWebDAV(url: address, user: user, password: password) }
+                            .disabled(address.isEmpty || user.isEmpty || password.isEmpty || vault.webdavConnection == .checking)
+                        if vault.webdavConnection == .checking {
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                    Text("The password stays in this Mac's Keychain. Use an app-specific password if your server offers one.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    if case .failed(let message) = vault.webdavConnection {
+                        Label(message, systemImage: "exclamationmark.triangle.fill")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .onAppear {
+                    if let account = vault.settings.webdav {
+                        address = account.server.absoluteString
+                        user = account.loginName
+                    }
+                }
+            }
+        }
+    }
+}
+
 private struct LocationCard<Path: View>: View {
     let vault: VaultController
     @ViewBuilder var path: Path
     let choose: () -> Void
 
     var body: some View {
-        Card(title: "Vault folder") {
+        Card(title: "Notes folder") {
             HStack(spacing: 10) {
                 Image(systemName: "folder.fill").foregroundStyle(Color.pencil)
                 path
@@ -253,8 +322,19 @@ private struct LocationCard<Path: View>: View {
                 if isObsidianVault {
                     Label("Obsidian vault · can write", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                 } else {
-                    Label("Can write here, but there's no .obsidian folder. Is this the vault's top folder?", systemImage: "exclamationmark.circle.fill")
-                        .foregroundStyle(.orange)
+                    Label("Plain folder · can write", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    if vault.obsidianUpgradeAvailable {
+                        HStack {
+                            Text("This folder is now an Obsidian vault. Add the review board and guide?")
+                                .font(.callout)
+                            Spacer()
+                            Button("Add board") { vault.adoptObsidianLayout() }
+                        }
+                    } else {
+                        Text("Notes are standard Markdown with a link to their recording. If this is meant to be an Obsidian vault, choose its top folder, the one holding .obsidian.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             case .failed(let message):
                 Label(message, systemImage: "xmark.octagon.fill").foregroundStyle(.red)
@@ -263,7 +343,8 @@ private struct LocationCard<Path: View>: View {
     }
 }
 
-private struct NextcloudFolderBrowser: View {
+/// Folder browser for Nextcloud or a WebDAV server.
+private struct RemoteFolderBrowser: View {
     @Bindable var vault: VaultController
     @Environment(\.dismiss) private var dismiss
 

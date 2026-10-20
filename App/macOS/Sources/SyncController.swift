@@ -144,11 +144,16 @@ final class SyncController {
                 apply(config)
                 Log.models.notice("Settings synced\(wrote ? " (file updated)" : "", privacy: .public)")
             }
-            await ensureStarterKit(provider: location.provider, vaultPath: location.path)
+            if let layout = vault.layout {
+                await ensureStarterKit(provider: location.provider, vaultPath: location.path, layout: layout)
+                if layout == .plain, (try? await location.provider.item(at: StoragePath.join(location.path, ".obsidian"))) != nil {
+                    vault.noticeObsidianFolder()
+                }
+            }
             let drained = await outbox.drain(to: location.provider, vaultPath: location.path)
             if Date().timeIntervalSince(lastRetentionRun) > 300, let folders = retentionFolders?() {
                 lastRetentionRun = Date()
-                await checkBoard(provider: location.provider, vaultPath: location.path)
+                if vault.layout == .obsidian { await checkBoard(provider: location.provider, vaultPath: location.path) }
                 let report = await retention.run(
                     provider: location.provider, vaultPath: location.path, folders: folders,
                     expireRegularAudio: expireRegularAudio?() ?? true
@@ -225,6 +230,32 @@ final class SyncController {
 
     func clearRepairSummary() { repairSummary = nil }
 
+    /// Keep forever or Delete from the app (the board's Retention view does the same in Obsidian): sets the
+    /// note's `retention`. A deleted note goes, with its audio, at the retention check run straight after.
+    func setRetention(_ value: Note.Retention, notePath: String) async -> Bool {
+        guard let location = vault.vaultLocation else { return false }
+        let path = StoragePath.join(location.path, notePath)
+        do {
+            let (data, etag) = try await location.provider.read(path)
+            let edited = NoteFrontmatter.setting("retention", to: value.rawValue, in: String(decoding: data, as: UTF8.self))
+            try await location.provider.write(path, data: Data(edited.utf8), ifMatch: etag, createOnly: false)
+            if value == .delete {
+                lastRetentionRun = .distantPast
+                syncSoon(after: .zero)
+            }
+            return true
+        } catch {
+            status = .failed(String(localized: "Couldn't update \(notePath.split(separator: "/").last.map(String.init) ?? notePath): \(error.localizedDescription)"))
+            return false
+        }
+    }
+
+    /// The plain folder's layout changed (adopted as a vault): set it up again for the new layout.
+    func layoutChanged() {
+        starterChecked.removeAll()
+        syncSoon(after: .zero)
+    }
+
     /// "Keep forever": moves a note to the Retention board's archive column.
     func archive(_ item: RetentionKeeper.Expiring) async {
         guard let location = vault.vaultLocation else { return }
@@ -239,18 +270,18 @@ final class SyncController {
     }
 
     /// PRD first run: the board and guide whenever they're missing; samples once per vault.
-    private func ensureStarterKit(provider: any StorageProvider, vaultPath: String) async {
-        let key = locationKey
+    private func ensureStarterKit(provider: any StorageProvider, vaultPath: String, layout: NoteLayout) async {
+        let key = locationKey + "|" + layout.rawValue
         guard !starterChecked.contains(key) else { return }
         let samplesKey = "starterSamples:" + key
         let firstTime = !UserDefaults.standard.bool(forKey: samplesKey)
         do {
-            let outcome = try await StarterKit.ensure(in: provider, vaultPath: vaultPath, includeSamples: firstTime)
+            let outcome = try await StarterKit.ensure(in: provider, vaultPath: vaultPath, includeSamples: firstTime && layout == .obsidian, layout: layout)
             starterChecked.insert(key)
             UserDefaults.standard.set(true, forKey: samplesKey)
             if case .created(let files) = outcome {
                 Log.models.notice("Created in the vault: \(files.joined(separator: ", "), privacy: .public)")
-                if firstTime { showWalkthrough = true }
+                if firstTime, layout == .obsidian { showWalkthrough = true }
             }
         } catch {
             Log.models.error("Couldn't create the board and guide: \(error.localizedDescription, privacy: .public)")
@@ -261,6 +292,7 @@ final class SyncController {
         switch vault.settings.kind {
         case .nextcloud: "nextcloud:\(vault.settings.account?.server.absoluteString ?? "")|\(vault.settings.account?.loginName ?? "")|\(vault.settings.remoteVaultPath ?? "")"
         case .localFolder: "local:\(vault.settings.localPath ?? "")"
+        case .webdav: "webdav:\(vault.settings.webdav?.server.absoluteString ?? "")|\(vault.settings.webdav?.loginName ?? "")|\(vault.settings.webdavPath ?? "")"
         }
     }
 }

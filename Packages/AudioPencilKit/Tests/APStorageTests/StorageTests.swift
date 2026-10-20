@@ -152,6 +152,26 @@ struct WebDAVStorageTests {
         #expect(storage.url(for: "/My Vault/Daily #1.md").absoluteString == "https://cloud.example.com/remote.php/dav/files/wes/My%20Vault/Daily%20%231.md")
     }
 
+    @Test func anyWebDAVServerIsRootedAtItsAddress() {
+        let storage = WebDAVStorage(davRoot: URL(string: "https://nas.example.com/dav")!, loginName: "me", password: "pw")
+        #expect(storage.url(for: "/Notes/a b.md").absoluteString == "https://nas.example.com/dav/Notes/a%20b.md")
+        let slashed = WebDAVStorage(davRoot: URL(string: "https://nas.example.com/dav/")!, loginName: "me", password: "pw")
+        #expect(slashed.url(for: "/Notes").absoluteString == "https://nas.example.com/dav/Notes")
+    }
+
+    @Test func settingsFromBeforeWebDAVStillDecode() throws {
+        let old = #"{"kind":"localFolder","localPath":"/Users/me/Notes"}"#
+        let settings = try JSONDecoder().decode(VaultSettings.self, from: Data(old.utf8))
+        #expect(settings.kind == .localFolder)
+        #expect(settings.layout == nil && settings.webdav == nil)
+        var webdav = VaultSettings()
+        webdav.kind = .webdav
+        #expect(!webdav.isConfigured)
+        webdav.webdav = NextcloudAccount(server: URL(string: "https://nas.example.com/dav")!, loginName: "me")
+        webdav.webdavPath = "/Notes"
+        #expect(webdav.isConfigured)
+    }
+
     @Test func conditionalWriteMapsPreconditionFailedToConflict() async throws {
         let stub = StubProtocol.make { request, _ in
             request.value(forHTTPHeaderField: "If-Match") == "\"old\"" ? (412, [:], Data()) : (201, ["ETag": "\"new\""], Data())

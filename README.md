@@ -105,9 +105,13 @@ If the board or `Settings.md` stops parsing, the app leaves it alone (Obsidian s
 
 Settings › Sounds offers Tricorder (default), Soft, Chime, Click, macOS sounds or None, with a volume slider and a preview button. The choice is per device and synced in its section of the settings file.
 
+### Storage: Obsidian vault or any folder
+
+The Storage page offers Nextcloud, any WebDAV server (URL, user name and password, kept in the Keychain), or a folder on this Mac such as iCloud Drive. Obsidian isn't required. A folder with a `.obsidian` folder gets the Obsidian extras: the review board, the guide, samples, `[[wiki]]` audio embeds and a collapsed transcript callout. Any other folder gets plain Markdown: a standard relative link to the recording, a `## Transcript` heading, and an `About these notes.md` explaining the files. If a plain folder later becomes an Obsidian vault, the Notes page offers to add the board; nothing is added without asking. The Notes page's recent list has **Keep forever** and **Delete** for each note, so retention works without the board.
+
 ### Vault settings file
 
-Once a vault is connected (Vault page), the app keeps `Audio Pencil/Settings.md` in it: a short note with one `yaml` block holding the shared styles, vocabulary and tags, plus a section per device (microphones, hotkey options, models). Edit it in Obsidian and the app picks the changes up within a minute, or when you switch to it. Changes made on both sides merge field by field against the last synced version. If both sides changed the same style, the vault's version wins. If the YAML has a mistake, syncing pauses until you fix it, and the file is never overwritten. Per-app style memory and stats stay on the device.
+Once storage is connected (Storage page), the app keeps `Audio Pencil/Settings.md` in it: a short note with one `yaml` block holding the shared styles, vocabulary and tags, plus a section per device (microphones, hotkey options, models). Edit it in Obsidian and the app picks the changes up within a minute, or when you switch to it. Changes made on both sides merge field by field against the last synced version. If both sides changed the same style, the vault's version wins. If the YAML has a mistake, syncing pauses until you fix it, and the file is never overwritten. Per-app style memory and stats stay on the device.
 
 The text is left on the clipboard as well. If the focused element clearly isn't a text field, nothing is pasted and the indicator shows "On clipboard".
 
@@ -125,7 +129,7 @@ Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
   APModels                    ModelCoordinator (one large model resident at a time), catalogue
   APTranscription             WhisperKit wrapper, streaming transcriber
   APSummary                   MLX writing model (SmolLM3 by default), Hugging Face download, benchmark
-  APStorage                   vault storage: Nextcloud WebDAV + Login Flow v2, local folder (iCloud Drive), Keychain
+  APStorage                   storage: Nextcloud (Login Flow v2) or any WebDAV server, local folder (iCloud Drive), Keychain
   APSync                      shared settings file (YAML in Markdown), three-way merge, offline upload queue
 ```
 

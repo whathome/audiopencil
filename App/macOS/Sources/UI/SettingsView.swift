@@ -246,11 +246,11 @@ private struct GeneralSettings: View {
                     }
                 } label: {
                     Text("Make a note instead of pasting after")
-                    Text("Longer recordings are kept with their audio and filed in the vault for review.")
+                    Text("Longer recordings are kept with their audio and filed with your notes for review.")
                 }
                 Toggle(isOn: $app.settings.saveQuickDictations) {
                     Text("Save quick dictations as notes too")
-                    Text("They still paste as usual; a copy is filed in the vault.")
+                    Text("They still paste as usual; a copy is filed with your notes.")
                 }
                 Toggle(isOn: $app.expireRegularAudio) {
                     Text("Remove a recording's audio after a year")

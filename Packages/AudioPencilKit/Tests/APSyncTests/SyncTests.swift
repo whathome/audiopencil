@@ -354,6 +354,16 @@ struct StarterKitTests {
         #expect(try await StarterKit.ensure(in: storage, vaultPath: "/Vault", includeSamples: false) == .created(files: [StarterKit.basePath]))
     }
 
+    @Test func plainFolderGetsOnlyTheAboutFile() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = try await StarterKit.ensure(in: storage, vaultPath: "/Folder", includeSamples: true, layout: .plain)
+        #expect(first == .created(files: [StarterKit.aboutPath]))
+        #expect(try await storage.item(at: StoragePath.join("/Folder", StarterKit.basePath)) == nil)
+        #expect(try await storage.item(at: StoragePath.join("/Folder", StarterKit.guidePath)) == nil)
+        #expect(try await StarterKit.ensure(in: storage, vaultPath: "/Folder", includeSamples: true, layout: .plain) == .alreadyThere)
+    }
+
     @Test func boardIsValidYAMLWithTheThreeViews() throws {
         let parsed = try #require(try Yams.load(yaml: StarterKit.base) as? [String: Any])
         let views = try #require(parsed["views"] as? [[String: Any]])
@@ -391,6 +401,16 @@ struct NoteFrontmatterTests {
         #expect(edited.contains("retention: archive\n---"))
         edited = NoteFrontmatter.removingEmbeds(of: "/Audio Pencil/Recordings/a.m4a", in: edited)
         #expect(!edited.contains("![["))
+        #expect(edited.hasSuffix("\nBody text.\n"))
+    }
+
+    @Test func plainLayoutValuesAndLinks() {
+        let plain = "---\ntype: audio-pencil\naudio: Audio Pencil/Recordings/x (2).m4a\n---\n\n[Audio](../Recordings/x%20%282%29.m4a)\n\nBody text.\n"
+        #expect(NoteFrontmatter.linkTarget(NoteFrontmatter.string("audio", in: plain)!) == "/Audio Pencil/Recordings/x (2).m4a")
+        #expect(NoteFrontmatter.linkTarget("[Audio](x.m4a)") == nil)
+        #expect(NoteFrontmatter.linkTarget("https://example.com/x.m4a") == nil)
+        let edited = NoteFrontmatter.removingEmbeds(of: "/Audio Pencil/Recordings/x (2).m4a", in: plain)
+        #expect(!edited.contains("[Audio]"))
         #expect(edited.hasSuffix("\nBody text.\n"))
     }
 }

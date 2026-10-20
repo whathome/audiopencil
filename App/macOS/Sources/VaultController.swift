@@ -30,7 +30,11 @@ final class VaultController {
     var serverText = ""
     private(set) var serverDescription: String?
     private(set) var connection: Connection = .signedOut
+    /// The generic WebDAV server's sign-in state (Nextcloud's is `connection`).
+    private(set) var webdavConnection: Connection = .signedOut
     private(set) var locationCheck: LocationCheck = .none
+    /// A plain folder has become an Obsidian vault (it now has .obsidian): offer the review board.
+    private(set) var obsidianUpgradeAvailable = false
 
     // Nextcloud folder browser
     var isBrowsing = false
@@ -43,6 +47,11 @@ final class VaultController {
     @ObservationIgnored private var signInTask: Task<Void, Never>?
     /// Called when the vault folder has been checked and is usable.
     @ObservationIgnored var onLocationReady: (() -> Void)?
+    /// Called when the layout changes (a new location, or a plain folder adopted as an Obsidian vault).
+    @ObservationIgnored var onLayoutChanged: (() -> Void)?
+
+    /// How notes are written here. Nil until the location has been checked once.
+    var layout: NoteLayout? { settings.layout }
 
     init() {
         if let data = UserDefaults.standard.data(forKey: Self.settingsKey),
@@ -54,6 +63,9 @@ final class VaultController {
         if let account = settings.account {
             serverText = account.server.absoluteString
             connection = Keychain.password(for: account) == nil ? .signedOut : .signedIn
+        }
+        if let webdav = settings.webdav, Keychain.password(for: webdav) != nil {
+            webdavConnection = .signedIn
         }
         if settings.isConfigured { verifyLocation() }
         if connection == .signedIn, let server = settings.account?.server {
@@ -161,6 +173,52 @@ final class VaultController {
         return WebDAVStorage(account: account, appPassword: password)
     }
 
+    private var webdavStorage: WebDAVStorage? {
+        guard let account = settings.webdav, let password = Keychain.password(for: account) else { return nil }
+        return WebDAVStorage(davRoot: account.server, loginName: account.loginName, password: password)
+    }
+
+    /// The server the folder browser works on: Nextcloud or the generic WebDAV server.
+    private var remoteStorage: WebDAVStorage? {
+        settings.kind == .webdav ? webdavStorage : nextcloudStorage
+    }
+
+    // MARK: Any WebDAV server
+
+    /// Checks the server answers WebDAV with these credentials, then remembers them (password in the Keychain).
+    func connectWebDAV(url text: String, user: String, password: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard let url = URL(string: trimmed.contains("://") ? trimmed : "https://" + trimmed),
+              let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http", url.host() != nil
+        else {
+            webdavConnection = .failed(String(localized: "Enter the server's WebDAV address, like https://example.com/dav/."))
+            return
+        }
+        let account = NextcloudAccount(server: url, loginName: user.trimmingCharacters(in: .whitespaces))
+        webdavConnection = .checking
+        Task {
+            do {
+                let storage = WebDAVStorage(davRoot: url, loginName: account.loginName, password: password)
+                guard try await storage.item(at: "/") != nil else { throw StorageError.notFound(url.absoluteString) }
+                try Keychain.savePassword(password, for: account, service: "WebDAV")
+                if settings.webdav != account { settings.webdavPath = nil }
+                settings.webdav = account
+                webdavConnection = .signedIn
+                locationChanged()
+            } catch {
+                webdavConnection = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    func disconnectWebDAV() {
+        if let account = settings.webdav { Keychain.deletePassword(for: account) }
+        settings.webdav = nil
+        settings.webdavPath = nil
+        webdavConnection = .signedOut
+        locationCheck = .none
+    }
+
     /// Provider plus the vault's path within it.
     var vaultLocation: (provider: any StorageProvider, path: String)? {
         switch settings.kind {
@@ -170,6 +228,9 @@ final class VaultController {
         case .localFolder:
             guard let url = resolvedLocalFolder else { return nil }
             return (LocalFolderStorage(root: url), "/")
+        case .webdav:
+            guard let storage = webdavStorage, let path = settings.webdavPath else { return nil }
+            return (storage, path)
         }
     }
 
@@ -186,11 +247,12 @@ final class VaultController {
 
     func openBrowser() {
         isBrowsing = true
-        browse(settings.remoteVaultPath.map(StoragePath.parent) ?? "/")
+        let current = settings.kind == .webdav ? settings.webdavPath : settings.remoteVaultPath
+        browse(current.map(StoragePath.parent) ?? "/")
     }
 
     func browse(_ path: String) {
-        guard let storage = nextcloudStorage else { return }
+        guard let storage = remoteStorage else { return }
         browserPath = path
         browserLoading = true
         browserError = nil
@@ -210,9 +272,39 @@ final class VaultController {
     }
 
     func chooseRemoteFolder(_ path: String) {
-        settings.remoteVaultPath = path
+        if settings.kind == .webdav {
+            settings.webdavPath = path
+        } else {
+            settings.remoteVaultPath = path
+        }
         isBrowsing = false
+        locationChanged()
+    }
+
+    /// A vault-relative path as a file on this Mac (local and iCloud folders only).
+    func localFileURL(for path: String) -> URL? {
+        guard settings.kind == .localFolder, let root = resolvedLocalFolder else { return nil }
+        let relative = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        return relative.isEmpty ? root : root.appending(path: relative)
+    }
+
+    /// Sync saw a .obsidian folder appear in a plain folder.
+    func noticeObsidianFolder() {
+        if settings.layout == .plain { obsidianUpgradeAvailable = true }
+    }
+
+    /// A different place: its layout is worked out afresh when it's checked.
+    func locationChanged() {
+        settings.layout = nil
+        obsidianUpgradeAvailable = false
         verifyLocation()
+    }
+
+    /// The plain folder became an Obsidian vault and the user wants the board: write notes for Obsidian from now on.
+    func adoptObsidianLayout() {
+        settings.layout = .obsidian
+        obsidianUpgradeAvailable = false
+        onLayoutChanged?()
     }
 
     /// Folder picker for a vault on this Mac. Starts in Obsidian's iCloud folder when there is one.
@@ -222,14 +314,14 @@ final class VaultController {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Use as vault")
-        panel.message = String(localized: "Choose your Obsidian vault folder (the one that contains .obsidian).")
+        panel.prompt = String(localized: "Use this folder")
+        panel.message = String(localized: "Choose the folder for your notes. An Obsidian vault (with a .obsidian folder) also gets a review board.")
         panel.directoryURL = resolvedLocalFolder ?? LocalFolderStorage.obsidianICloudFolder ?? FileManager.default.homeDirectoryForCurrentUser
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }
         settings.localBookmark = try? url.bookmarkData()
         settings.localPath = url.path
-        verifyLocation()
+        locationChanged()
     }
 
     /// Confirms the folder exists, whether it's an Obsidian vault, and that we can write to it
@@ -248,6 +340,15 @@ final class VaultController {
                 try await provider.write(probe, data: Data("ok".utf8), ifMatch: nil, createOnly: false)
                 try await provider.delete(probe)
                 locationCheck = .ok(isObsidianVault: isVault)
+                switch (settings.layout, isVault) {
+                case (nil, _):
+                    settings.layout = isVault ? .obsidian : .plain
+                    onLayoutChanged?()
+                case (.plain?, true):
+                    obsidianUpgradeAvailable = true // never adds files without asking
+                default:
+                    obsidianUpgradeAvailable = false
+                }
                 onLocationReady?()
             } catch {
                 locationCheck = .failed(error.localizedDescription)
@@ -257,7 +358,11 @@ final class VaultController {
 
     /// The Obsidian vault's name: its folder's name.
     var vaultName: String? {
-        let path = settings.kind == .nextcloud ? settings.remoteVaultPath : settings.localPath
+        let path = switch settings.kind {
+        case .nextcloud: settings.remoteVaultPath
+        case .localFolder: settings.localPath
+        case .webdav: settings.webdavPath
+        }
         return path?.split(separator: "/").last.map(String.init)
     }
 
