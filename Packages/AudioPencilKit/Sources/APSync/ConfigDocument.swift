@@ -169,6 +169,7 @@ public enum ConfigDocument {
                 out += "    picker_auto_confirm: \(number(device.pickerAutoConfirm))\n"
                 out += "    long_form_threshold_seconds: \(number(device.longFormThreshold))\n"
                 out += "    save_quick_dictations: \(device.saveQuickDictations)\n"
+                out += "    keep_clipboard: \(device.keepClipboard)  # put the clipboard back after a confirmed paste\n"
                 out += "    sounds: \(scalar(device.sounds))  # tricorder, soft, chime, click, system or none\n"
                 out += "    sound_volume: \(number(device.soundVolume))\n"
             }

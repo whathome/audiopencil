@@ -406,7 +406,7 @@ struct IndicatorView: View {
                 ProgressView().controlSize(.small).tint(.white)
             case .clipboard:
                 Image(systemName: "doc.on.clipboard")
-                Text("On clipboard").font(.callout)
+                Text("On clipboard: press ⌘V").font(.callout)
             case .nothingHeard:
                 Image(systemName: "mic.slash")
                 Text("Nothing heard").font(.callout)

@@ -2040,6 +2040,38 @@
         }
       }
     },
+    "Copy": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier"
+          }
+        }
+      }
+    },
+    "Copy Last Dictation": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar el último dictado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier la dernière dictée"
+          }
+        }
+      }
+    },
     "Couldn't archive %@: %@": {
       "localizations": {
         "en": {
@@ -2410,6 +2442,22 @@
         }
       }
     },
+    "Dictation pastes through the clipboard, then your clipboard goes back once the text is seen to arrive. If that can't be confirmed, the dictation stays on the clipboard so ⌘V pastes it. Passwords copied from a password manager aren't kept.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado se pega a través del portapapeles y luego tu portapapeles vuelve a su sitio en cuanto se ve que el texto ha llegado. Si no se puede confirmar, el dictado se queda en el portapapeles para que ⌘V lo pegue. Las contraseñas copiadas de un gestor de contraseñas no se guardan."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée est collée via le presse-papiers, puis votre presse-papiers est remis en place dès que le texte est bien arrivé. Si ce n’est pas confirmé, la dictée reste dans le presse-papiers pour que ⌘V la colle. Les mots de passe copiés depuis un gestionnaire de mots de passe ne sont pas conservés."
+          }
+        }
+      }
+    },
     "Dictation test area": {
       "localizations": {
         "es": {
@@ -2742,6 +2790,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chaque app démarre dans la dernière langue que vous y avez parlée."
+          }
+        }
+      }
+    },
+    "Each dictation is left on the clipboard after pasting, replacing what was there.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada dictado se queda en el portapapeles después de pegarlo, en lugar de lo que había."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque dictée reste dans le presse-papiers après le collage, à la place de ce qui s’y trouvait."
           }
         }
       }
@@ -3382,6 +3446,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Garder pour toujours"
+          }
+        }
+      }
+    },
+    "Keep what's on my clipboard": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar mi portapapeles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préserver mon presse-papiers"
           }
         }
       }
@@ -4874,22 +4954,6 @@
         }
       }
     },
-    "On clipboard": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En el portapapeles"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dans le presse-papiers"
-          }
-        }
-      }
-    },
     "On clipboard · %@ s after stop": {
       "localizations": {
         "es": {
@@ -4902,6 +4966,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dans le presse-papiers · %@ s après l’arrêt"
+          }
+        }
+      }
+    },
+    "On clipboard: press ⌘V": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el portapapeles: pulsa ⌘V"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans le presse-papiers : ⌘V pour coller"
           }
         }
       }
@@ -5174,6 +5254,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Colle exactement ce que vous avez dit. Maintenir Fn donne toujours ceci."
+          }
+        }
+      }
+    },
+    "Pasting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collage"
           }
         }
       }
@@ -6284,6 +6380,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enregistrement de l’audio…"
+          }
+        }
+      }
+    },
+    "Sent, not confirmed: on clipboard · %@ s after stop": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado sin confirmar: en el portapapeles · %@ s tras parar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé, non confirmé : dans le presse-papiers · %@ s après l’arrêt"
           }
         }
       }
@@ -9110,6 +9222,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "utilisé"
+          }
+        }
+      }
+    },
+    "macOS is set to deny Audio Pencil clipboard access (Privacy & Security › Paste from Other Apps), so dictations stay on the clipboard.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS deniega a Audio Pencil el acceso al portapapeles (Privacidad y seguridad › Pegar desde otras apps), así que los dictados se quedan en el portapapeles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS refuse à Audio Pencil l’accès au presse-papiers (Confidentialité et sécurité › Coller depuis d’autres apps) : les dictées restent donc dans le presse-papiers."
           }
         }
       }

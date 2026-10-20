@@ -48,6 +48,10 @@ private struct MenuBarContent: View {
             app.toggleDictation()
         }
         .disabled(app.dictation.phase == .starting || app.dictation.phase == .finishing)
+        Button("Copy Last Dictation") {
+            if let text = app.dictation.lastText { app.dictation.paster.copy(text) }
+        }
+        .disabled(app.dictation.lastText == nil)
         Divider()
         Button("Open Audio Pencil") {
             openWindow(id: "main")
@@ -77,6 +81,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.applicationIconImage = icon
         }
         app.bootstrap()
+    }
+
+    /// A dictation offered on the clipboard on request can't outlive the app: hand over the text.
+    func applicationWillTerminate(_ notification: Notification) {
+        app.dictation.paster.settle()
     }
 
     /// Keep running with no windows open: the hotkey is the main interface.

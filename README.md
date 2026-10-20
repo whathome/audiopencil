@@ -117,7 +117,15 @@ The Storage page offers Nextcloud, any WebDAV server (URL, user name and passwor
 
 Once storage is connected (Storage page), the app keeps `Audio Pencil/Settings.md` in it: a short note with one `yaml` block holding the shared styles, vocabulary and tags, plus a section per device (microphones, hotkey options, models). Edit it in Obsidian and the app picks the changes up within a minute, or when you switch to it. Changes made on both sides merge field by field against the last synced version. If both sides changed the same style, the vault's version wins. If the YAML has a mistake, syncing pauses until you fix it, and the file is never overwritten. Per-app style memory and stats stay on the device.
 
-The text is left on the clipboard as well. If the focused element clearly isn't a text field, nothing is pasted and the indicator shows "On clipboard".
+**Keep what's on my clipboard** (Settings › General › Pasting, on by default) pastes through the clipboard without losing what you'd copied:
+
+- Your clipboard is saved first: every item and format, in memory only. Items marked concealed (passwords from a password manager) are never kept, and clipboards over 32 MB are left alone.
+- The dictation goes on the clipboard marked transient, so clipboard managers skip it, and it's handed over only when an app asks for it.
+- After ⌘V, the paste counts as confirmed when the app asks for the text and, where Accessibility can read the field, the text shows up there. Typical checks take 0.05–0.3 s (TextEdit, Safari, Firefox).
+- Confirmed: your clipboard goes back. Not confirmed, or the focus clearly isn't a text field: the dictation stays on the clipboard and the indicator says "On clipboard: press ⌘V". Your clipboard comes back once you've pasted the dictation, or after two minutes, unless you copy something else first.
+- **Copy Last Dictation** in the menu bar, and **Copy** on the Last dictation card, put the last dictation back on the clipboard at any time.
+
+With the setting off, each dictation stays on the clipboard after pasting, as before. If macOS is set to deny Audio Pencil clipboard access (Privacy & Security › Paste from Other Apps), dictations stay on the clipboard.
 
 The hotkey doesn't work while macOS Secure Input is on: password fields, Terminal with Secure Keyboard Entry, some password managers.
 

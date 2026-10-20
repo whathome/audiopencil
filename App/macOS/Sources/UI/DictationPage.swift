@@ -288,8 +288,16 @@ private struct LastDictationCard: View {
     var body: some View {
         if let report = app.dictation.lastReport {
             Card(title: "Last dictation", trailing: trailing(for: report)) {
-                if report.styleName != Style.raw.displayName {
-                    Label { Text(verbatim: report.styleName) } icon: { Image(systemName: "pencil.and.scribble") }.font(.caption).foregroundStyle(Color.pencil)
+                HStack {
+                    if report.styleName != Style.raw.displayName {
+                        Label { Text(verbatim: report.styleName) } icon: { Image(systemName: "pencil.and.scribble") }.font(.caption).foregroundStyle(Color.pencil)
+                    }
+                    Spacer()
+                    if let text = app.dictation.lastText {
+                        Button { app.dictation.paster.copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
+                            .buttonStyle(.link)
+                            .font(.callout)
+                    }
                 }
                 Text(report.preview)
                     .font(.system(.title3, design: .serif))
@@ -308,6 +316,7 @@ private struct LastDictationCard: View {
         let time = seconds.formatted(.number.precision(.fractionLength(2)))
         return switch report.outcome {
         case "pasted": "Pasted · \(time) s after stop"
+        case "unconfirmed": "Sent, not confirmed: on clipboard · \(time) s after stop"
         case "clipboardOnly": "On clipboard · \(time) s after stop"
         default: "\(report.outcome.capitalized) · \(time) s after stop"
         }

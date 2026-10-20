@@ -71,6 +71,9 @@ final class DictationController {
 
     private(set) var phase: Phase = .idle
     private(set) var lastReport: DictationReport?
+    /// The last delivered dictation in full, for "Copy Last Dictation". Memory only.
+    private(set) var lastText: String?
+    let paster = Paster()
     private(set) var lastError: String?
     /// Style the current recording will be delivered in. Number keys change it while recording.
     private(set) var style: Style = .raw
@@ -372,6 +375,7 @@ final class DictationController {
                 }
 
                 let outcome: String
+                var delivered = ContinuousClock.now
                 if text.isEmpty {
                     outcome = "nothing heard"
                     indicator.flash(.nothingHeard)
@@ -380,7 +384,9 @@ final class DictationController {
                     indicator.hide()
                     Log.dictation.notice("Dry-run \(style.name, privacy: .public) text: \(text, privacy: .public)")
                 } else {
-                    let result = Paster.deliver(text)
+                    lastText = text
+                    indicator.hide()
+                    let result = await paster.deliver(text) { delivered = .now }
                     outcome = result.rawValue
                     onDelivered?(UsageStats.wordCount(transcript), audioSeconds)
                     if savesQuickDictations {
@@ -388,15 +394,13 @@ final class DictationController {
                     }
                     if let fallbackNote {
                         indicator.flash(.error(fallbackNote), seconds: 3)
-                    } else if result == .clipboardOnly {
-                        indicator.flash(.clipboard)
-                    } else {
-                        indicator.hide()
+                    } else if result != .pasted {
+                        indicator.flash(.clipboard, seconds: 3)
                     }
                 }
                 if !text.isEmpty, remembersStyle { onStyleUsed?(style, targetApp) }
                 if !text.isEmpty { onLanguageUsed?(language, targetApp) }
-                let delivered = ContinuousClock.now
+                if text.isEmpty || dryRun { delivered = .now }
                 lastReport = DictationReport(
                     finishedAt: Date(),
                     styleName: style.displayName,

@@ -145,6 +145,9 @@ public struct DictationSettings: Codable, Equatable, Sendable {
     public var longFormThreshold: Double = 300
     /// Also save quick dictations as notes in the vault (PRD default: paste and forget).
     public var saveQuickDictations: Bool = false
+    /// Put back what was on the clipboard once a pasted dictation is seen to arrive; if it can't be
+    /// confirmed, the dictation stays on the clipboard as a backup.
+    public var keepClipboard: Bool = true
     /// Start/stop/cancel sound theme (a CueTheme raw value) and its volume (0…1).
     public var cueTheme: String = "tricorder"
     public var cueVolume: Double = 0.35
@@ -208,6 +211,7 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
         longFormThreshold = try c.decodeIfPresent(Double.self, forKey: .longFormThreshold) ?? defaults.longFormThreshold
         saveQuickDictations = try c.decodeIfPresent(Bool.self, forKey: .saveQuickDictations) ?? defaults.saveQuickDictations
+        keepClipboard = try c.decodeIfPresent(Bool.self, forKey: .keepClipboard) ?? defaults.keepClipboard
         cueTheme = try c.decodeIfPresent(String.self, forKey: .cueTheme) ?? defaults.cueTheme
         cueVolume = try c.decodeIfPresent(Double.self, forKey: .cueVolume) ?? defaults.cueVolume
     }

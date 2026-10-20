@@ -150,6 +150,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public var pickerAutoConfirm: Double = 1.0
     public var longFormThreshold: Double = 300
     public var saveQuickDictations: Bool = false
+    public var keepClipboard: Bool = true
     public var sounds: String = "tricorder"
     public var soundVolume: Double = 0.35
 
@@ -160,7 +161,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         case transcriptionModel = "transcription_model", writingModel = "writing_model"
         case multilingualModel = "multilingual_transcription_model", languages
         case pickStyleAfterStop = "pick_style_after_stop", pickerAutoConfirm = "picker_auto_confirm"
-        case longFormThreshold = "long_form_threshold_seconds", saveQuickDictations = "save_quick_dictations"
+        case longFormThreshold = "long_form_threshold_seconds", saveQuickDictations = "save_quick_dictations", keepClipboard = "keep_clipboard"
         case sounds, soundVolume = "sound_volume"
     }
 
@@ -185,6 +186,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         pickerAutoConfirm = settings.pickerAutoConfirm
         longFormThreshold = settings.longFormThreshold
         saveQuickDictations = settings.saveQuickDictations
+        keepClipboard = settings.keepClipboard
         sounds = settings.cueTheme
         soundVolume = settings.cueVolume
     }
@@ -210,6 +212,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
         longFormThreshold = try c.decodeIfPresent(Double.self, forKey: .longFormThreshold) ?? defaults.longFormThreshold
         saveQuickDictations = try c.decodeIfPresent(Bool.self, forKey: .saveQuickDictations) ?? defaults.saveQuickDictations
+        keepClipboard = try c.decodeIfPresent(Bool.self, forKey: .keepClipboard) ?? defaults.keepClipboard
         sounds = try c.decodeIfPresent(String.self, forKey: .sounds) ?? defaults.sounds
         soundVolume = try c.decodeIfPresent(Double.self, forKey: .soundVolume) ?? defaults.soundVolume
     }
@@ -260,6 +263,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         settings.pickerAutoConfirm = min(max(pickerAutoConfirm, 0.25), 5)
         settings.longFormThreshold = min(max(longFormThreshold, 60), 3_600)
         settings.saveQuickDictations = saveQuickDictations
+        settings.keepClipboard = keepClipboard
         settings.cueTheme = sounds
         settings.cueVolume = min(max(soundVolume, 0), 1)
     }

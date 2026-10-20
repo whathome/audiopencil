@@ -146,6 +146,15 @@ private struct GeneralSettings: View {
     @Bindable var app: AppModel
     var embedded = false
 
+    private var clipboardDetail: LocalizedStringResource {
+        if #available(macOS 15.4, *), NSPasteboard.general.accessBehavior == .alwaysDeny {
+            return "macOS is set to deny Audio Pencil clipboard access (Privacy & Security › Paste from Other Apps), so dictations stay on the clipboard."
+        }
+        return app.settings.keepClipboard
+            ? "Dictation pastes through the clipboard, then your clipboard goes back once the text is seen to arrive. If that can't be confirmed, the dictation stays on the clipboard so ⌘V pastes it. Passwords copied from a password manager aren't kept."
+            : "Each dictation is left on the clipboard after pasting, replacing what was there."
+    }
+
     var body: some View {
         Form {
             Section {
@@ -206,6 +215,13 @@ private struct GeneralSettings: View {
                 FirstSectionHeader(app: app, embedded: embedded, title: "Dictation hotkey")
             }
 
+
+            Section("Pasting") {
+                Toggle(isOn: $app.settings.keepClipboard) {
+                    Text("Keep what's on my clipboard")
+                    Text(clipboardDetail)
+                }
+            }
 
             Section("Sounds") {
                 HStack {

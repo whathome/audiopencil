@@ -121,6 +121,19 @@ struct ConfigMergerTests {
         #expect(restored.fallbackShortcut == KeyShortcut(keyCode: 96, modifiers: 0)) // unreadable: kept
     }
 
+    @Test func keepClipboardSyncsAndDefaultsOn() throws {
+        #expect(DictationSettings().keepClipboard)
+        var settings = DictationSettings()
+        settings.keepClipboard = false
+        let section = DeviceSection(settings)
+        var restored = DictationSettings()
+        section.apply(to: &restored)
+        #expect(!restored.keepClipboard)
+        // Settings saved before the option existed keep it on.
+        let old = try JSONDecoder().decode(DictationSettings.self, from: Data("{}".utf8))
+        #expect(old.keepClipboard)
+    }
+
     @Test func languageVocabularyMergesPerLanguage() {
         var base = SharedConfig()
         base.languageVocabulary = ["fr": ["Loïc"]]

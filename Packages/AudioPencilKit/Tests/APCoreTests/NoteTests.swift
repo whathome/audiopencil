@@ -92,3 +92,42 @@ struct LongFormPromptTests {
         #expect(prompt.instructions.contains("preferably from this list: work, diary"))
     }
 }
+
+struct PasteCheckTests {
+    private let text = "Let's meet on Thursday at ten.\nI'll bring the “draft” notes."
+
+    @Test func textInTheFieldConfirmsEvenWhenTidied() {
+        let before = FieldState(value: "Hi Sam, ", length: nil)
+        let after = FieldState(value: "Hi Sam, Let\u{2019}s meet on Thursday at ten.\r\nI'll bring the \"draft\" notes.", length: nil)
+        #expect(PasteCheck.evidence(before: before, after: after, pasted: text) == .arrived)
+        #expect(PasteCheck.verdict(clipboardRead: false, evidence: .arrived) == .confirmed)
+    }
+
+    @Test func pastingTheSameTextTwiceStillCounts() {
+        let before = FieldState(value: text, length: nil)
+        let after = FieldState(value: text + text, length: nil)
+        #expect(PasteCheck.evidence(before: before, after: after, pasted: text) == .arrived)
+    }
+
+    @Test func unchangedReadableFieldOverrulesAClipboardRead() {
+        let field = FieldState(value: "Hi Sam, ", length: nil)
+        #expect(PasteCheck.evidence(before: field, after: field, pasted: text) == .unchanged)
+        #expect(PasteCheck.verdict(clipboardRead: true, evidence: .unchanged) == .unconfirmed)
+    }
+
+    @Test func lengthAloneJudgesFieldsThatHideTheirText() {
+        let grew = PasteCheck.evidence(before: FieldState(value: nil, length: 3), after: FieldState(value: nil, length: 3 + 61), pasted: text)
+        #expect(grew == .arrived)
+        let same = PasteCheck.evidence(before: FieldState(value: nil, length: 3), after: FieldState(value: nil, length: 3), pasted: text)
+        #expect(same == .unchanged)
+    }
+
+    @Test func unreadableFieldsFallBackToTheClipboardRead() {
+        #expect(PasteCheck.evidence(before: nil, after: nil, pasted: text) == .unknown)
+        #expect(PasteCheck.verdict(clipboardRead: true, evidence: .unknown) == .confirmed)
+        #expect(PasteCheck.verdict(clipboardRead: false, evidence: .unknown) == .unconfirmed)
+        // A rich editor rewrote the text into something shorter: can't tell from the field.
+        let rewritten = PasteCheck.evidence(before: FieldState(value: "", length: nil), after: FieldState(value: "Draft", length: nil), pasted: text)
+        #expect(rewritten == .unknown)
+    }
+}

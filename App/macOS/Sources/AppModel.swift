@@ -336,6 +336,13 @@ final class AppModel {
                 case "vault:sync": sync.syncSoon(after: .zero)
                 case "setup": showSetup(hidingMainWindow: false)
                 case "setup:close": setupWindow?.close()
+                case let command where command.hasPrefix("paste:"):
+                    // The real paste path into the frontmost app, for measuring confirmation per app.
+                    let text = String(command.dropFirst("paste:".count))
+                    Task {
+                        let outcome = await dictation.paster.deliver(text)
+                        Log.dictation.notice("Paste test in \(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "?", privacy: .public): \(outcome.rawValue, privacy: .public)")
+                    }
                 case "report:windows":
                     for window in NSApp.windows {
                         Log.dictation.notice("Window \(window.identifier?.rawValue ?? "-", privacy: .public) “\(window.title, privacy: .public)” visible \(window.isVisible)")
@@ -733,6 +740,7 @@ final class AppModel {
     private func applyNoteSettings() {
         dictation?.longFormThreshold = debugLongFormThreshold ?? settings.longFormThreshold
         dictation?.savesQuickDictations = settings.saveQuickDictations
+        dictation?.paster.keepsClipboard = settings.keepClipboard
         dictation?.setSounds(theme: CueTheme(rawValue: settings.cueTheme) ?? .tricorder, volume: settings.cueVolume)
     }
 
