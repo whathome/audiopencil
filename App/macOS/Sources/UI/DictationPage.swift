@@ -64,37 +64,39 @@ private struct HotkeyCard: View {
 
     var body: some View {
         Card(title: "Hotkey") {
-            HStack(spacing: 8) {
-                Chip(label: "\(key.name)", symbol: key == .fn ? "globe" : nil, isOn: true)
-                Chip(label: "\(app.settings.fallbackShortcut.displayText)", isOn: app.settings.fallbackShortcutEnabled)
-                Spacer()
-                Button("Change…") { app.settingsTab = .general; app.page = .settings }
-                    .buttonStyle(.link)
-            }
-            Divider().padding(.vertical, 2)
-            // Gestures flow into as many columns as fit: 2 × 2 in a normal window, one column when tiny.
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 185), spacing: 12, alignment: .topLeading)], alignment: .leading, spacing: 14) {
-                if app.settings.holdFnForRaw {
-                    Gesture(title: "Push to talk", detail: "Hold, release to paste", keys: "Hold \(key.name)") {
-                        KeyCap(label: "hold \(key.keycap)")
-                    }
-                }
-                Gesture(
-                    title: "In a style",
-                    detail: app.settings.startGesture == .doubleTap ? "Double-tap; 1–9 to switch" : "Tap; 1–9 to switch",
+            // One row per gesture, in the order you use them: what it does on the left, the keys on the right.
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
+                GestureRow(
+                    title: "Start dictating",
+                    detail: app.settings.startGesture == .doubleTap ? "Double-tap; 1–9 picks a style while you talk" : "Tap; 1–9 picks a style while you talk",
                     keys: "\(app.settings.startGesture.label(key))"
                 ) {
                     KeyCap(label: "\(key.keycap)")
                     if app.settings.startGesture == .doubleTap { KeyCap(label: "\(key.keycap)") }
                 }
-                Gesture(title: "Stop and paste", detail: stopDetail, keys: stopKeys) {
+                if app.settings.holdFnForRaw {
+                    GestureRow(title: "Push to talk", detail: "Hold, release to paste the raw transcript", keys: "Hold \(key.name)") {
+                        KeyCap(label: "hold \(key.keycap)")
+                    }
+                }
+                GestureRow(title: "Stop and paste", detail: stopDetail, keys: stopKeys) {
                     KeyCap(label: "\(key.keycap)")
                     if app.settings.effectiveStopGesture == .doubleTapFn { KeyCap(label: "\(key.keycap)") }
                     if app.settings.returnStops { KeyCap(label: "return", symbol: "return") }
                 }
-                Gesture(title: "Cancel", detail: "Nothing is pasted", keys: "Escape") {
+                GestureRow(title: "Cancel", detail: "Nothing is pasted", keys: "Escape") {
                     KeyCap(label: "esc")
                 }
+                if app.settings.fallbackShortcutEnabled {
+                    GestureRow(title: "Shortcut", detail: "Also starts and stops", keys: "\(app.settings.fallbackShortcut.displayText)") {
+                        KeyCap(label: "\(app.settings.fallbackShortcut.displayText)")
+                    }
+                }
+            }
+            HStack {
+                Spacer()
+                Button("Change…") { app.settingsTab = .general; app.page = .settings }
+                    .buttonStyle(.link)
             }
         }
     }
@@ -114,7 +116,8 @@ private struct HotkeyCard: View {
     }
 }
 
-private struct Gesture<Keys: View>: View {
+/// A gesture: what it does (title, detail) on the left, its keycaps on the right.
+private struct GestureRow<Keys: View>: View {
     let title: LocalizedStringResource
     let detail: LocalizedStringResource
     /// The keys in words, for VoiceOver (keycaps alone read as "fn fn").
@@ -122,13 +125,17 @@ private struct Gesture<Keys: View>: View {
     @ViewBuilder var keycaps: Keys
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 4) { keycaps }.fixedSize()
-            Text(title).font(.headline)
-            Text(detail).font(.callout).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+        GridRow {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.headline)
+                Text(detail).font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 4) { keycaps }
+                .fixedSize()
+                .gridColumnAlignment(.trailing)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(String(localized: title)): \(String(localized: keys))"))
         .accessibilityHint(Text(detail))
@@ -215,14 +222,17 @@ struct TryItCard: View {
                 }
             }
             ZStack(alignment: .topLeading) {
-                TextEditor(text: $text)
+                // A growing multi-line field rather than a TextEditor: no scroller strip when macOS is set
+                // to always show scroll bars.
+                TextField("", text: $text, axis: .vertical)
+                    .textFieldStyle(.plain)
                     .focused($focused)
                     .font(.system(.title3, design: .serif))
                     .lineSpacing(3)
-                    .scrollContentBackground(.hidden)
-                    .scrollIndicators(.hidden)
-                    .padding(8)
-                    .frame(minHeight: 96)
+                    .lineLimit(4...12)
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 10)
+                    .frame(minHeight: 96, alignment: .topLeading)
                     .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.background))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -234,7 +244,7 @@ struct TryItCard: View {
                         .font(.system(.title3, design: .serif))
                         .foregroundStyle(.tertiary)
                         .padding(.horizontal, 13)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 10)
                         .allowsHitTesting(false)
                 }
             }
