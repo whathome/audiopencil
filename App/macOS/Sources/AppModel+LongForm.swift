@@ -41,7 +41,7 @@ extension AppModel {
                 let sections = PromptBuilder.sections(of: transcript)
                 if sections.count == 1 {
                     status("Writing the note…")
-                    body = try await generateText(PromptBuilder.prompt(for: style, transcript: transcript, context: .longForm, vocabulary: vocabulary))
+                    body = try await generateText(stylePrompt(for: style, transcript: transcript, context: .longForm))
                 } else if style.intensity == .heavy {
                     // Summaries: notes per section, then one note in the style from those.
                     var notes: [String] = []
@@ -50,13 +50,13 @@ extension AppModel {
                         notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary)))
                     }
                     status("Writing the note…")
-                    body = try await generateText(PromptBuilder.prompt(for: style, transcript: notes.joined(separator: "\n\n"), context: .longForm, vocabulary: vocabulary))
+                    body = try await generateText(stylePrompt(for: style, transcript: notes.joined(separator: "\n\n"), context: .longForm))
                 } else {
                     // Tidy or rewrite: section by section, kept in order.
                     var parts: [String] = []
                     for (index, section) in sections.enumerated() {
                         status("Writing part \(index + 1) of \(sections.count)…")
-                        parts.append(try await generateText(PromptBuilder.prompt(for: style, transcript: section, context: .longForm, vocabulary: vocabulary)))
+                        parts.append(try await generateText(stylePrompt(for: style, transcript: section, context: .longForm)))
                     }
                     body = parts.joined(separator: "\n\n")
                 }

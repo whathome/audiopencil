@@ -5,9 +5,12 @@ import Foundation
 /// Paths are relative to `root`.
 public struct LocalFolderStorage: StorageProvider {
     public let root: URL
+    /// Deletions go to the macOS Trash (recoverable), like Nextcloud's trash bin for WebDAV.
+    public var usesTrash: Bool
 
-    public init(root: URL) {
+    public init(root: URL, usesTrash: Bool = true) {
         self.root = root
+        self.usesTrash = usesTrash
     }
 
     /// Obsidian's iCloud container, if Obsidian has created one on this Mac.
@@ -79,7 +82,11 @@ public struct LocalFolderStorage: StorageProvider {
         let fileURL = url(for: path)
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         do {
-            try FileManager.default.removeItem(at: fileURL)
+            if usesTrash {
+                try FileManager.default.trashItem(at: fileURL, resultingItemURL: nil)
+            } else {
+                try FileManager.default.removeItem(at: fileURL)
+            }
         } catch {
             throw StorageError.transport(error.localizedDescription)
         }

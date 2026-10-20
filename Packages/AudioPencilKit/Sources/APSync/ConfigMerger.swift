@@ -12,6 +12,7 @@ public enum ConfigMerger {
         merged.vocabulary = mergeList(base: base?.vocabulary, local: local.vocabulary, remote: remote.vocabulary)
         merged.tags = mergeList(base: base?.tags, local: local.tags, remote: remote.tags)
         merged.styles = mergeStyles(base: base?.styles, local: local.styles, remote: remote.styles)
+        merged.writingSamples = mergeByID(base: base?.writingSamples, local: local.writingSamples, remote: remote.writingSamples)
 
         let localDevice = local.devices[device]
         let baseDevice = base?.devices[device]
@@ -38,8 +39,13 @@ public enum ConfigMerger {
     }
 
     static func mergeStyles(base: [ConfigStyle]?, local: [ConfigStyle], remote: [ConfigStyle]) -> [ConfigStyle] {
-        func find(_ id: String, in list: [ConfigStyle]?) -> ConfigStyle? { list?.first { $0.id == id } }
-        var result: [ConfigStyle] = []
+        mergeByID(base: base, local: local, remote: remote)
+    }
+
+    /// Three-way merge of a list of items keyed by id (styles, writing samples).
+    static func mergeByID<Item: Equatable & Identifiable>(base: [Item]?, local: [Item], remote: [Item]) -> [Item] where Item.ID == String {
+        func find(_ id: String, in list: [Item]?) -> Item? { list?.first { $0.id == id } }
+        var result: [Item] = []
 
         for remoteStyle in remote {
             let localStyle = find(remoteStyle.id, in: local)

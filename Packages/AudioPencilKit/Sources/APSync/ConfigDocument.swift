@@ -116,6 +116,17 @@ public enum ConfigDocument {
                 out += "    folder: \(style.folder.map(scalar) ?? "null")\n"
             }
         }
+        if config.writingSamples.isEmpty {
+            out += "writing_samples: []\n"
+        } else {
+            out += "writing_samples:\n"
+            for sample in config.writingSamples {
+                out += "  - id: \(scalar(sample.id))\n"
+                out += "    kind: \(scalar(sample.kind))\n"
+                if let prompt = sample.promptID { out += "    prompt: \(scalar(prompt))\n" }
+                out += "    text: " + block(sample.text, indent: 6)
+            }
+        }
         if config.devices.isEmpty {
             out += "devices: {}\n"
         } else {

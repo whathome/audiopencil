@@ -4,11 +4,18 @@ import Foundation
 /// Contents of the shared settings file in the vault (PRD "Configuration"): what all devices share,
 /// plus one section per device. Keys are snake_case and enum values kebab-case for hand editing.
 public struct SharedConfig: Codable, Equatable, Sendable {
+    enum CodingKeys: String, CodingKey {
+        case version, vocabulary, tags, styles, devices
+        case writingSamples = "writing_samples"
+    }
+
     public var version: Int = 1
     public var vocabulary: [String] = []
     /// Master tag list (used from milestone 5).
     public var tags: [String] = []
     public var styles: [ConfigStyle] = []
+    /// The user's writing, for the "Like me" style.
+    public var writingSamples: [WritingSample] = []
     /// Keyed by device name, e.g. "Wes's MacBook Air".
     public var devices: [String: DeviceSection] = [:]
 
@@ -20,11 +27,12 @@ public struct SharedConfig: Codable, Equatable, Sendable {
         vocabulary = try c.decodeIfPresent([String].self, forKey: .vocabulary) ?? []
         tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
         styles = try c.decodeIfPresent([ConfigStyle].self, forKey: .styles) ?? []
+        writingSamples = try c.decodeIfPresent([WritingSample].self, forKey: .writingSamples) ?? []
         devices = try c.decodeIfPresent([String: DeviceSection].self, forKey: .devices) ?? [:]
     }
 }
 
-public struct ConfigStyle: Codable, Equatable, Sendable {
+public struct ConfigStyle: Codable, Equatable, Sendable, Identifiable {
     public var id: String
     public var name: String
     public var shortcut: Int?

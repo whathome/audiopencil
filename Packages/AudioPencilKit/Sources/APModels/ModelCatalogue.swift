@@ -9,7 +9,7 @@ public struct TranscriptionModelOption: Identifiable, Hashable, Sendable {
     public let approximateDownloadMB: Int
 
     public static let catalogue: [TranscriptionModelOption] = [
-        .init(id: "openai_whisper-small.en", name: "Small (English)", note: "Recommended on M1 with 8 GB", approximateDownloadMB: 480),
+        .init(id: "openai_whisper-small.en", name: "Small (English)", note: "Recommended: keeps up live on any Apple silicon Mac", approximateDownloadMB: 480),
         .init(id: "openai_whisper-base.en", name: "Base (English)", note: "Faster, less accurate", approximateDownloadMB: 140),
         .init(id: "openai_whisper-tiny.en", name: "Tiny (English)", note: "Fastest; for testing", approximateDownloadMB: 75),
     ]
@@ -19,7 +19,7 @@ public struct TranscriptionModelOption: Identifiable, Hashable, Sendable {
     }
 }
 
-/// Curated MLX writing models that fit an 8 GB Mac alongside the system (one at a time with Whisper).
+/// Curated MLX writing models that fit even an 8 GB Mac. Discovery suggests bigger ones on bigger machines.
 /// Notes come from docs/benchmarks/summary-models-m1-8gb.md.
 public struct WritingModelOption: Identifiable, Hashable, Sendable {
     public let id: String

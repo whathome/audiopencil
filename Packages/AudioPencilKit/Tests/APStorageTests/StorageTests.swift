@@ -186,7 +186,7 @@ struct LocalFolderStorageTests {
     private func makeStorage() throws -> LocalFolderStorage {
         let root = FileManager.default.temporaryDirectory.appending(path: "audiopencil-local-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        return LocalFolderStorage(root: root)
+        return LocalFolderStorage(root: root, usesTrash: false)
     }
 
     @Test func writeReadListAndDelete() async throws {

@@ -42,6 +42,7 @@ extension AppModel {
         config.styles = styles.map(ConfigStyle.init)
         config.vocabulary = settings.customVocabulary
         config.tags = tags
+        config.writingSamples = writingSamples
         config.devices[sync.deviceName] = DeviceSection(settings)
         return config
     }
@@ -58,6 +59,46 @@ extension AppModel {
         config.devices[sync.deviceName]?.apply(to: &updated)
         if updated != settings { settings = updated }
         if config.tags != tags { tags = config.tags }
+        if config.writingSamples != writingSamples { writingSamples = config.writingSamples }
+    }
+
+    // MARK: Like me
+
+    static func loadWritingSamples() -> [WritingSample] {
+        guard let data = UserDefaults.standard.data(forKey: "writingSamples"),
+              let samples = try? JSONDecoder().decode([WritingSample].self, from: data) else { return [] }
+        return samples
+    }
+
+    func writingSamplesChanged(from old: [WritingSample]) {
+        if let data = try? JSONEncoder().encode(writingSamples) {
+            UserDefaults.standard.set(data, forKey: "writingSamples")
+        }
+        // Turn "Like me" on once there's enough to imitate (once; after that it's the user's switch).
+        let key = "likeMeAutoEnabled"
+        if writingSamples.count >= InterviewPrompt.minimumSamples, !UserDefaults.standard.bool(forKey: key),
+           let index = styles.firstIndex(where: { $0.tone == .likeMe }) {
+            UserDefaults.standard.set(true, forKey: key)
+            styles[index].isEnabled = true
+        }
+        if !applyingSync, writingSamples != old { sync?.syncSoon() }
+    }
+
+    func saveSample(_ sample: WritingSample) {
+        if let index = writingSamples.firstIndex(where: { $0.id == sample.id }) {
+            writingSamples[index] = sample
+        } else {
+            writingSamples.append(sample)
+        }
+    }
+
+    /// Style prompt, with the closest writing samples for "Like me".
+    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context) -> StylePrompt {
+        guard style.tone == .likeMe else {
+            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: settings.customVocabulary)
+        }
+        let examples = WritingSampleSelector.pick(for: transcript, from: writingSamples)
+        return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: settings.customVocabulary, examples: examples)
     }
 
     static func loadStyleMemory() -> StyleMemory {
@@ -145,7 +186,7 @@ extension AppModel {
         guard memoryPressure != .critical else { throw RewriteError.lowMemory }
         defer { restoreWhisper() }
 
-        let prompt = PromptBuilder.prompt(for: style, transcript: transcript, context: .quick, vocabulary: settings.customVocabulary)
+        let prompt = stylePrompt(for: style, transcript: transcript, context: .quick)
         let swapStart = ContinuousClock.now
         writingModelState = .loading(firstTime: false)
         modelState = .idle

@@ -17,7 +17,7 @@ struct StylesPage: View {
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 14) {
                     ForEach(sortedStyles) { style in
-                        StyleCard(style: style, isDefault: style.id == app.styleMemory.lastUsed) {
+                        StyleCard(style: style, isDefault: style.id == app.styleMemory.lastUsed, sampleCount: app.writingSamples.count) {
                             editing = style
                         } toggle: { enabled in
                             update(style.id) { $0.isEnabled = enabled }
@@ -77,6 +77,7 @@ struct StylesPage: View {
 private struct StyleCard: View {
     let style: Style
     let isDefault: Bool
+    var sampleCount = 0
     let edit: () -> Void
     let toggle: (Bool) -> Void
 
@@ -94,7 +95,7 @@ private struct StyleCard: View {
                         .toggleStyle(.switch)
                         .controlSize(.small)
                         .labelsHidden()
-                        .disabled(style.id == Style.likeMe.id) // needs writing samples (milestone 6)
+                        .disabled(style.tone == .likeMe && sampleCount < InterviewPrompt.minimumSamples)
                 }
             }
             Text(style.isRaw ? "Pastes exactly what you said. Holding Fn always gives you this." : style.instructions)
@@ -110,8 +111,8 @@ private struct StyleCard: View {
                     if style.tone != .asSpoken { Tag(style.tone.label) }
                     if style.length != .asSpoken { Tag(style.length.label) }
                 }
-                if style.id == Style.likeMe.id, !style.isEnabled {
-                    Tag("Needs writing samples (milestone 6)")
+                if style.tone == .likeMe {
+                    Tag(sampleCount < InterviewPrompt.minimumSamples ? "Needs \(InterviewPrompt.minimumSamples) writing samples (My writing)" : "\(sampleCount) writing samples")
                 }
                 Spacer()
                 if !style.isRaw {

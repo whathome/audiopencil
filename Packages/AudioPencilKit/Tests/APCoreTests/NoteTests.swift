@@ -30,7 +30,7 @@ struct NoteTests {
 
     @Test func markdownHasFrontmatterAudioAndCollapsedTranscript() {
         let markdown = NoteRenderer.markdown(for: note(), timeZone: toronto)
-        #expect(markdown.hasPrefix("---\ntype: audio-pencil\nstyle: professional\nstatus: needs-review\nrecorded: 2026-10-19T14:30:05-04:00\nduration: 312\ndevice: mac\nmode: long-form\ntags:\n  - home-lab\n  - backups\n"))
+        #expect(markdown.hasPrefix("---\ntype: audio-pencil\nstyle: professional\nstatus: needs-review\nrecorded: 2026-10-19T14:30:05-04:00\nduration: 312\ndevice: mac\nmode: long-form\nretention: regular\ntags:\n  - home-lab\n  - backups\n"))
         #expect(markdown.contains("audio: \"[[Audio Pencil/Recordings/2026-10-19 1430 Backup plan for the home server.m4a]]\"\n---"))
         #expect(markdown.contains("\n![[Audio Pencil/Recordings/2026-10-19 1430 Backup plan for the home server.m4a]]\n"))
         #expect(markdown.contains("> [!quote]- Transcript\n> So I've been thinking.\n>\n> About backups.\n"))

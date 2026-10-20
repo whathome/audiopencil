@@ -42,6 +42,11 @@ final class AppModel {
     let vault = VaultController()
     @ObservationIgnored private(set) var sync: SyncController!
     @ObservationIgnored private(set) var notes: NoteMaker!
+    @ObservationIgnored private(set) var advisor: ModelAdvisor!
+    /// The user's writing for "Like me". Shared through the vault settings file.
+    var writingSamples: [WritingSample] = AppModel.loadWritingSamples() {
+        didSet { writingSamplesChanged(from: oldValue) }
+    }
     /// Master tag list from the vault settings file. Approving new tags in a review adds them here.
     var tags: [String] = [] {
         didSet { if !applyingSync, tags != oldValue { sync?.syncSoon() } }
@@ -133,6 +138,7 @@ final class AppModel {
         sync.apply = { [unowned self] config in apply(config) }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         notes = NoteMaker(app: self)
+        advisor = ModelAdvisor(app: self)
         dictation.onLongForm = { [unowned self] capture in notes.makeLongFormNote(capture) }
         dictation.onQuickNote = { [unowned self] capture in notes.saveQuick(capture) }
         applyNoteSettings()
@@ -172,6 +178,10 @@ final class AppModel {
         if needsSetup { page = .setup }
         prepareModel()
         pollPermissions()
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(30)) // after startup settles
+            self?.advisor.checkIfDue()
+        }
         #if DEBUG
         listenForDebugCommands()
         #endif
@@ -226,6 +236,22 @@ final class AppModel {
                     debugLongFormThreshold = Double(command.dropFirst("longform-threshold:".count))
                     applyNoteSettings()
                 case "review": notes.review()
+                case "models:check": Task { await advisor.check() }
+                case let command where command.hasPrefix("models:try:"):
+                    let id = String(command.dropFirst("models:try:".count))
+                    if let suggestion = advisor.suggestions.first(where: { $0.id == id }) { advisor.tryOut(suggestion) }
+                case "models:report":
+                    Log.models.notice("Suggestions: \(self.advisor.suggestions.map { "\($0.id) [\($0.kind.rawValue), \($0.sizeDescription)]" }.joined(separator: "; "), privacy: .public)")
+                    for (id, trial) in self.advisor.trials {
+                        switch trial {
+                        case .done(let lines):
+                            for line in lines {
+                                Log.models.notice("Trial \(id, privacy: .public) – \(line.label, privacy: .public)\nNEW (\(line.candidateSeconds, format: .fixed(precision: 1))s): \(line.candidate, privacy: .public)\nCURRENT (\(line.currentSeconds, format: .fixed(precision: 1))s): \(line.current, privacy: .public)")
+                            }
+                        default:
+                            Log.models.notice("Trial \(id, privacy: .public): \(String(describing: trial), privacy: .public)")
+                        }
+                    }
                 case "review:skip": if let first = notes.pending.first { notes.skip(first) }
                 case "review:approve":
                     if let first = notes.pending.first { notes.approve(first, title: first.note.title, tags: first.note.tags, folder: first.note.folder) }

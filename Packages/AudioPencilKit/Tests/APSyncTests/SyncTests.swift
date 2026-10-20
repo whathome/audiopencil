@@ -18,13 +18,14 @@ private func sampleConfig() -> SharedConfig {
     var device = DeviceSection()
     device.microphones = [.init(name: "MacBook Air Microphone", uid: "BuiltInMicrophoneDevice")]
     config.devices = ["Wes’s MacBook Air": device, "iPhone": DeviceSection()]
+    config.writingSamples = [WritingSample(id: "s1", kind: "diary", text: "Today: fine.\n\nSecond paragraph, with \"quotes\".", promptID: "diary")]
     return config
 }
 
 private func tempVault() throws -> (LocalFolderStorage, URL) {
     let root = FileManager.default.temporaryDirectory.appending(path: "audiopencil-sync-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-    return (LocalFolderStorage(root: root), root)
+    return (LocalFolderStorage(root: root, usesTrash: false), root)
 }
 
 struct ConfigDocumentTests {
@@ -318,7 +319,7 @@ struct StarterKitTests {
     @Test func boardIsValidYAMLWithTheThreeViews() throws {
         let parsed = try #require(try Yams.load(yaml: StarterKit.base) as? [String: Any])
         let views = try #require(parsed["views"] as? [[String: Any]])
-        #expect(views.compactMap { $0["name"] as? String } == ["Professional review", "Diary", "All recordings"])
+        #expect(views.compactMap { $0["name"] as? String } == ["Professional review", "Diary", "All recordings", "Retention"])
         #expect(views.first?["type"] as? String == "kanban")
         #expect((views.first?["groupOrder"] as? [String]) == ["needs-review", "reviewed", "actioned"])
     }
@@ -330,5 +331,99 @@ struct StarterKitTests {
             #expect(markdown.contains("  - sample\n"))
         }
         #expect(StarterKit.samples().map(\.status) == [.reviewed, .reviewed, .needsReview])
+    }
+}
+
+struct NoteFrontmatterTests {
+    private let note = "---\ntype: audio-pencil\nstatus: reviewed\ntags:\n  - work\naudio: \"[[Audio Pencil/Recordings/a.m4a]]\"\n---\n\n![[Audio Pencil/Recordings/a.m4a]]\n\nBody text.\n"
+
+    @Test func readsValues() {
+        #expect(NoteFrontmatter.string("type", in: note) == "audio-pencil")
+        #expect(NoteFrontmatter.linkTarget(NoteFrontmatter.string("audio", in: note)!) == "/Audio Pencil/Recordings/a.m4a")
+        #expect(NoteFrontmatter.string("missing", in: note) == nil)
+        #expect(NoteFrontmatter.string("type", in: "No frontmatter") == nil)
+    }
+
+    @Test func editsOnlyTheKey() {
+        var edited = NoteFrontmatter.setting("status", to: "actioned", in: note)
+        #expect(edited.contains("status: actioned\ntags:\n  - work"))
+        edited = NoteFrontmatter.setting("tags", to: nil, in: edited)
+        #expect(!edited.contains("work"))
+        edited = NoteFrontmatter.setting("retention", to: "archive", in: edited)
+        #expect(edited.contains("retention: archive\n---"))
+        edited = NoteFrontmatter.removingEmbeds(of: "/Audio Pencil/Recordings/a.m4a", in: edited)
+        #expect(!edited.contains("![["))
+        #expect(edited.hasSuffix("\nBody text.\n"))
+    }
+}
+
+struct RetentionKeeperTests {
+    private let now = ISO8601DateFormatter().date(from: "2027-11-01T12:00:00Z")!
+
+    private func write(_ storage: LocalFolderStorage, _ name: String, retention: String?, recorded: String, audio: Bool) async throws {
+        let audioPath = "/Audio Pencil/Recordings/\(name).m4a"
+        if audio { try await storage.write("/V" + audioPath, data: Data("aac".utf8), ifMatch: nil, createOnly: false) }
+        var lines = ["---", "type: audio-pencil", "recorded: \(recorded)"]
+        if let retention { lines.append("retention: \(retention)") }
+        if audio { lines.append("audio: \"[[\(audioPath.dropFirst())]]\"") }
+        lines += ["---", "", audio ? "![[\(audioPath.dropFirst())]]" : "", "Text of \(name)."]
+        try await storage.write("/V/Notes/\(name).md", data: Data(lines.joined(separator: "\n").utf8), ifMatch: nil, createOnly: false)
+    }
+
+    @Test func appliesTheThreeColumns() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        try await write(storage, "old-regular", retention: "regular", recorded: "2026-10-01T10:00:00Z", audio: true)
+        try await write(storage, "old-archive", retention: "archive", recorded: "2026-10-01T10:00:00Z", audio: true)
+        try await write(storage, "to-delete", retention: "delete", recorded: "2027-10-30T10:00:00Z", audio: true)
+        try await write(storage, "expiring", retention: "regular", recorded: "2026-11-15T10:00:00Z", audio: true)
+        try await write(storage, "legacy", retention: nil, recorded: "2027-10-01T10:00:00Z", audio: false)
+        try await storage.write("/V/Notes/not-ours.md", data: Data("---\ntitle: mine\nretention: delete\n---\nKeep me".utf8), ifMatch: nil, createOnly: false)
+
+        let keeper = RetentionKeeper(stateURL: root.appending(path: ".state/retention.json"))
+        let report = await keeper.run(provider: storage, vaultPath: "/V", folders: ["/Notes"], expireRegularAudio: true, now: now)
+
+        #expect(report.errors.isEmpty)
+        #expect(report.deletedNotes == ["/V/Notes/to-delete.md"])
+        #expect(try await storage.item(at: "/V/Audio Pencil/Recordings/to-delete.m4a") == nil)
+        #expect(report.expiredAudio == ["/Audio Pencil/Recordings/old-regular.m4a"])
+        #expect(try await storage.item(at: "/V/Audio Pencil/Recordings/old-archive.m4a") != nil)
+        #expect(report.backfilled == ["/V/Notes/legacy.md"])
+        #expect(report.expiringSoon.map(\.title) == ["expiring"])
+        #expect(try await storage.item(at: "/V/Notes/not-ours.md") != nil) // only audio-pencil notes are touched
+
+        let regular = String(decoding: try await storage.read("/V/Notes/old-regular.md").data, as: UTF8.self)
+        #expect(!regular.contains("audio:") && !regular.contains("![[") && regular.contains("audio_expired: 2027-11-01"))
+        #expect(regular.contains("Text of old-regular."))
+        #expect(String(decoding: try await storage.read("/V/Notes/legacy.md").data, as: UTF8.self).contains("retention: regular"))
+
+        // A second run with nothing changed does nothing.
+        let again = await keeper.run(provider: storage, vaultPath: "/V", folders: ["/Notes"], expireRegularAudio: true, now: now)
+        #expect(again.deletedNotes.isEmpty && again.expiredAudio.isEmpty && again.backfilled.isEmpty)
+    }
+
+    @Test func yearRuleCanBeOff() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        try await write(storage, "old-regular", retention: "regular", recorded: "2026-10-01T10:00:00Z", audio: true)
+        let keeper = RetentionKeeper(stateURL: root.appending(path: ".state/retention.json"))
+        let report = await keeper.run(provider: storage, vaultPath: "/V", folders: ["/Notes"], expireRegularAudio: false, now: now)
+        #expect(report.expiredAudio.isEmpty)
+        #expect(try await storage.item(at: "/V/Audio Pencil/Recordings/old-regular.m4a") != nil)
+    }
+}
+
+struct BoardUpgradeTests {
+    @Test func upgradesAnUnchangedBoardButNotACustomisedOne() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let board = StoragePath.join("/V", StarterKit.basePath)
+        try await storage.write(board, data: Data(StarterKit.previousBases[0].utf8), ifMatch: nil, createOnly: false)
+        let upgraded = try await StarterKit.ensure(in: storage, vaultPath: "/V", includeSamples: false)
+        #expect(upgraded == .created(files: [StarterKit.basePath, StarterKit.guidePath]))
+        #expect(String(decoding: try await storage.read(board).data, as: UTF8.self).contains("name: Retention"))
+
+        try await storage.write(board, data: Data("views: []  # mine".utf8), ifMatch: nil, createOnly: false)
+        #expect(try await StarterKit.ensure(in: storage, vaultPath: "/V", includeSamples: false) == .boardCustomised)
     }
 }

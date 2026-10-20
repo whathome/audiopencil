@@ -1,13 +1,14 @@
 import SwiftUI
 
 enum Page: String, CaseIterable, Identifiable, Hashable {
-    case dictation, styles, notes, vault, setup, settings
+    case dictation, styles, writing, notes, vault, setup, settings
     var id: Self { self }
 
     var title: String {
         switch self {
         case .dictation: "Dictation"
         case .styles: "Styles"
+        case .writing: "My writing"
         case .notes: "Notes"
         case .vault: "Vault"
         case .setup: "Setup"
@@ -19,6 +20,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .dictation: "keyboard"
         case .styles: "paintbrush.pointed"
+        case .writing: "text.quote"
         case .notes: "book.closed"
         case .vault: "externaldrive.connected.to.line.below"
         case .setup: "checkmark.shield"
@@ -40,6 +42,7 @@ struct MainWindow: View {
                 switch app.page {
                 case .dictation: DictationPage(app: app)
                 case .styles: StylesPage(app: app)
+                case .writing: WritingPage(app: app)
                 case .notes: NotesPage(app: app, notes: app.notes)
                 case .vault: VaultPage(vault: app.vault, sync: app.sync)
                 case .setup: SetupView(app: app)
@@ -63,6 +66,7 @@ private struct Sidebar: View {
             Section {
                 row(.dictation)
                 row(.styles)
+                row(.writing)
                 row(.notes)
             }
             Section {

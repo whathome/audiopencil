@@ -9,8 +9,84 @@ public enum StarterKit {
     public static let guidePath = "/Audio Pencil/Audio Pencil guide.md"
     public static let samplesFolder = "/Audio Pencil/Samples"
 
-    /// Obsidian Bases file: Kanban of professional notes by status, a diary list, and everything.
+    /// Obsidian Bases file: Kanban of professional notes by status, a diary list, everything, and retention.
     public static let base = """
+        filters:
+          and:
+            - 'type == "audio-pencil"'
+        properties:
+          note.status:
+            displayName: Status
+          note.style:
+            displayName: Style
+          note.recorded:
+            displayName: Recorded
+          note.duration:
+            displayName: Seconds
+          note.retention:
+            displayName: Keep
+        views:
+          - type: kanban
+            name: Professional review
+            filters:
+              and:
+                - 'style == "professional"'
+            groupBy:
+              property: note.status
+              direction: ASC
+            groupOrder:
+              - needs-review
+              - reviewed
+              - actioned
+            order:
+              - file.name
+              - note.recorded
+              - note.tags
+          - type: table
+            name: Diary
+            filters:
+              and:
+                - 'style == "diary"'
+            order:
+              - file.name
+              - note.recorded
+              - note.duration
+            sort:
+              - property: note.recorded
+                direction: DESC
+          - type: table
+            name: All recordings
+            order:
+              - file.name
+              - note.style
+              - note.status
+              - note.mode
+              - note.recorded
+              - note.duration
+              - note.tags
+            sort:
+              - property: note.recorded
+                direction: DESC
+          - type: kanban
+            name: Retention
+            groupBy:
+              property: note.retention
+              direction: ASC
+            groupOrder:
+              - regular
+              - archive
+              - delete
+            order:
+              - file.name
+              - note.recorded
+              - note.style
+
+        """
+
+    /// Earlier versions of `base`, exactly as shipped. A board still matching one of these is upgraded;
+    /// a board the user has edited is left alone.
+    static let previousBases: [String] = [
+        """
         filters:
           and:
             - 'type == "audio-pencil"'
@@ -66,7 +142,8 @@ public enum StarterKit {
               - property: note.recorded
                 direction: DESC
 
-        """
+        """,
+    ]
 
     public static let guide = """
         ---
@@ -90,6 +167,9 @@ public enum StarterKit {
         Dragging changes the note's `status` property for you.
         - **Diary**: your diary entries, newest first.
         - **All recordings**: everything, as a table you can sort and filter.
+        - **Retention**: what to keep. *regular* notes keep their audio for a year, then the audio is removed \
+        (the note stays). *archive* keeps note and audio forever. Drag a card to *delete* and Audio Pencil \
+        deletes the note and its audio (to the trash) the next time it checks.
 
         ## The properties
 
@@ -103,7 +183,8 @@ public enum StarterKit {
         | `device` | `mac` or `iphone`. |
         | `mode` | `quick` (hotkey dictation), `long-form`, or `meeting`. |
         | `tags` | From your tag list in `Audio Pencil/Settings.md`. |
-        | `audio` | Link to the recording in `Audio Pencil/Recordings` (long recordings only; kept for a year). |
+        | `retention` | `regular` (audio kept a year), `archive` (kept forever) or `delete` (removed next check). |
+        | `audio` | Link to the recording in `Audio Pencil/Recordings` (long recordings only). |
 
         ## Statuses in practice
 
@@ -191,6 +272,8 @@ public enum StarterKit {
 
     public enum Outcome: Equatable, Sendable {
         case alreadyThere
+        /// The board was edited by hand, so new views weren't added.
+        case boardCustomised
         case created(files: [String])
     }
 
@@ -198,6 +281,7 @@ public enum StarterKit {
     /// Never overwrites anything.
     public static func ensure(in provider: any StorageProvider, vaultPath: String, includeSamples: Bool, now: Date = Date(), timeZone: TimeZone = .current) async throws -> Outcome {
         var created: [String] = []
+        var boardCustomised = false
         func create(_ relative: String, _ text: String) async throws {
             let path = StoragePath.join(vaultPath, relative)
             if try await provider.item(at: path) != nil { return }
@@ -210,12 +294,23 @@ public enum StarterKit {
             }
         }
         try await create(basePath, base)
+        let board = StoragePath.join(vaultPath, basePath)
+        if !created.contains(basePath), let (data, etag) = try? await provider.read(board) {
+            let current = String(decoding: data, as: UTF8.self)
+            if previousBases.contains(current) {
+                try await provider.write(board, data: Data(base.utf8), ifMatch: etag, createOnly: false)
+                created.append(basePath)
+            } else if current != base {
+                boardCustomised = true
+            }
+        }
         try await create(guidePath, guide)
         if includeSamples {
             for note in samples(now: now) {
                 try await create(NoteRenderer.notePath(for: note, timeZone: timeZone), NoteRenderer.markdown(for: note, timeZone: timeZone))
             }
         }
+        if boardCustomised, created.isEmpty { return .boardCustomised }
         return created.isEmpty ? .alreadyThere : .created(files: created)
     }
 }

@@ -67,6 +67,9 @@ struct SettingsView: View {
                     ForEach(WritingModelOption.catalogue) { option in
                         Text("\(option.name) – \(option.note)").tag(option.id)
                     }
+                    if WritingModelOption.option(for: app.settings.writingModel) == nil {
+                        Text(app.settings.writingModel.replacingOccurrences(of: "mlx-community/", with: "") + " – from discovery").tag(app.settings.writingModel)
+                    }
                 }
                 .disabled(app.dictation.isActive)
                 LabeledContent("Status") {
@@ -105,10 +108,15 @@ struct SettingsView: View {
                     ForEach(TranscriptionModelOption.catalogue) { option in
                         Text("\(option.name) – \(option.note)").tag(option.id)
                     }
+                    if TranscriptionModelOption.option(for: app.settings.transcriptionModel) == nil {
+                        Text(app.settings.transcriptionModel + " – from discovery").tag(app.settings.transcriptionModel)
+                    }
                 }
                 .disabled(app.dictation.isActive)
                 Toggle("Show live transcript above the indicator", isOn: $app.settings.showLiveText)
             }
+
+            ModelSuggestionsSection(advisor: app.advisor)
 
             Section("App") {
                 Toggle(isOn: $app.settings.menuBarMode) {
@@ -195,5 +203,111 @@ private struct MicrophonePriorityList: View {
         case .other: "mic"
         case nil: "mic.slash"
         }
+    }
+}
+
+/// Discovery results: what fits this machine, with Try / Switch / Dismiss.
+private struct ModelSuggestionsSection: View {
+    let advisor: ModelAdvisor
+
+    var body: some View {
+        Section {
+            LabeledContent("This Mac", value: advisor.machine.summary)
+            LabeledContent("Room for models") {
+                Text("writing up to \(Self.bytes(advisor.machine.writingModelBudget)), transcription up to \(Self.bytes(advisor.machine.transcriptionModelBudget))")
+                    .foregroundStyle(.secondary)
+            }
+            HStack {
+                Text(advisor.lastChecked.map { "Last checked \($0.formatted(.relative(presentation: .named)))" } ?? "Not checked yet")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if advisor.checking { ProgressView().controlSize(.small) }
+                Button("Check now") { Task { await advisor.check() } }.disabled(advisor.checking)
+            }
+            if let error = advisor.checkError {
+                Text(error).foregroundStyle(.orange).font(.callout)
+            }
+            ForEach(advisor.suggestions) { suggestion in
+                SuggestionRow(advisor: advisor, suggestion: suggestion)
+            }
+            if advisor.suggestions.isEmpty, advisor.lastChecked != nil, !advisor.checking {
+                Text("Nothing better that fits right now.").foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Model suggestions")
+        } footer: {
+            Text("Audio Pencil checks Hugging Face weekly for transcription and writing models that fit this machine. Try one to compare it with your current model on this Mac; nothing changes until you choose Switch.")
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    static func bytes(_ value: UInt64) -> String { ByteCountFormatter.string(fromByteCount: Int64(value), countStyle: .memory) }
+}
+
+private struct SuggestionRow: View {
+    let advisor: ModelAdvisor
+    let suggestion: ModelSuggestion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: suggestion.kind == .writing ? "pencil.and.scribble" : "waveform")
+                    .foregroundStyle(Color.pencil)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(suggestion.name).font(.headline)
+                    Text("\(suggestion.kind == .writing ? "Writing" : "Transcription") · \(suggestion.sizeDescription) · \(suggestion.reason)")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                switch advisor.trials[suggestion.id] {
+                case .downloading(let fraction):
+                    ProgressView(value: fraction).frame(width: 90)
+                case .testing:
+                    ProgressView().controlSize(.small)
+                case .done:
+                    Button("Switch") { advisor.adopt(suggestion) }.buttonStyle(.borderedProminent)
+                default:
+                    Button("Try") { advisor.tryOut(suggestion) }
+                }
+                Button { advisor.dismiss(suggestion) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
+                    .buttonStyle(.borderless)
+                    .help("Don't suggest this again")
+            }
+            switch advisor.trials[suggestion.id] {
+            case .testing(let status):
+                Text(status).font(.caption).foregroundStyle(.secondary)
+            case .failed(let message):
+                Text(message).font(.caption).foregroundStyle(.orange)
+            case .done(let lines):
+                ForEach(lines) { line in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(line.label).font(.caption.weight(.semibold))
+                        HStack(alignment: .top, spacing: 12) {
+                            result("This model", line.candidate, line.candidateSeconds, line.candidateWER)
+                            result("Current", line.current, line.currentSeconds, line.currentWER)
+                        }
+                    }
+                }
+            default:
+                EmptyView()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func result(_ title: String, _ text: String, _ seconds: Double, _ wer: Double?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text(title).font(.caption.weight(.semibold))
+                Text(String(format: "%.1f s", seconds)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                if let wer {
+                    Text("\(Int((wer * 100).rounded()))% word errors").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Text(text).font(.caption).textSelection(.enabled).lineLimit(8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(.background.secondary))
     }
 }

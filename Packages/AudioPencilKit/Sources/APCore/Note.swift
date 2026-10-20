@@ -14,6 +14,16 @@ public struct Note: Codable, Equatable, Sendable, Identifiable {
         case actioned
     }
 
+    /// What happens to the note and its audio over time (the Retention board view).
+    public enum Retention: String, Codable, Sendable, CaseIterable {
+        /// Audio is removed after a year; the note stays.
+        case regular
+        /// Kept forever.
+        case archive
+        /// The app deletes the note and its audio (to the trash) next time it checks.
+        case delete
+    }
+
     public var id: UUID
     public var title: String
     public var styleID: String
@@ -24,6 +34,7 @@ public struct Note: Codable, Equatable, Sendable, Identifiable {
     public var device: String
     public var mode: Mode
     public var tags: [String]
+    public var retention: Retention = .regular
     /// Vault folder the note lands in (the style's landing zone), e.g. "/Dictation".
     public var folder: String
     /// Vault path of the kept audio, e.g. "/Audio Pencil/Recordings/2026-10-19 1430 Title.m4a".
@@ -106,6 +117,7 @@ public enum NoteRenderer {
         lines.append("duration: \(Int(note.duration.rounded()))")
         lines.append("device: \(YAMLText.scalar(note.device))")
         lines.append("mode: \(note.mode.rawValue)")
+        lines.append("retention: \(note.retention.rawValue)")
         if note.tags.isEmpty {
             lines.append("tags: []")
         } else {
