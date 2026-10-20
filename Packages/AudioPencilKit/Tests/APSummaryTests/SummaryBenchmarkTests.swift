@@ -1,6 +1,7 @@
 import APCore
 import APModels
 import APSummary
+import Darwin
 import Foundation
 import MLX
 import Testing
@@ -12,7 +13,8 @@ import Testing
 ///   TEST_RUNNER_AUDIOPENCIL_BENCH_OUT=$PWD/docs/benchmarks/summary-models.md \
 ///   xcodebuild test -scheme AudioPencilKit-Package -destination platform=macOS -only-testing:APSummaryTests
 ///
-/// AUDIOPENCIL_BENCH_MODELS (comma-separated repo IDs) overrides the candidate list.
+/// AUDIOPENCIL_BENCH_MODELS (comma-separated repo IDs) overrides the candidate list. Run one model per invocation
+/// when comparing peak process footprint: it is the process lifetime peak.
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["AUDIOPENCIL_BENCH"] == "1"), .serialized)
 struct SummaryBenchmarkTests {
     static let candidates = [
@@ -24,17 +26,30 @@ struct SummaryBenchmarkTests {
 
     struct Case {
         let name: String
-        let transcript: String
-        let style: Style
-        let context: PromptBuilder.Context
+        let prompt: StylePrompt
     }
 
     static let cases: [Case] = [
-        Case(name: "Quick note → Polished", transcript: BenchmarkFixtures.lateReport, style: .polished, context: .quick),
-        Case(name: "Quick note → Professional", transcript: BenchmarkFixtures.lateReport, style: .professional, context: .quick),
-        Case(name: "Diary → Diary", transcript: BenchmarkFixtures.diary, style: .diary, context: .quick),
-        Case(name: "Work ramble → Professional (long-form)", transcript: BenchmarkFixtures.workRamble, style: .professional, context: .longForm),
+        Case(name: "Quick note → Polished", prompt: PromptBuilder.prompt(for: .polished, transcript: BenchmarkFixtures.lateReport, context: .quick)),
+        Case(name: "Quick note → Professional", prompt: PromptBuilder.prompt(for: .professional, transcript: BenchmarkFixtures.lateReport, context: .quick)),
+        Case(name: "Diary → Diary", prompt: PromptBuilder.prompt(for: .diary, transcript: BenchmarkFixtures.diary, context: .quick)),
+        Case(name: "Work ramble → Professional (long-form)", prompt: PromptBuilder.prompt(for: .professional, transcript: BenchmarkFixtures.workRamble, context: .longForm)),
+        // The first pass of a long recording: per-section notes, combined afterwards.
+        Case(name: "Work ramble → section notes", prompt: PromptBuilder.sectionNotesPrompt(section: BenchmarkFixtures.workRamble, index: 1, count: 2, vocabulary: [])),
     ]
+
+    /// Time from the start of `generate` to the first streamed text.
+    private final class FirstToken: @unchecked Sendable {
+        private let lock = NSLock()
+        private let started = ContinuousClock.now
+        private var elapsed: Duration?
+
+        func mark() {
+            lock.withLock { if elapsed == nil { elapsed = ContinuousClock.now - started } }
+        }
+
+        var latency: Duration? { lock.withLock { elapsed } }
+    }
 
     @Test func benchmarkCandidates() async throws {
         let environment = ProcessInfo.processInfo.environment
@@ -71,19 +86,24 @@ struct SummaryBenchmarkTests {
             var genSpeeds: [Double] = []
 
             for testCase in Self.cases {
-                let prompt = PromptBuilder.prompt(for: testCase.style, transcript: testCase.transcript, context: testCase.context)
+                let prompt = testCase.prompt
+                let firstToken = FirstToken()
                 let started = ContinuousClock.now
-                let output = try await engine.generate(instructions: prompt.instructions, input: prompt.input, maxTokens: prompt.maxTokens)
+                let output = try await engine.generate(
+                    instructions: prompt.instructions, input: prompt.input, maxTokens: prompt.maxTokens,
+                    onText: { _ in firstToken.mark() }
+                )
                 let total = ContinuousClock.now - started
                 totals.append(seconds(total).value)
                 genSpeeds.append(output.generationTokensPerSecond)
                 let cleaned = OutputCleaner.clean(output.text)
-                print("[bench]   \(testCase.name): \(seconds(total)) total, \(Int(output.generationTokensPerSecond)) tok/s")
+                let ttft = firstToken.latency.map { seconds($0).description } ?? "–"
+                print("[bench]   \(testCase.name): \(seconds(total)) total, first token \(ttft), \(Int(output.generationTokensPerSecond)) tok/s")
                 report += """
 
                     ### \(testCase.name)
 
-                    \(seconds(total)) total · prompt \(output.promptTokens) tokens at \(Int(output.promptTokensPerSecond)) tok/s · \
+                    \(seconds(total)) total · first token \(ttft) · prompt \(output.promptTokens) tokens at \(Int(output.promptTokensPerSecond)) tok/s · \
                     generated \(output.generatedTokens) tokens at \(Int(output.generationTokensPerSecond)) tok/s
 
                     \(cleaned.split(separator: "\n", omittingEmptySubsequences: false).map { "> " + $0 }.joined(separator: "\n"))
@@ -94,11 +114,12 @@ struct SummaryBenchmarkTests {
             let peakMLX = Memory.peakMemory
             await coordinator.unload(engine)
             let afterUnload = MemoryFootprint.currentBytes()
-            report += "\nPeak MLX memory \(MemoryFootprint.formatted(UInt64(peakMLX))); footprint after unload \(MemoryFootprint.formatted(afterUnload))\n"
+            let peakFootprint = lifetimePeakFootprint()
+            report += "\nPeak MLX memory \(MemoryFootprint.formatted(UInt64(peakMLX))); process peak footprint \(MemoryFootprint.formatted(peakFootprint)); footprint after unload \(MemoryFootprint.formatted(afterUnload))\n"
             summaryRows.append(
                 "| \(modelID.replacingOccurrences(of: "mlx-community/", with: "")) | \(seconds(loadTime)) | "
                     + totals.map { String(format: "%.1f s", $0) }.joined(separator: " | ")
-                    + " | \(Int(genSpeeds.reduce(0, +) / Double(genSpeeds.count))) | \(MemoryFootprint.formatted(UInt64(peakMLX))) |"
+                    + " | \(Int(genSpeeds.reduce(0, +) / Double(genSpeeds.count))) | \(MemoryFootprint.formatted(UInt64(peakMLX))) | \(MemoryFootprint.formatted(peakFootprint)) |"
             )
         }
 
@@ -106,8 +127,8 @@ struct SummaryBenchmarkTests {
 
             ## Summary
 
-            | Model | Load | \(Self.cases.map(\.name).joined(separator: " | ")) | Avg gen tok/s | Peak MLX memory |
-            |---|---|\(String(repeating: "---|", count: Self.cases.count))---|---|
+            | Model | Load | \(Self.cases.map(\.name).joined(separator: " | ")) | Avg gen tok/s | Peak MLX memory | Process peak footprint |
+            |---|---|\(String(repeating: "---|", count: Self.cases.count))---|---|---|
             \(summaryRows.joined(separator: "\n"))
 
             """
@@ -124,6 +145,17 @@ struct SummaryBenchmarkTests {
     private struct Measurement: CustomStringConvertible {
         let value: Double
         var description: String { String(format: "%.1f s", value) }
+    }
+
+    /// Highest physical footprint this process has reached: what the OS has to find room for.
+    private func lifetimePeakFootprint() -> UInt64? {
+        var usage = rusage_info_v4()
+        let result = withUnsafeMutablePointer(to: &usage) { pointer in
+            pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
+                proc_pid_rusage(getpid(), RUSAGE_INFO_V4, $0)
+            }
+        }
+        return result == 0 ? usage.ri_lifetime_max_phys_footprint : nil
     }
 
     private func machine() -> String {
