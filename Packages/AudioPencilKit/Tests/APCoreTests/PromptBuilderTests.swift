@@ -23,6 +23,27 @@ struct PromptBuilderTests {
         #expect(layout.contains("**Action items**"))
     }
 
+    @Test func sectionNotesAreLabelledAndNamedInKeyPoints() {
+        let joined = PromptBuilder.joinSectionNotes(["- Backups", "- Ran along the river", "- Pizza"])
+        #expect(joined == "Part 1:\n- Backups\n\nPart 2:\n- Ran along the river\n\nPart 3:\n- Pizza")
+        #expect(PromptBuilder.joinSectionNotes(["- Backups"]) == "- Backups")
+
+        let prompt = PromptBuilder.prompt(for: .professional, transcript: joined, context: .sectionNotes(count: 3))
+        #expect(prompt.input.hasPrefix("<transcript>\n\(joined)\n</transcript>\n\n"))
+        let layout = prompt.input.components(separatedBy: "</transcript>").last ?? ""
+        #expect(layout.contains("These are my notes from 3 parts of one recording. Write it as me"))
+        #expect(layout.contains("**Key points**: bullets, grouped under a bold heading per theme, with themes from Part 1, Part 2 and Part 3."))
+        #expect(layout.contains("**Action items**"))
+        #expect(prompt.instructions == PromptBuilder.prompt(for: .professional, transcript: joined, context: .longForm).instructions)
+    }
+
+    @Test func singleTranscriptLongFormDoesNotMentionParts() {
+        let prompt = PromptBuilder.prompt(for: .professional, transcript: "We agreed I'll send the deck Friday.", context: .longForm)
+        #expect(!prompt.input.contains("Part 1"))
+        #expect(prompt.input.contains("</transcript>\n\nWrite it as me, in three sections, in this order:\n"))
+        #expect(prompt.input.contains("**Key points**: bullets, grouped under a bold heading per theme.\n"))
+    }
+
     @Test func sectionLayoutOnlyForLongFormSummaries() {
         let transcript = "We agreed I'll send the deck Friday."
         let fenced = "<transcript>\n\(transcript)\n</transcript>"

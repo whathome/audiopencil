@@ -55,7 +55,7 @@ extension AppModel {
                         notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary, language: language)))
                     }
                     status(String(localized: "Writing the note…"))
-                    body = try await generateText(stylePrompt(for: style, transcript: notes.joined(separator: "\n\n"), context: .longForm, language: language))
+                    body = try await generateText(stylePrompt(for: style, transcript: PromptBuilder.joinSectionNotes(notes), context: .sectionNotes(count: notes.count), language: language))
                 } else {
                     // Tidy or rewrite: section by section, kept in order.
                     var parts: [String] = []

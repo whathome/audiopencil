@@ -9,9 +9,11 @@ public struct StylePrompt: Equatable, Sendable {
 }
 
 public enum PromptBuilder {
-    public enum Context: Sendable {
+    public enum Context: Equatable, Sendable {
         case quick
         case longForm
+        /// The last pass of a long recording, on the notes from `count` sections (see `joinSectionNotes`).
+        case sectionNotes(count: Int)
     }
 
     public static func prompt(
@@ -43,10 +45,11 @@ public enum PromptBuilder {
         }
 
         // Summaries of long recordings: summary, themed key points, action items.
-        let sectioned = context == .longForm && style.extractActionItems && style.intensity == .heavy
+        let longForm = context != .quick
+        let sectioned = longForm && style.extractActionItems && style.intensity == .heavy
         if sectioned {
             rules.append("End with an \"Action items\" list of what I committed to.")
-        } else if context == .longForm, style.extractActionItems {
+        } else if longForm, style.extractActionItems {
             rules.append("End with an \"Action items\" list of what the speaker committed to, if anything.")
         } else {
             rules.append("No action items list.")
@@ -62,12 +65,19 @@ public enum PromptBuilder {
         if sectioned {
             // After the transcript, not in the rules: there, SmolLM3 writes one summary paragraph and stops.
             // "None" keeps it from stopping before the list or making items up to fill it.
+            var lead = ""
+            var keyPoints = "bullets, grouped under a bold heading per theme."
+            if case .sectionNotes(let count) = context, count > 1 {
+                // Without the parts named, SmolLM3 keeps the first part's topic and drops unrelated later ones.
+                lead = "These are my notes from \(count) parts of one recording. "
+                keyPoints = "bullets, grouped under a bold heading per theme, with themes from \(partNames(count))."
+            }
             input += """
 
 
-                Write it as me, in three sections, in this order:
+                \(lead)Write it as me, in three sections, in this order:
                 **Summary**: 2–3 sentences.
-                **Key points**: bullets, grouped under a bold heading per theme.
+                **Key points**: \(keyPoints)
                 **Action items**: a bullet for each thing I said I'd do, or just "None".
                 """
             if !language.isEnglish {
@@ -152,6 +162,17 @@ extension PromptBuilder {
         }
         if !current.isEmpty { result.append(current.joined(separator: " ")) }
         return result
+    }
+
+    /// Joins the notes on each section for the last pass, labelled "Part 1:", "Part 2:"… to match the prompt.
+    public static func joinSectionNotes(_ notes: [String]) -> String {
+        guard notes.count > 1 else { return notes.first ?? "" }
+        return notes.enumerated().map { "Part \($0.offset + 1):\n\($0.element)" }.joined(separator: "\n\n")
+    }
+
+    /// "Part 1 and Part 2", "Part 1, Part 2 and Part 3". `count` is at least 2.
+    static func partNames(_ count: Int) -> String {
+        (1..<count).map { "Part \($0)" }.joined(separator: ", ") + " and Part \(count)"
     }
 
     /// Notes on one section of a long recording, to be combined afterwards.

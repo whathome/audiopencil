@@ -131,7 +131,75 @@ The layout carries over to notes input, though less reliably than on a transcrip
 appeared: "Action items: None" despite three clear commitments. Both prompts usually drop the
 unrelated second section. This was already the case with the old prompt, most likely because of
 the Professional style's "drop rambling" instruction. Real long recordings that stay on one subject
-may behave differently.
+may behave differently. The next section fixes the dropped topics.
+
+## Long recordings: keeping every part's topics
+
+The final pass now gets the section notes labelled by part, and the layout block names the parts:
+
+- `PromptBuilder.joinSectionNotes` joins the notes as `Part 1:\n…\n\nPart 2:\n…`. The app used to
+  join them with blank lines only.
+- A new context, `.sectionNotes(count:)`, is used only for this final pass. It adds a sentence before
+  the layout block and extends the Key points line:
+
+  ```
+  These are my notes from 2 parts of one recording. Write it as me, in three sections, in this order:
+  **Summary**: 2–3 sentences.
+  **Key points**: bullets, grouped under a bold heading per theme, with themes from Part 1 and Part 2.
+  **Action items**: a bullet for each thing I said I'd do, or just "None".
+  ```
+
+The system rules are unchanged, including "drop rambling" and "Make it shorter than the transcript".
+A single-transcript long-form prompt (`.longForm`), quick notes and Diary are byte-for-byte unchanged.
+
+**Result:** on the same scratch input as above (work ramble as part 1, diary as part 2, fresh
+section notes each round), the diary topic appeared in Key points in 11 of 12 final passes, against
+0 of 12 with the old prompt. The prompts ran interleaved on one loaded SmolLM3-3B-4bit, 20 Oct
+13:28–13:35, with 6 rounds of section notes and 2 runs per prompt per round.
+
+| | Old prompt (12 runs) | New prompt (12 runs) |
+|---|---|---|
+| Second part (diary) in Key points | 0 | 11 |
+| Summary + Key points + Action items | 12 | 11 (1 had no Action items list) |
+| Stray "None" after real action items | 0 (1 inline "; none") | 3 |
+| Prompt tokens | 453–524 (avg 480) | 484–555 (avg 511) |
+| Generated tokens | avg 208 | avg 228 |
+| Total time | 10.4–18.8 s (avg 12.7) | 10.5–16.9 s (avg 13.9) |
+
+The cost is 31 more prompt tokens (about 0.2 s) and about 20 more output tokens, the diary's
+bullets (about 0.8 s at 25 tok/s). Generation ran at 15–30 tok/s in this lab (average 25), so these
+times are slower than the benchmark below. The new prompt doesn't add any new kind of mistake. It
+gets the same distortions as before: "test restoring … this weekend" merged from two plans, and once
+"I also asked Dave", in the past tense. The diary's "want to keep running three times a week" stays
+a Key point. It never reached Action items in these 12 runs, but did in 1 earlier lab run.
+
+Single-transcript check (`SummaryBenchmarkTests`, SmolLM3-3B-4bit only, 20 Oct 13:44–13:46, 2 runs):
+the long-form prompt is still 468 tokens and took 9.3 s and 9.4 s (8.8–9.6 s before), with Summary,
+Key points and Action items both times. The other cases were 2.9–3.5 s for quick notes, 5.8 s for
+Diary and 7.3–7.6 s for section notes, all at 29 tok/s, with peak MLX memory 2.21 GB, as before.
+
+What else was tried (lab batches of 6–9 runs per variant, counts are runs with the diary in Key points):
+
+- **Wording only, no part labels**: telling it the input is "notes from 2 parts" and that "every
+  topic in the notes gets one" kept the diary in 3 of 6 runs. Adding "2–3 sentences that mention
+  every topic" to the Summary line got 3 of 9. Replacing "Make it shorter than the transcript" with
+  "keep every topic" in the system rules got 0 of 6. Dropping that rule as well as changing the
+  wording got 1 of 6.
+- **Part labels with no other change**: 2 of 9. Labels plus the lead sentence: 5 of 9.
+- **Labels plus "Every part's topics get one"**: 16 of 24 over three batches, from 3 of 9 to 9 of 9.
+  Results swing a lot with the section notes of each round, which is why only variants that held
+  up across batches were kept.
+- **Naming the parts in Key points** (the change above): 9 of 9 and 7 of 8 in the lab, then 11 of 12
+  in the final comparison. That's 27 of 29 overall.
+- **"Going through Part 1, then Part 2"** and **"a sentence or two per part"** kept the diary 8 of 8
+  each, but lost the Action items list in 2 of 8. The per-part summary also copied "Part 1:" and
+  "Part 2:" into the note as headings. **"A bold heading for each part's main topic"**: 4 of 8, and
+  only 4 of 8 had the layout.
+
+Raw outputs, the lab test and run-condition logs are kept outside the repo with the earlier lab
+files. Run conditions as in Method below: Audio Pencil running and idle, normal memory pressure,
+≥ 25% free memory, no compiler processes, ≥ 50% CPU idle for the variant batches, ≥ 60% for the
+final comparison and ≥ 70% for the benchmark.
 
 ## What didn't work
 
