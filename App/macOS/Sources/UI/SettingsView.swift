@@ -64,14 +64,8 @@ struct SettingsHeader: View {
         VStack(alignment: .leading, spacing: 14) {
             PageHeader(title: "Settings", subtitle: "Hotkey and sounds, the models on this Mac, and permissions.")
             HStack(spacing: 8) {
-                Picker("", selection: $app.settingsTab) {
-                    ForEach(SettingsTab.allCases) { tab in
-                        Text(tab.title).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 380)
+                SettingsTabControl(selection: $app.settingsTab)
+                    .frame(maxWidth: 380)
                 if app.needsSetup {
                     Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
                         .help("Permissions need attention")
@@ -83,6 +77,44 @@ struct SettingsHeader: View {
         // Section headers sit inset to the form's rows; pull the page title back to the 24 pt edge
         // the other pages' titles use.
         .padding(.leading, -10)
+    }
+}
+
+/// Segmented tabs with the ⌘, window's tab-bar symbols. SwiftUI's segmented picker drops a Label's icon
+/// on macOS, so this is the AppKit control.
+private struct SettingsTabControl: NSViewRepresentable {
+    @Binding var selection: SettingsTab
+
+    func makeNSView(context: Context) -> NSSegmentedControl {
+        let control = NSSegmentedControl(
+            labels: SettingsTab.allCases.map { String(localized: $0.title) },
+            trackingMode: .selectOne,
+            target: context.coordinator,
+            action: #selector(Coordinator.changed(_:))
+        )
+        for (index, tab) in SettingsTab.allCases.enumerated() {
+            control.setImage(NSImage(systemSymbolName: tab.symbol, accessibilityDescription: nil), forSegment: index)
+            control.setImageScaling(.scaleProportionallyDown, forSegment: index)
+        }
+        control.segmentDistribution = .fillEqually
+        return control
+    }
+
+    func updateNSView(_ control: NSSegmentedControl, context: Context) {
+        context.coordinator.selection = $selection
+        control.selectedSegment = SettingsTab.allCases.firstIndex(of: selection) ?? 0
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(selection: $selection) }
+
+    final class Coordinator: NSObject {
+        var selection: Binding<SettingsTab>
+        init(selection: Binding<SettingsTab>) { self.selection = selection }
+
+        @objc func changed(_ control: NSSegmentedControl) {
+            guard SettingsTab.allCases.indices.contains(control.selectedSegment) else { return }
+            selection.wrappedValue = SettingsTab.allCases[control.selectedSegment]
+        }
     }
 }
 
