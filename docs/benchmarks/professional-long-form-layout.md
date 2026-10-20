@@ -113,6 +113,26 @@ Long-form Professional, old → new:
 
 The quick-note prompts are byte-for-byte unchanged, and so are their times.
 
+## Long recordings (section notes → final pass)
+
+Recordings over 2,000 words are summarised section by section, and the long-form prompt then runs on
+the joined bullet notes. No benchmark fixture is that long, so a scratch test built this input from
+two real section-notes passes: the work ramble as part 1 of 2 and the diary as part 2 of 2. It then
+ran the final pass on the joined notes, 18 times in all:
+
+| | Old prompt (6 runs) | New prompt (12 runs) |
+|---|---|---|
+| Summary + Key points + Action items | 1 (3 more had Summary + Action items; 2 were plain paragraphs) | 11 (1 put the actions inside Key points) |
+| Correct Action items list | 4 | 10 (one of them ends with a stray "None"); plus 1 inline and 1 wrongly "None" |
+| Kept the second, unrelated section (the diary) | 2 | 3 |
+| Total time | 6.4–12.0 s | 7.9–11.2 s |
+
+The layout carries over to notes input, though less reliably than on a transcript. One new failure
+appeared: "Action items: None" despite three clear commitments. Both prompts usually drop the
+unrelated second section. This was already the case with the old prompt, most likely because of
+the Professional style's "drop rambling" instruction. Real long recordings that stay on one subject
+may behave differently.
+
 ## What didn't work
 
 From 10 prompt-lab batches, 3–8 runs per variant, all on one loaded SmolLM3:
@@ -150,5 +170,3 @@ From 10 prompt-lab batches, 3–8 runs per variant, all on one loaded SmolLM3:
   Free memory was 47–55% and generation held at 29–30 tok/s in every run. Lab runs used a 50% idle
   bar instead, because an `ANECompilerService` job and other sessions were busy. Lab timings are
   therefore noisy (13–30 tok/s), and only the benchmark runs above are used for timing.
-- Not covered: long recordings that are split into sections. Their final pass uses the same
-  long-form prompt on combined section notes, but no benchmark fixture exercises it.
