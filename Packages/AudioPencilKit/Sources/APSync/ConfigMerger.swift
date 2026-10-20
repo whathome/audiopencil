@@ -12,6 +12,9 @@ public enum ConfigMerger {
         merged.vocabulary = mergeList(base: base?.vocabulary, local: local.vocabulary, remote: remote.vocabulary)
         merged.tags = mergeList(base: base?.tags, local: local.tags, remote: remote.tags)
         merged.styles = mergeStyles(base: base?.styles, local: local.styles, remote: remote.styles)
+        if let base, local.expireRegularAudio != base.expireRegularAudio, remote.expireRegularAudio == base.expireRegularAudio {
+            merged.expireRegularAudio = local.expireRegularAudio // changed here only
+        }
         merged.writingSamples = mergeByID(base: base?.writingSamples, local: local.writingSamples, remote: remote.writingSamples)
 
         let localDevice = local.devices[device]

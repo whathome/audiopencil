@@ -43,6 +43,31 @@ struct SettingsView: View {
                 .padding(.top, embedded ? 8 : 0)
             }
 
+            Section("Sounds") {
+                HStack {
+                    Picker("Start and stop sounds", selection: $app.settings.cueTheme) {
+                        ForEach(CueTheme.allCases, id: \.self) { Text($0.label).tag($0.rawValue) }
+                    }
+                    Button {
+                        app.dictation.previewSounds()
+                    } label: {
+                        Label("Play", systemImage: "speaker.wave.2")
+                    }
+                    .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
+                }
+                LabeledContent("Volume") {
+                    HStack {
+                        Image(systemName: "speaker.fill").foregroundStyle(.secondary)
+                        Slider(value: $app.settings.cueVolume, in: 0.05...1) { editing in
+                            if !editing { app.dictation.previewSounds() }
+                        }
+                        Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
+                    }
+                }
+                .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
+            }
+            .onChange(of: app.settings.cueTheme) { app.dictation.previewSounds() }
+
             MicrophonePriorityList(app: app)
 
             Section {

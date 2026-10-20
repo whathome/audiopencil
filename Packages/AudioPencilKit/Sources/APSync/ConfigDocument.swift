@@ -95,6 +95,7 @@ public enum ConfigDocument {
         var out = "version: \(config.version)\n"
         out += list("vocabulary", config.vocabulary)
         out += list("tags", config.tags)
+        out += "expire_regular_audio_after_a_year: \(config.expireRegularAudio)\n"
         if config.styles.isEmpty {
             out += "styles: []\n"
         } else {
@@ -153,6 +154,8 @@ public enum ConfigDocument {
                 out += "    picker_auto_confirm: \(number(device.pickerAutoConfirm))\n"
                 out += "    long_form_threshold_seconds: \(number(device.longFormThreshold))\n"
                 out += "    save_quick_dictations: \(device.saveQuickDictations)\n"
+                out += "    sounds: \(scalar(device.sounds))  # tricorder, soft, chime, click, system or none\n"
+                out += "    sound_volume: \(number(device.soundVolume))\n"
             }
         }
         return out

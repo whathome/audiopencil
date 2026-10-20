@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 5 (notes in Obsidian). Long recordings become reviewed notes with audio in your vault; a Bases board, guide and sample notes are created on first run. Milestone 4 (vault and sync): Connect your Obsidian vault on Nextcloud or in a folder on this Mac (e.g. iCloud Drive); styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` in the vault. Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
+**Status:** milestone 6 (Like me, model discovery, retention). Phase 1 (Mac) feature-complete; phase 2 (iPhone) next. Milestone 5 (notes in Obsidian): Long recordings become reviewed notes with audio in your vault; a Bases board, guide and sample notes are created on first run. Milestone 4 (vault and sync): Connect your Obsidian vault on Nextcloud or in a folder on this Mac (e.g. iCloud Drive); styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` in the vault. Hold Fn for a raw transcript, or double-tap Fn to dictate in a style (Polished, Diary, Professional, or your own), rewritten on this Mac by a small MLX language model.
 
 ## Build and run
 
@@ -72,6 +72,34 @@ Notes are `YYYY-MM-DD HHmm Title.md` in the style's folder (Styles page), or `Au
 
 On first connecting a vault the app adds `Audio Pencil/Audio Pencil.base` (Kanban "Professional review" by status, "Diary", "All recordings"), `Audio Pencil guide.md`, and three sample notes tagged `sample`. The board and guide are recreated if missing; the samples never are.
 
+### Like me
+
+The **My writing** page holds samples of your own writing: the PRD's 11 interview prompts (typed, 100–300 words) and anything you paste in. For each note, the two samples most similar to what you said go to the writing model as examples of your voice. The Like me style switches on at three samples. Samples sync through the vault settings file.
+
+### Model suggestions
+
+Settings › Model suggestions shows this Mac's chip and memory, and how much room that leaves for each kind of model (a third of RAM for writing, an eighth for transcription; 8 GB → 2.8 GB / 1.0 GB). Weekly, the app looks on Hugging Face for MLX chat models that MLX can load and that fit, plus English WhisperKit models Argmax supports on this chip. **Try** downloads one and runs it next to your current model on the same material (word error rate for transcription), and **Switch** adopts it. Nothing changes on its own.
+
+### Retention
+
+Every note has `retention: regular | archive | delete`, shown as the **Retention** view on the board. At least every 5 minutes, and whenever you switch to the app, Audio Pencil applies it:
+
+- **delete:** the note and its audio are removed.
+- **archive:** kept forever.
+- **regular:** the audio is removed a year after recording (Notes page switch, on by default, shared by all devices). The note stays and gets `audio_expired`.
+
+Removed files go to Nextcloud's trash, or the macOS Trash for a local vault. Recordings expiring within 30 days are listed on the Notes page with **Keep forever**. Older notes without the property are marked `regular`.
+
+### Keeping the board and settings working
+
+The board's own views (Professional review, Diary, All recordings, Retention) are re-added whenever one goes missing. Your own views, filters and view settings are kept.
+
+If the board or `Settings.md` stops parsing, the app leaves it alone (Obsidian saves while you type, so this can be momentary), pauses syncing that file, and offers **Repair…**. A repair keeps every section, style, writing sample or view that still parses, so valid edits made elsewhere in the file survive. Only the broken parts come back from the last good version. The broken file is saved to `Audio Pencil/Backups/` first.
+
+### Sounds
+
+Settings › Sounds offers Tricorder (default), Soft, Chime, Click, macOS sounds or None, with a volume slider and a preview button. The choice is per device and synced in its section of the settings file.
+
 ### Vault settings file
 
 Once a vault is connected (Vault page), the app keeps `Audio Pencil/Settings.md` in it: a short note with one `yaml` block holding the shared styles, vocabulary and tags, plus a section per device (microphones, hotkey options, models). Edit it in Obsidian and the app picks the changes up within a minute, or when you switch to it. Changes made on both sides merge field by field against the last synced version. If both sides changed the same style, the vault's version wins. If the YAML has a mistake, syncing pauses until you fix it, and the file is never overwritten. Per-app style memory and stats stay on the device.
@@ -131,5 +159,5 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 2. **Dictation polish** (done): instant start, mic priority list, Dock/menu-bar mode, launch at login, custom vocabulary.
 3. **Styles** (done): hold-for-raw, MLX writing model with swapping, presets, number keys and clickable style menu, picker, per-app defaults, Styles page.
 4. **Vault and sync** (done): Nextcloud (Login Flow v2) or a local/iCloud folder, folder selection, shared YAML settings file with three-way merge and ETag retries, offline upload queue.
-5. **Notes in Obsidian** (this): long-form promotion (5 min, configurable), m4a audio, sectioned summaries, suggested title and tags, review prompt and notification, notes and frontmatter via the offline queue, optional saving of quick dictations, Bases board, guide and samples. One-year audio retention moves to milestone 6.
-6. "Like me" and model discovery.
+5. **Notes in Obsidian** (done): long-form promotion (5 min, configurable), m4a audio, sectioned summaries, suggested title and tags, review prompt and notification, notes and frontmatter via the offline queue, optional saving of quick dictations, Bases board, guide and samples. One-year audio retention moves to milestone 6.
+6. **Like me, discovery, retention** (this): My writing page and interview, machine-aware model suggestions with on-device trials, Retention board (regular / archive / delete) with one-year audio expiry, board and settings-file repair, sound themes.

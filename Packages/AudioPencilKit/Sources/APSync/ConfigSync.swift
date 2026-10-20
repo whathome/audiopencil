@@ -1,6 +1,7 @@
 import APCore
 import APStorage
 import Foundation
+import Yams
 
 /// Keeps the vault's settings file and the app's settings in step.
 ///
@@ -23,7 +24,7 @@ public actor ConfigSync {
     }
 
     private let stateURL: URL
-    private var state: State
+    var state: State
 
     public init(stateURL: URL) {
         self.stateURL = stateURL
@@ -107,9 +108,95 @@ public actor ConfigSync {
 
     private func save(_ newState: State) {
         state = newState
+        persist()
+    }
+
+    func persist() {
         try? FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if let data = try? JSONEncoder().encode(newState) {
+        if let data = try? JSONEncoder().encode(state) {
             try? data.write(to: stateURL, options: .atomic)
         }
+    }
+}
+
+// MARK: Repair
+
+extension ConfigSync {
+    public struct Repair: Equatable, Sendable {
+        /// Sections taken from the broken file because they still parsed.
+        public var kept: [String]
+        /// Sections (or items) put back from the last good version.
+        public var restored: [String]
+        public var backupPath: String
+        public var config: SharedConfig
+    }
+
+    /// Repairs a settings file that won't parse: every section (and every style or writing sample)
+    /// that still parses is kept, so valid edits made elsewhere in the file survive; broken parts
+    /// come back from the last version both sides agreed on (or this device's settings). The broken
+    /// original is saved to "Audio Pencil/Backups" first. Only on request: Obsidian saves while you
+    /// type, so a file can look broken for a moment.
+    public func repair(fallback local: SharedConfig, device: String, provider: any StorageProvider, vaultPath: String, location: String) async throws -> Repair {
+        let path = Self.filePath(inVault: vaultPath)
+        let (data, etag) = try await provider.read(path)
+        let broken = String(decoding: data, as: UTF8.self)
+        let lastGood = (state.location == location ? state.base : nil) ?? local
+
+        var repaired = lastGood
+        var kept: [String] = []
+        var restored: [String] = []
+        if let yaml = Self.yamlBlock(broken) {
+            for (key, chunk) in YAMLSalvage.topLevelChunks(yaml) {
+                if let partial = try? YAMLDecoder().decode(SharedConfig.self, from: chunk) {
+                    switch key {
+                    case "version": repaired.version = partial.version
+                    case "vocabulary": repaired.vocabulary = partial.vocabulary
+                    case "tags": repaired.tags = partial.tags
+                    case "styles": repaired.styles = partial.styles
+                    case "writing_samples": repaired.writingSamples = partial.writingSamples
+                    case "devices": repaired.devices = partial.devices
+                    case "expire_regular_audio_after_a_year": repaired.expireRegularAudio = partial.expireRegularAudio
+                    default: continue
+                    }
+                    kept.append(key)
+                } else if key == "styles" || key == "writing_samples" {
+                    // Salvage item by item; anything unreadable comes back from the last good version.
+                    let items = YAMLSalvage.sequenceItems(chunk)
+                    if key == "styles" {
+                        let good = items.compactMap { try? YAMLDecoder().decode([ConfigStyle].self, from: $0).first }
+                        let back = lastGood.styles.filter { old in !good.contains { $0.id == old.id } }
+                        repaired.styles = good + back
+                        kept.append("styles (\(good.count) of \(items.count))")
+                        if !back.isEmpty { restored.append("styles: " + back.map(\.name).joined(separator: ", ")) }
+                    } else {
+                        let good = items.compactMap { try? YAMLDecoder().decode([WritingSample].self, from: $0).first }
+                        let back = lastGood.writingSamples.filter { old in !good.contains { $0.id == old.id } }
+                        repaired.writingSamples = good + back
+                        kept.append("writing samples (\(good.count) of \(items.count))")
+                        if !back.isEmpty { restored.append("\(back.count) writing samples") }
+                    }
+                } else {
+                    restored.append(key)
+                }
+            }
+        } else {
+            restored.append("everything (no yaml block)")
+        }
+
+        let backup = try await StarterKit.saveBackup(of: broken, name: "Settings", asYAML: false, provider: provider, vaultPath: vaultPath, now: Date())
+        let data2 = Data(ConfigDocument.render(repaired).utf8)
+        var newEtag = try await provider.write(path, data: data2, ifMatch: etag, createOnly: false)
+        if newEtag == nil { newEtag = try await provider.item(at: path)?.etag }
+        state = State(base: repaired, etag: newEtag, location: location)
+        persist()
+        return Repair(kept: kept, restored: restored, backupPath: backup, config: repaired)
+    }
+
+    static func yamlBlock(_ markdown: String) -> String? {
+        let lines = markdown.components(separatedBy: "\n")
+        guard let start = lines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("```yaml") }) else { return nil }
+        let rest = lines[(start + 1)...]
+        let end = rest.firstIndex { $0.trimmingCharacters(in: .whitespaces) == "```" } ?? lines.endIndex
+        return lines[(start + 1)..<end].joined(separator: "\n")
     }
 }

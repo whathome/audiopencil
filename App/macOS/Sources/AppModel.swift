@@ -1,6 +1,7 @@
 import APAudio
 import APCore
 import APModels
+import APStorage
 import APSummary
 import APSync
 import APTranscription
@@ -46,6 +47,13 @@ final class AppModel {
     /// The user's writing for "Like me". Shared through the vault settings file.
     var writingSamples: [WritingSample] = AppModel.loadWritingSamples() {
         didSet { writingSamplesChanged(from: oldValue) }
+    }
+    /// Vault-wide: remove "regular" audio a year after recording. Shared through the settings file.
+    var expireRegularAudio: Bool = UserDefaults.standard.object(forKey: "expireRegularAudio") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(expireRegularAudio, forKey: "expireRegularAudio")
+            if !applyingSync, expireRegularAudio != oldValue { sync?.syncSoon() }
+        }
     }
     /// Master tag list from the vault settings file. Approving new tags in a review adds them here.
     var tags: [String] = [] {
@@ -136,6 +144,10 @@ final class AppModel {
         sync = SyncController(vault: vault)
         sync.localConfig = { [unowned self] base in localConfig(from: base) }
         sync.apply = { [unowned self] config in apply(config) }
+        sync.retentionFolders = { [unowned self] in
+            Array(Set(styles.map { notes.folder(for: $0) } + [NoteMaker.defaultFolder, StarterKit.samplesFolder]))
+        }
+        sync.expireRegularAudio = { [unowned self] in expireRegularAudio }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         notes = NoteMaker(app: self)
         advisor = ModelAdvisor(app: self)
@@ -210,11 +222,11 @@ final class AppModel {
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
                 case "snapshot": snapshotMainWindow()
-                case "vault:read":
-                    // Logs the vault settings file as the app sees it.
+                case let command where command == "vault:read" || command.hasPrefix("vault:read:"):
+                    // Logs the vault settings file (or vault:read:<vault-relative path>) as the app sees it.
                     Task {
                         guard let location = vault.vaultLocation else { return }
-                        let path = ConfigSync.filePath(inVault: location.path)
+                        let path = command == "vault:read" ? ConfigSync.filePath(inVault: location.path) : StoragePath.join(location.path, String(command.dropFirst("vault:read:".count)))
                         let text = (try? await location.provider.read(path)).map { String(decoding: $0.data, as: UTF8.self) } ?? "(unreadable)"
                         Log.dictation.notice("Vault file \(path, privacy: .public):\n\(text, privacy: .public)")
                     }
@@ -581,6 +593,7 @@ final class AppModel {
     private func applyNoteSettings() {
         dictation?.longFormThreshold = debugLongFormThreshold ?? settings.longFormThreshold
         dictation?.savesQuickDictations = settings.saveQuickDictations
+        dictation?.setSounds(theme: CueTheme(rawValue: settings.cueTheme) ?? .tricorder, volume: settings.cueVolume)
     }
 
     // MARK: App presence

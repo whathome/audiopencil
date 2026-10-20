@@ -427,3 +427,115 @@ struct BoardUpgradeTests {
         #expect(try await StarterKit.ensure(in: storage, vaultPath: "/V", includeSamples: false) == .boardCustomised)
     }
 }
+
+struct BoardMaintenanceTests {
+    private let board = StoragePath.join("/V", StarterKit.basePath)
+
+    @Test func addsMissingViewsAndKeepsCustomisations() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        // As Obsidian might leave it: reformatted, with a user view and view state, Retention missing.
+        let customised = """
+            filters:
+              and:
+                - type == "audio-pencil"
+            formulas:
+              age: 'now() - recorded'
+            views:
+              - type: kanban
+                name: Professional review
+                groupBy:
+                  property: note.status
+                  direction: ASC
+              - type: table
+                name: My own view
+                order: [file.name]
+              - type: table
+                name: Diary
+              - type: table
+                name: All recordings
+            """
+        try await storage.write(board, data: Data(customised.utf8), ifMatch: nil, createOnly: false)
+        #expect(try await StarterKit.ensureBoard(in: storage, vaultPath: "/V") == .addedViews(["Retention"]))
+        let text = String(decoding: try await storage.read(board).data, as: UTF8.self)
+        let views = try #require((try Yams.load(yaml: text) as? [String: Any])?["views"] as? [[String: Any]])
+        #expect(views.compactMap { $0["name"] as? String } == ["Professional review", "My own view", "Diary", "All recordings", "Retention"])
+        #expect(text.contains("now() - recorded"))
+        #expect(try await StarterKit.ensureBoard(in: storage, vaultPath: "/V") == .ok)
+    }
+
+    @Test func leavesABrokenBoardAloneUntilAskedThenSalvages() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let broken = """
+            filters:
+              and:
+                - type == "audio-pencil"
+            views:
+              - type: table
+                name: My own view
+                order: [file.name]
+              - type: kanban
+                name: Broken one
+                groupBy: [unclosed
+            """
+        try await storage.write(board, data: Data(broken.utf8), ifMatch: nil, createOnly: false)
+        guard case .unparseable = try await StarterKit.ensureBoard(in: storage, vaultPath: "/V") else { Issue.record("expected unparseable"); return }
+        #expect(try await storage.read(board).data == Data(broken.utf8)) // untouched
+
+        let repair = try await StarterKit.repairBoard(in: storage, vaultPath: "/V")
+        #expect(repair.keptViews == ["My own view"])
+        #expect(repair.droppedSections == 1)
+        let text = String(decoding: try await storage.read(board).data, as: UTF8.self)
+        let names = ((try Yams.load(yaml: text) as? [String: Any])?["views"] as? [[String: Any]])?.compactMap { $0["name"] as? String }
+        #expect(names == ["My own view"] + StarterKit.requiredViewNames)
+        #expect(try await storage.read(repair.backupPath).data.count > broken.count)
+    }
+}
+
+struct SettingsRepairTests {
+    @Test func keepsValidEditsAndRestoresBrokenParts() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let sync = ConfigSync(stateURL: root.appending(path: ".state/sync.json"))
+        var local = SharedConfig()
+        local.vocabulary = ["Nextcloud"]
+        local.tags = ["work"]
+        local.styles = [ConfigStyle(.polished), ConfigStyle(.diary)]
+        _ = try await sync.sync(local: local, device: "Mac", provider: storage, vaultPath: "/V", location: "t")
+
+        // In Obsidian: a valid new tag, a renamed style, and a typo that breaks vocabulary and the diary style.
+        let broken = """
+            # Audio Pencil settings
+            ```yaml
+            version: 1
+            vocabulary: [Nextcloud, "unclosed
+            tags:
+              - work
+              - home
+            styles:
+              - id: polished
+                name: Polished (mine)
+                shortcut: 1
+                instructions: Rewrite it.
+              - id: diary
+                name: Diary
+                shortcut: [oops
+            ```
+            """
+        let path = ConfigSync.filePath(inVault: "/V")
+        try await storage.write(path, data: Data(broken.utf8), ifMatch: nil, createOnly: false)
+        await #expect(throws: ConfigError.self) { _ = try await sync.sync(local: local, device: "Mac", provider: storage, vaultPath: "/V", location: "t") }
+
+        let repair = try await sync.repair(fallback: local, device: "Mac", provider: storage, vaultPath: "/V", location: "t")
+        #expect(repair.config.tags == ["work", "home"])                 // valid edit kept
+        #expect(repair.config.styles.first?.name == "Polished (mine)")  // valid style edit kept
+        #expect(repair.config.styles.map(\.id) == ["polished", "diary"]) // broken style restored
+        #expect(repair.config.vocabulary == ["Nextcloud"])               // broken section restored
+        #expect(repair.restored.contains("vocabulary"))
+        #expect(try await storage.read(repair.backupPath).data == Data(broken.utf8))
+        // Syncing works again.
+        let after = try await sync.sync(local: repair.config, device: "Mac", provider: storage, vaultPath: "/V", location: "t")
+        #expect(after == .unchanged(repair.config))
+    }
+}

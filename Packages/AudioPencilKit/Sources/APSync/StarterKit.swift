@@ -1,6 +1,7 @@
 import APCore
 import APStorage
 import Foundation
+import Yams
 
 /// First-run files in the vault (PRD "Bases file created by the app", "First run"): the review board,
 /// a guide note, and sample notes so the board shows real cards straight away.
@@ -312,5 +313,122 @@ public enum StarterKit {
         }
         if boardCustomised, created.isEmpty { return .boardCustomised }
         return created.isEmpty ? .alreadyThere : .created(files: created)
+    }
+}
+
+// MARK: Keeping the board working
+
+extension StarterKit {
+    public enum BoardCheck: Equatable, Sendable {
+        case ok
+        case created
+        /// Views the app relies on were missing and have been added back.
+        case addedViews([String])
+        /// The file doesn't parse (perhaps mid-edit). Left alone; `repairBoard` fixes it on request.
+        case unparseable(String)
+    }
+
+    /// The views the app depends on (taken from `base`).
+    static var requiredViews: [Node] {
+        (try? Yams.compose(yaml: base))?["views"]?.sequence.map(Array.init) ?? []
+    }
+
+    public static var requiredViewNames: [String] { requiredViews.compactMap { $0["name"]?.string } }
+
+    /// Makes sure the board exists and still has every required view (matched by name).
+    /// Anything else in the file (your own views, filters, formulas, view settings) is kept.
+    public static func ensureBoard(in provider: any StorageProvider, vaultPath: String) async throws -> BoardCheck {
+        let path = StoragePath.join(vaultPath, basePath)
+        guard try await provider.item(at: path) != nil else {
+            try await provider.createFolder(StoragePath.parent(of: path))
+            try await provider.write(path, data: Data(base.utf8), ifMatch: nil, createOnly: true)
+            return .created
+        }
+        let (data, etag) = try await provider.read(path)
+        let text = String(decoding: data, as: UTF8.self)
+        let root: Node
+        do {
+            guard let parsed = try Yams.compose(yaml: text), parsed.mapping != nil else { return .unparseable("The board isn't a YAML mapping.") }
+            root = parsed
+        } catch {
+            return .unparseable(String(describing: error))
+        }
+        let (fixed, added) = try addingMissingViews(to: root)
+        guard !added.isEmpty else { return .ok }
+        try await provider.write(path, data: Data(try Yams.serialize(node: fixed).utf8), ifMatch: etag, createOnly: false)
+        return .addedViews(added)
+    }
+
+    static func addingMissingViews(to root: Node) throws -> (Node, [String]) {
+        let existing = root["views"]?.sequence.map(Array.init) ?? []
+        let names = Set(existing.compactMap { $0["name"]?.string })
+        let missing = requiredViews.filter { !names.contains($0["name"]?.string ?? "") }
+        guard !missing.isEmpty else { return (root, []) }
+        var fixed = root
+        fixed["views"] = Node(existing + missing)
+        return (fixed, missing.compactMap { $0["name"]?.string })
+    }
+
+    public struct BoardRepair: Equatable, Sendable {
+        public var keptViews: [String]
+        public var droppedSections: Int
+        public var backupPath: String
+    }
+
+    /// For a board that won't parse: keeps every top-level section and view that still parses,
+    /// re-adds the required views, and saves the broken original as a backup note first.
+    public static func repairBoard(in provider: any StorageProvider, vaultPath: String, now: Date = Date()) async throws -> BoardRepair {
+        let path = StoragePath.join(vaultPath, basePath)
+        let (data, etag) = try await provider.read(path)
+        let broken = String(decoding: data, as: UTF8.self)
+
+        var keptViews: [Node] = []
+        var keptSections: [(Node, Node)] = []
+        var dropped = 0
+        for (key, chunk) in YAMLSalvage.topLevelChunks(broken) {
+            if key == "views" {
+                for item in YAMLSalvage.sequenceItems(chunk) {
+                    if let node = (try? Yams.compose(yaml: item))?.sequence?.first, node.mapping != nil {
+                        keptViews.append(node)
+                    } else {
+                        dropped += 1
+                    }
+                }
+            } else if let node = try? Yams.compose(yaml: chunk), let pair = node.mapping?.first {
+                keptSections.append((pair.key, pair.value))
+            } else {
+                dropped += 1
+            }
+        }
+        if !keptSections.contains(where: { $0.0.string == "filters" }), let filters = (try? Yams.compose(yaml: base))?["filters"] {
+            keptSections.insert((Node("filters"), filters), at: 0)
+        }
+        let rebuilt = Node(keptSections + [(Node("views"), Node(keptViews))])
+        let (fixed, _) = try addingMissingViews(to: rebuilt)
+
+        let backup = try await saveBackup(of: broken, name: "Audio Pencil board", asYAML: true, provider: provider, vaultPath: vaultPath, now: now)
+        try await provider.write(path, data: Data(try Yams.serialize(node: fixed).utf8), ifMatch: etag, createOnly: false)
+        return BoardRepair(keptViews: keptViews.compactMap { $0["name"]?.string }, droppedSections: dropped, backupPath: backup)
+    }
+
+    /// Saves a broken file's text as a note in "Audio Pencil/Backups" before it's repaired.
+    static func saveBackup(of text: String, name: String, asYAML: Bool, provider: any StorageProvider, vaultPath: String, now: Date) async throws -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd HHmm"
+        let folder = StoragePath.join(vaultPath, "Audio Pencil", "Backups")
+        try await provider.createFolder(folder)
+        let body = asYAML ? "Broken copy saved before Audio Pencil repaired it.\n\n```yaml\n\(text)\n```\n" : text
+        for attempt in 1...20 {
+            let file = "\(name) (broken copy \(formatter.string(from: now)))" + (attempt == 1 ? "" : "-\(attempt)") + ".md"
+            let path = StoragePath.join(folder, file)
+            do {
+                try await provider.write(path, data: Data(body.utf8), ifMatch: nil, createOnly: true)
+                return path
+            } catch StorageError.conflict {
+                continue
+            }
+        }
+        throw StorageError.conflict(folder)
     }
 }

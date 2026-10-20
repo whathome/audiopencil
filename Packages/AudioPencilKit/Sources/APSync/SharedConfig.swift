@@ -7,6 +7,7 @@ public struct SharedConfig: Codable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey {
         case version, vocabulary, tags, styles, devices
         case writingSamples = "writing_samples"
+        case expireRegularAudio = "expire_regular_audio_after_a_year"
     }
 
     public var version: Int = 1
@@ -16,6 +17,8 @@ public struct SharedConfig: Codable, Equatable, Sendable {
     public var styles: [ConfigStyle] = []
     /// The user's writing, for the "Like me" style.
     public var writingSamples: [WritingSample] = []
+    /// Retention board: remove the audio of "regular" notes a year after recording (vault-wide policy).
+    public var expireRegularAudio: Bool = true
     /// Keyed by device name, e.g. "Wes's MacBook Air".
     public var devices: [String: DeviceSection] = [:]
 
@@ -28,6 +31,7 @@ public struct SharedConfig: Codable, Equatable, Sendable {
         tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
         styles = try c.decodeIfPresent([ConfigStyle].self, forKey: .styles) ?? []
         writingSamples = try c.decodeIfPresent([WritingSample].self, forKey: .writingSamples) ?? []
+        expireRegularAudio = try c.decodeIfPresent(Bool.self, forKey: .expireRegularAudio) ?? true
         devices = try c.decodeIfPresent([String: DeviceSection].self, forKey: .devices) ?? [:]
     }
 }
@@ -135,6 +139,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public var pickerAutoConfirm: Double = 1.0
     public var longFormThreshold: Double = 300
     public var saveQuickDictations: Bool = false
+    public var sounds: String = "tricorder"
+    public var soundVolume: Double = 0.35
 
     enum CodingKeys: String, CodingKey {
         case microphones, stop
@@ -143,6 +149,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         case transcriptionModel = "transcription_model", writingModel = "writing_model"
         case pickStyleAfterStop = "pick_style_after_stop", pickerAutoConfirm = "picker_auto_confirm"
         case longFormThreshold = "long_form_threshold_seconds", saveQuickDictations = "save_quick_dictations"
+        case sounds, soundVolume = "sound_volume"
     }
 
     public init() {}
@@ -161,6 +168,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         pickerAutoConfirm = settings.pickerAutoConfirm
         longFormThreshold = settings.longFormThreshold
         saveQuickDictations = settings.saveQuickDictations
+        sounds = settings.cueTheme
+        soundVolume = settings.cueVolume
     }
 
     public init(from decoder: any Decoder) throws {
@@ -179,6 +188,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
         longFormThreshold = try c.decodeIfPresent(Double.self, forKey: .longFormThreshold) ?? defaults.longFormThreshold
         saveQuickDictations = try c.decodeIfPresent(Bool.self, forKey: .saveQuickDictations) ?? defaults.saveQuickDictations
+        sounds = try c.decodeIfPresent(String.self, forKey: .sounds) ?? defaults.sounds
+        soundVolume = try c.decodeIfPresent(Double.self, forKey: .soundVolume) ?? defaults.soundVolume
     }
 
     /// Writes this section's values into the app's settings, leaving local-only fields alone.
@@ -196,5 +207,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         settings.pickerAutoConfirm = min(max(pickerAutoConfirm, 0.25), 5)
         settings.longFormThreshold = min(max(longFormThreshold, 60), 3_600)
         settings.saveQuickDictations = saveQuickDictations
+        settings.cueTheme = sounds
+        settings.cueVolume = min(max(soundVolume, 0), 1)
     }
 }

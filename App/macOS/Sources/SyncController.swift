@@ -23,6 +23,14 @@ final class SyncController {
     private(set) var status: Status = .notConfigured
     private(set) var lastSynced: Date?
     private(set) var queuedUploads = 0
+    /// Regular notes whose audio goes within 30 days.
+    private(set) var expiringSoon: [RetentionKeeper.Expiring] = []
+    /// The board file doesn't parse (left alone until repaired).
+    private(set) var boardProblem: String?
+    /// Result of the last repair, for a confirmation message.
+    private(set) var repairSummary: String?
+    /// Last retention pass, for the Notes page.
+    private(set) var lastRetention: RetentionKeeper.Report?
     /// First-run files were just created in this vault: show the board walkthrough once.
     var showWalkthrough = false
     let deviceName = Host.current().localizedName ?? "Mac"
@@ -31,6 +39,9 @@ final class SyncController {
     @ObservationIgnored var localConfig: ((SharedConfig?) -> SharedConfig)?
     /// Applies a merged config to the app.
     @ObservationIgnored var apply: ((SharedConfig) -> Void)?
+    /// Folders notes land in (scanned by the retention pass).
+    @ObservationIgnored var retentionFolders: (() -> [String])?
+    @ObservationIgnored var expireRegularAudio: (() -> Bool)?
 
     @ObservationIgnored private let vault: VaultController
     @ObservationIgnored private let configSync: ConfigSync
@@ -43,12 +54,15 @@ final class SyncController {
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
     /// Vaults whose board and guide were checked this launch.
     @ObservationIgnored private var starterChecked: Set<String> = []
+    @ObservationIgnored private let retention: RetentionKeeper
+    @ObservationIgnored private var lastRetentionRun = Date.distantPast
 
     init(vault: VaultController) {
         self.vault = vault
         let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Sync", directoryHint: .isDirectory)
         configSync = ConfigSync(stateURL: folder.appending(path: "config-state.json"))
         outbox = Outbox(directory: folder.appending(path: "Outbox", directoryHint: .isDirectory))
+        retention = RetentionKeeper(stateURL: folder.appending(path: "retention-state.json"))
     }
 
     var settingsFilePath: String? {
@@ -78,7 +92,10 @@ final class SyncController {
             }
         }
         activationObserver = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.syncSoon(after: .milliseconds(500)) }
+            MainActor.assumeIsolated {
+                self?.lastRetentionRun = .distantPast // "the next time the app is aware": check on activation too
+                self?.syncSoon(after: .milliseconds(500))
+            }
         }
         syncSoon(after: .seconds(1))
     }
@@ -127,6 +144,19 @@ final class SyncController {
             }
             await ensureStarterKit(provider: location.provider, vaultPath: location.path)
             let drained = await outbox.drain(to: location.provider, vaultPath: location.path)
+            if Date().timeIntervalSince(lastRetentionRun) > 300, let folders = retentionFolders?() {
+                lastRetentionRun = Date()
+                await checkBoard(provider: location.provider, vaultPath: location.path)
+                let report = await retention.run(
+                    provider: location.provider, vaultPath: location.path, folders: folders,
+                    expireRegularAudio: expireRegularAudio?() ?? true
+                )
+                lastRetention = report
+                expiringSoon = report.expiringSoon
+                if !report.deletedNotes.isEmpty || !report.expiredAudio.isEmpty || !report.backfilled.isEmpty {
+                    Log.models.notice("Retention: deleted \(report.deletedNotes.count) notes, removed \(report.expiredAudio.count) expired recordings, marked \(report.backfilled.count) older notes regular")
+                }
+            }
             queuedUploads = await outbox.pending.count
             if let reason = drained.stoppedBecause {
                 status = .failed("Uploads waiting: \(reason)")
@@ -140,6 +170,65 @@ final class SyncController {
             status = isOnline ? .failed(detail) : .offline
         } catch {
             status = .failed(error.localizedDescription)
+        }
+    }
+
+    /// Keeps the board's required views in place (re-adding any that went missing).
+    private func checkBoard(provider: any StorageProvider, vaultPath: String) async {
+        do {
+            switch try await StarterKit.ensureBoard(in: provider, vaultPath: vaultPath) {
+            case .ok, .created:
+                boardProblem = nil
+            case .addedViews(let names):
+                boardProblem = nil
+                Log.models.notice("Board: added missing views \(names.joined(separator: ", "), privacy: .public)")
+            case .unparseable(let detail):
+                boardProblem = detail
+            }
+        } catch {
+            Log.models.error("Board check failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Repairs a settings file that won't parse, keeping every part that still does.
+    func repairSettings() async {
+        guard let location = vault.vaultLocation, let localConfig, let apply else { return }
+        do {
+            let base = await configSync.base
+            let repair = try await configSync.repair(fallback: localConfig(base), device: deviceName, provider: location.provider, vaultPath: location.path, location: locationKey)
+            apply(repair.config)
+            repairSummary = "Settings repaired. Kept: \(repair.kept.joined(separator: ", ")). Restored from the last good version: \(repair.restored.isEmpty ? "nothing" : repair.restored.joined(separator: "; ")). The broken copy is in \(repair.backupPath.dropFirst())."
+            status = .idle
+            lastSynced = Date()
+        } catch {
+            status = .failed("Repair failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Repairs a board that won't parse, keeping every view that still does.
+    func repairBoard() async {
+        guard let location = vault.vaultLocation else { return }
+        do {
+            let repair = try await StarterKit.repairBoard(in: location.provider, vaultPath: location.path)
+            boardProblem = nil
+            repairSummary = "Board repaired. Kept your views: \(repair.keptViews.isEmpty ? "none" : repair.keptViews.joined(separator: ", ")). The broken copy is in \(repair.backupPath.dropFirst())."
+        } catch {
+            boardProblem = "Repair failed: \(error.localizedDescription)"
+        }
+    }
+
+    func clearRepairSummary() { repairSummary = nil }
+
+    /// "Keep forever": moves a note to the Retention board's archive column.
+    func archive(_ item: RetentionKeeper.Expiring) async {
+        guard let location = vault.vaultLocation else { return }
+        do {
+            let (data, etag) = try await location.provider.read(item.notePath)
+            let edited = NoteFrontmatter.setting("retention", to: "archive", in: String(decoding: data, as: UTF8.self))
+            try await location.provider.write(item.notePath, data: Data(edited.utf8), ifMatch: etag, createOnly: false)
+            expiringSoon.removeAll { $0.id == item.id }
+        } catch {
+            status = .failed("Couldn't archive \(item.title): \(error.localizedDescription)")
         }
     }
 

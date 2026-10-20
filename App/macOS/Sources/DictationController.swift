@@ -102,6 +102,14 @@ final class DictationController {
 
     private let recorder = AudioRecorder()
     private let cues = CuePlayer()
+
+    /// Applies the sound theme and volume from Settings.
+    func setSounds(theme: CueTheme, volume: Double) {
+        if cues.theme != theme { cues.setTheme(theme) }
+        cues.volume = Float(volume)
+    }
+
+    func previewSounds() { cues.preview() }
     private let indicator: IndicatorModel
     private let engine: () -> WhisperEngine
     private let waitForModel: () async throws -> Void

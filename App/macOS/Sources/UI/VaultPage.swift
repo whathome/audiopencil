@@ -62,6 +62,7 @@ struct VaultPage: View {
 
 private struct SyncCard: View {
     let sync: SyncController
+    @State private var confirmingRepair = false
 
     var body: some View {
         Card(title: "Sync") {
@@ -74,8 +75,19 @@ private struct SyncCard: View {
                     }
                 }
                 Spacer()
+                if case .paused = sync.status {
+                    Button("Repair…") { confirmingRepair = true }
+                }
                 Button("Sync now") { Task { await sync.syncNow() } }
                     .disabled(sync.status == .syncing)
+            }
+            if let summary = sync.repairSummary {
+                HStack(alignment: .top) {
+                    Label(summary, systemImage: "wrench.and.screwdriver").font(.callout).foregroundStyle(.secondary)
+                    Spacer()
+                    Button { sync.clearRepairSummary() } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
+                        .buttonStyle(.borderless)
+                }
             }
             Divider()
             Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 6) {
@@ -96,6 +108,11 @@ private struct SyncCard: View {
             Text("Styles, vocabulary and tags are shared through the settings file; edit it in Obsidian and changes arrive here within a minute. This Mac's hotkey, microphone and model choices live in its own section.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+        .confirmationDialog("Repair the settings file?", isPresented: $confirmingRepair) {
+            Button("Repair") { Task { await sync.repairSettings() } }
+        } message: {
+            Text("Every section that still reads correctly is kept, including edits made elsewhere. Only the broken parts are put back from the last good version. A copy of the file as it is now goes to Audio Pencil/Backups first. If you're still editing it in Obsidian, finish that instead.")
         }
     }
 

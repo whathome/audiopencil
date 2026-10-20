@@ -7,6 +7,7 @@ struct NotesPage: View {
     @Bindable var app: AppModel
     let notes: NoteMaker
     @State private var showingWalkthrough = false
+    @State private var confirmingBoardRepair = false
 
     var body: some View {
         ScrollView {
@@ -29,6 +30,18 @@ struct NotesPage: View {
                             if let url = notes.obsidianURL(for: StarterKit.basePath) {
                                 Link("Open board", destination: url)
                             }
+                        }
+                        if let problem = app.sync.boardProblem {
+                            HStack {
+                                Label("The board file has a mistake, so it's been left alone.", systemImage: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .help(problem)
+                                Spacer()
+                                Button("Repair…") { confirmingBoardRepair = true }
+                            }
+                        }
+                        if let summary = app.sync.repairSummary, summary.hasPrefix("Board") {
+                            Text(summary).font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -60,6 +73,24 @@ struct NotesPage: View {
                     }
                 }
 
+                if !app.sync.expiringSoon.isEmpty {
+                    Card(title: "Audio expiring soon") {
+                        Text("These recordings are a year old soon. Their notes stay; the audio goes unless you keep it.")
+                            .font(.callout).foregroundStyle(.secondary)
+                        ForEach(app.sync.expiringSoon) { item in
+                            HStack {
+                                Image(systemName: "waveform.badge.exclamationmark").foregroundStyle(.orange)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.title)
+                                    Text("Audio removed \(item.expires.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Button("Keep forever") { Task { await app.sync.archive(item) } }
+                            }
+                        }
+                    }
+                }
+
                 Card(title: "Recent") {
                     if notes.recent.isEmpty {
                         Text("Nothing saved yet. Recordings longer than \(Int(app.settings.longFormThreshold / 60)) minutes become notes; quick dictations too if you turn that on below.")
@@ -83,6 +114,10 @@ struct NotesPage: View {
 
                 Card(title: "Saving") {
                     Toggle("Save quick dictations as notes too", isOn: $app.settings.saveQuickDictations)
+                    Toggle(isOn: $app.expireRegularAudio) {
+                        Text("Remove a recording's audio a year after it was made")
+                        Text("For notes in the Regular column of the board's Retention view. Archive keeps audio forever; Delete removes the note and audio at the next check. Removed files go to the trash.")
+                    }
                     HStack {
                         Text("Recordings longer than")
                         Stepper(value: $app.settings.longFormThreshold, in: 60...3_600, step: 60) {
@@ -98,6 +133,11 @@ struct NotesPage: View {
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
+        }
+        .confirmationDialog("Repair the board?", isPresented: $confirmingBoardRepair) {
+            Button("Repair") { Task { await app.sync.repairBoard() } }
+        } message: {
+            Text("Your views and settings that still read correctly are kept, and the views Audio Pencil needs are put back. A copy of the file as it is now goes to Audio Pencil/Backups first.")
         }
         .sheet(isPresented: $showingWalkthrough) {
             BoardWalkthrough(boardURL: notes.obsidianURL(for: StarterKit.basePath), guideURL: notes.obsidianURL(for: StarterKit.guidePath))

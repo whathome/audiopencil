@@ -43,6 +43,7 @@ extension AppModel {
         config.vocabulary = settings.customVocabulary
         config.tags = tags
         config.writingSamples = writingSamples
+        config.expireRegularAudio = expireRegularAudio
         config.devices[sync.deviceName] = DeviceSection(settings)
         return config
     }
@@ -60,6 +61,7 @@ extension AppModel {
         if updated != settings { settings = updated }
         if config.tags != tags { tags = config.tags }
         if config.writingSamples != writingSamples { writingSamples = config.writingSamples }
+        if config.expireRegularAudio != expireRegularAudio { expireRegularAudio = config.expireRegularAudio }
     }
 
     // MARK: Like me
