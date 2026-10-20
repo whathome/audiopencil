@@ -100,7 +100,22 @@
         }
       }
     },
-    "A folder in Files, such as your Obsidian vault in iCloud Drive (iCloud Drive › Obsidian).": {},
+    "A folder in Files, such as your Obsidian vault in iCloud Drive (iCloud Drive › Obsidian).": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una carpeta en Archivos, como tu bóveda de Obsidian en iCloud Drive (iCloud Drive › Obsidian)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dossier dans Fichiers, comme votre coffre Obsidian dans iCloud Drive (iCloud Drive › Obsidian)."
+          }
+        }
+      }
+    },
     "A short summary paragraph, then the key points as bullets grouped by theme. Keeps facts, names, numbers and decisions; drops rambling.": {
       "localizations": {
         "es": {
@@ -149,8 +164,38 @@
         }
       }
     },
-    "Allow Microphone": {},
-    "Any server that speaks WebDAV: a Synology, ownCloud, a hosting provider.": {},
+    "Allow Microphone": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir el micrófono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autoriser le micro"
+          }
+        }
+      }
+    },
+    "Any server that speaks WebDAV: a Synology, ownCloud, a hosting provider.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cualquier servidor WebDAV: un Synology, ownCloud, un proveedor de alojamiento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout serveur WebDAV : un Synology, ownCloud, un hébergeur."
+          }
+        }
+      }
+    },
     "App password": {
       "localizations": {
         "es": {
@@ -183,7 +228,22 @@
         }
       }
     },
-    "Approve Audio Pencil in Safari, then come back.": {},
+    "Approve Audio Pencil in Safari, then come back.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprueba Audio Pencil en Safari y luego vuelve."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisez Audio Pencil dans Safari, puis revenez ici."
+          }
+        }
+      }
+    },
     "Audio Pencil": {
       "localizations": {
         "es": {
@@ -200,8 +260,38 @@
         }
       }
     },
-    "Audio Pencil listens only while you record. The speech model starts downloading now, so it's ready when you are.": {},
-    "Audio Pencil needs the microphone. Allow it in Settings › Privacy & Security › Microphone.": {},
+    "Audio Pencil listens only while you record. The speech model starts downloading now, so it's ready when you are.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil solo escucha mientras grabas. El modelo de voz empieza a descargarse ahora, para que esté listo cuando tú lo estés."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil n’écoute que pendant l’enregistrement. Le modèle vocal commence à se télécharger maintenant, pour être prêt quand vous le serez."
+          }
+        }
+      }
+    },
+    "Audio Pencil needs the microphone. Allow it in Settings › Privacy & Security › Microphone.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil necesita el micrófono. Permítelo en Ajustes › Privacidad y seguridad › Micrófono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil a besoin du micro. Autorisez-le dans Réglages › Confidentialité et sécurité › Micro."
+          }
+        }
+      }
+    },
     "Back": {
       "localizations": {
         "es": {
@@ -272,7 +362,22 @@
         }
       }
     },
-    "Choose where notes go": {},
+    "Choose where notes go": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir adónde van las notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir où vont les notes"
+          }
+        }
+      }
+    },
     "Choose…": {
       "localizations": {
         "es": {
@@ -305,7 +410,22 @@
         }
       }
     },
-    "Connected as": {},
+    "Connected as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectado como"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecté en tant que"
+          }
+        }
+      }
+    },
     "Continue": {
       "localizations": {
         "es": {
@@ -414,8 +534,38 @@
         }
       }
     },
-    "Discard": {},
-    "Discard recording": {},
+    "Discard": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer"
+          }
+        }
+      }
+    },
+    "Discard recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar la grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l’enregistrement"
+          }
+        }
+      }
+    },
     "Disconnect": {
       "localizations": {
         "es": {
@@ -432,7 +582,22 @@
         }
       }
     },
-    "Download (%@)": {},
+    "Download (%@)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar (%@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télécharger (%@)"
+          }
+        }
+      }
+    },
     "Downloading Whisper %@: %lld%%": {
       "localizations": {
         "en": {
@@ -440,12 +605,69 @@
             "state": "new",
             "value": "Downloading Whisper %1$@: %2$lld%%"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargando Whisper %@: %lld %%"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Téléchargement de Whisper %@ : %lld %%"
+          }
         }
       }
     },
-    "Each is prepared for this iPhone's chip the first time it's used, which takes a few minutes once.": {},
-    "Each model downloads once and is prepared for this iPhone's chip the first time it's used.": {},
-    "Each recording becomes a Markdown note with its audio, in Obsidian or any folder, on Nextcloud or iCloud Drive.": {},
+    "Each is prepared for this iPhone's chip the first time it's used, which takes a few minutes once.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada uno se prepara para el chip de este iPhone la primera vez que se usa, lo que lleva unos minutos una sola vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chacun est préparé pour la puce de cet iPhone à sa première utilisation, ce qui prend quelques minutes une seule fois."
+          }
+        }
+      }
+    },
+    "Each model downloads once and is prepared for this iPhone's chip the first time it's used.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada modelo se descarga una vez y se prepara para el chip de este iPhone la primera vez que se usa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque modèle se télécharge une fois et est préparé pour la puce de cet iPhone à sa première utilisation."
+          }
+        }
+      }
+    },
+    "Each recording becomes a Markdown note with its audio, in Obsidian or any folder, on Nextcloud or iCloud Drive.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada grabación se convierte en una nota Markdown con su audio, en Obsidian o en cualquier carpeta, en Nextcloud o iCloud Drive."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque enregistrement devient une note Markdown avec son audio, dans Obsidian ou n’importe quel dossier, sur Nextcloud ou iCloud Drive."
+          }
+        }
+      }
+    },
     "English": {
       "localizations": {
         "es": {
@@ -494,8 +716,38 @@
         }
       }
     },
-    "Exactly what you said, as transcribed.": {},
-    "Filed": {},
+    "Exactly what you said, as transcribed.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exactamente lo que dijiste, tal como se transcribió."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exactement ce que vous avez dit, tel que transcrit."
+          }
+        }
+      }
+    },
+    "Filed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivadas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rangées"
+          }
+        }
+      }
+    },
     "Files": {
       "localizations": {
         "es": {
@@ -512,7 +764,22 @@
         }
       }
     },
-    "Finishing the transcript…": {},
+    "Finishing the transcript…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminando la transcripción…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalisation de la transcription…"
+          }
+        }
+      }
+    },
     "Folder": {
       "localizations": {
         "es": {
@@ -545,7 +812,22 @@
         }
       }
     },
-    "In use": {},
+    "In use": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En uso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisé"
+          }
+        }
+      }
+    },
     "Language: %@": {
       "localizations": {
         "es": {
@@ -578,7 +860,22 @@
         }
       }
     },
-    "Later": {},
+    "Later": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más tarde"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
     "Like me": {
       "localizations": {
         "es": {
@@ -595,8 +892,38 @@
         }
       }
     },
-    "Listening…": {},
-    "Loading Whisper %@…": {},
+    "Listening…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escuchando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’écoute…"
+          }
+        }
+      }
+    },
+    "Loading Whisper %@…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando Whisper %@…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chargement de Whisper %@…"
+          }
+        }
+      }
+    },
     "Loading the writing model…": {
       "localizations": {
         "es": {
@@ -613,7 +940,22 @@
         }
       }
     },
-    "Make Note": {},
+    "Make Note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear la nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer la note"
+          }
+        }
+      }
+    },
     "Microphone": {
       "localizations": {
         "es": {
@@ -630,7 +972,22 @@
         }
       }
     },
-    "Microphone allowed": {},
+    "Microphone allowed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micrófono permitido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micro autorisé"
+          }
+        }
+      }
+    },
     "Model": {
       "localizations": {
         "es": {
@@ -663,7 +1020,22 @@
         }
       }
     },
-    "Next recording": {},
+    "Next recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próxima grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prochain enregistrement"
+          }
+        }
+      }
+    },
     "Nextcloud": {
       "localizations": {
         "es": {
@@ -712,7 +1084,22 @@
         }
       }
     },
-    "No notes yet": {},
+    "No notes yet": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune note pour l’instant"
+          }
+        }
+      }
+    },
     "No tags": {
       "localizations": {
         "es": {
@@ -793,9 +1180,54 @@
         }
       }
     },
-    "Notes go to your Nextcloud over WebDAV, from any network.": {},
-    "Notes in your own folder": {},
-    "Nothing heard.": {},
+    "Notes go to your Nextcloud over WebDAV, from any network.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notas van a tu Nextcloud por WebDAV, desde cualquier red."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notes vont dans votre Nextcloud via WebDAV, depuis n’importe quel réseau."
+          }
+        }
+      }
+    },
+    "Notes in your own folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas en tu propia carpeta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des notes dans votre propre dossier"
+          }
+        }
+      }
+    },
+    "Nothing heard.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se oyó nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien entendu."
+          }
+        }
+      }
+    },
     "Obsidian vault · can write": {
       "localizations": {
         "es": {
@@ -812,10 +1244,70 @@
         }
       }
     },
-    "Offered after each recording. Edit styles on your Mac; changes arrive here through the settings file.": {},
-    "Offline: changes wait here": {},
-    "On this iPhone": {},
-    "One language per recording: tap one to start the next recording in it, or switch with the language button while recording. English uses the English model; other languages use the multilingual one.": {},
+    "Offered after each recording. Edit styles on your Mac; changes arrive here through the settings file.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ofrecen después de cada grabación. Edita los estilos en tu Mac; los cambios llegan aquí a través del archivo de ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposés après chaque enregistrement. Modifiez les styles sur votre Mac ; les changements arrivent ici par le fichier de réglages."
+          }
+        }
+      }
+    },
+    "Offline: changes wait here": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin conexión: los cambios esperan aquí"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hors ligne : les changements attendent ici"
+          }
+        }
+      }
+    },
+    "On this iPhone": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En este iPhone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur cet iPhone"
+          }
+        }
+      }
+    },
+    "One language per recording: tap one to start the next recording in it, or switch with the language button while recording. English uses the English model; other languages use the multilingual one.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un idioma por grabación: toca uno para hacer en él la próxima grabación, o cambia con el botón de idioma mientras grabas. El inglés usa el modelo en inglés; los demás idiomas, el multilingüe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une langue par enregistrement : touchez-en une pour y faire le prochain enregistrement, ou changez avec le bouton de langue pendant l’enregistrement. L’anglais utilise le modèle anglais ; les autres langues, le modèle multilingue."
+          }
+        }
+      }
+    },
     "Other languages": {
       "localizations": {
         "es": {
@@ -848,8 +1340,38 @@
         }
       }
     },
-    "Pause": {},
-    "Paused.": {},
+    "Pause": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
+    "Paused.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pause."
+          }
+        }
+      }
+    },
     "Plain folder · can write": {
       "localizations": {
         "es": {
@@ -882,8 +1404,38 @@
         }
       }
     },
-    "Polished text, summaries and key points, plus suggested titles and tags. Without it, notes keep the transcript as spoken.": {},
-    "Preparing Whisper %@ for this iPhone": {},
+    "Polished text, summaries and key points, plus suggested titles and tags. Without it, notes keep the transcript as spoken.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto pulido, resúmenes y puntos clave, además de títulos y etiquetas sugeridos. Sin él, las notas conservan la transcripción tal como se dijo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texte soigné, résumés et points clés, plus des titres et tags suggérés. Sans lui, les notes gardent la transcription telle que dite."
+          }
+        }
+      }
+    },
+    "Preparing Whisper %@ for this iPhone": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando Whisper %@ para este iPhone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation de Whisper %@ pour cet iPhone"
+          }
+        }
+      }
+    },
     "Private by design": {
       "localizations": {
         "es": {
@@ -900,7 +1452,22 @@
         }
       }
     },
-    "Private, on-device. Audio and text stay on this iPhone until you file a note in your own storage.": {},
+    "Private, on-device. Audio and text stay on this iPhone until you file a note in your own storage.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privado, en el dispositivo. El audio y el texto se quedan en este iPhone hasta que archivas una nota en tu propio almacenamiento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privé, sur l’appareil. L’audio et le texte restent sur cet iPhone jusqu’à ce que vous rangiez une note dans votre propre stockage."
+          }
+        }
+      }
+    },
     "Professional": {
       "localizations": {
         "es": {
@@ -949,7 +1516,22 @@
         }
       }
     },
-    "Record": {},
+    "Record": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        }
+      }
+    },
     "Recorded": {
       "localizations": {
         "es": {
@@ -966,8 +1548,38 @@
         }
       }
     },
-    "Recorded time": {},
-    "Recordings become notes: written up in a style, with their audio, filed in your notes folder.": {},
+    "Recorded time": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo grabado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durée enregistrée"
+          }
+        }
+      }
+    },
+    "Recordings become notes: written up in a style, with their audio, filed in your notes folder.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las grabaciones se convierten en notas: redactadas en un estilo, con su audio, archivadas en tu carpeta de notas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les enregistrements deviennent des notes : rédigées dans un style, avec leur audio, rangées dans votre dossier de notes."
+          }
+        }
+      }
+    },
     "Remove tag %@": {
       "localizations": {
         "es": {
@@ -1000,7 +1612,22 @@
         }
       }
     },
-    "Resume": {},
+    "Resume": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre"
+          }
+        }
+      }
+    },
     "Review note": {
       "localizations": {
         "es": {
@@ -1049,7 +1676,22 @@
         }
       }
     },
-    "Run Setup Again": {},
+    "Run Setup Again": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a configurar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relancer la configuration"
+          }
+        }
+      }
+    },
     "Saving the audio…": {
       "localizations": {
         "es": {
@@ -1120,8 +1762,38 @@
         }
       }
     },
-    "Sign In with Browser": {},
-    "Sign Out": {},
+    "Sign In with Browser": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión con el navegador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter avec le navigateur"
+          }
+        }
+      }
+    },
+    "Sign Out": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sesión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se déconnecter"
+          }
+        }
+      }
+    },
     "Sign in with the browser instead": {
       "localizations": {
         "es": {
@@ -1138,7 +1810,22 @@
         }
       }
     },
-    "Signed in as": {},
+    "Signed in as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión iniciada como"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecté en tant que"
+          }
+        }
+      }
+    },
     "Skip": {
       "localizations": {
         "es": {
@@ -1171,7 +1858,22 @@
         }
       }
     },
-    "Skipped notes are filed as “needs review”.": {},
+    "Skipped notes are filed as “needs review”.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notas omitidas se archivan como «needs review»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notes passées sont rangées comme « needs review »."
+          }
+        }
+      }
+    },
     "Speech": {
       "localizations": {
         "es": {
@@ -1188,9 +1890,54 @@
         }
       }
     },
-    "Speech recognition and writing happen on this iPhone. What you say isn't sent anywhere.": {},
-    "Start Recording": {},
-    "Starting the microphone…": {},
+    "Speech recognition and writing happen on this iPhone. What you say isn't sent anywhere.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz y la redacción ocurren en este iPhone. Lo que dices no se envía a ningún sitio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnaissance vocale et la rédaction se font sur cet iPhone. Ce que vous dites n’est envoyé nulle part."
+          }
+        }
+      }
+    },
+    "Start Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar a grabar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer à enregistrer"
+          }
+        }
+      }
+    },
+    "Starting the microphone…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciando el micrófono…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrage du micro…"
+          }
+        }
+      }
+    },
     "Status": {
       "localizations": {
         "es": {
@@ -1273,7 +2020,22 @@
         }
       }
     },
-    "Stop and make a note": {},
+    "Stop and make a note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parar y crear una nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter et créer une note"
+          }
+        }
+      }
+    },
     "Storage": {
       "localizations": {
         "es": {
@@ -1306,7 +2068,22 @@
         }
       }
     },
-    "Styles, vocabulary and tags come from the settings file there, shared with your Mac.": {},
+    "Styles, vocabulary and tags come from the settings file there, shared with your Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los estilos, el vocabulario y las etiquetas vienen del archivo de ajustes que hay allí, compartido con tu Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les styles, le vocabulaire et les tags viennent du fichier de réglages qui s’y trouve, partagé avec votre Mac."
+          }
+        }
+      }
+    },
     "Suggested new tags (added to your tag list if you keep them)": {
       "localizations": {
         "es": {
@@ -1377,7 +2154,22 @@
         }
       }
     },
-    "Sync Now": {},
+    "Sync Now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronizar ahora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchroniser"
+          }
+        }
+      }
+    },
     "Syncing…": {
       "localizations": {
         "es": {
@@ -1410,9 +2202,54 @@
         }
       }
     },
-    "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note.": {},
-    "The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.": {},
-    "The writing model runs on a real iPhone, not in the simulator.": {},
+    "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca el botón y habla. Se transcribe en este iPhone sobre la marcha y luego se redacta como una nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez le bouton et parlez. La transcription se fait sur cet iPhone au fil de l’eau, puis devient une note."
+          }
+        }
+      }
+    },
+    "The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de redacción aún no está en este iPhone, así que la nota conserva la transcripción tal como se dijo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle de rédaction n’est pas encore sur cet iPhone : la note garde donc la transcription telle que dite."
+          }
+        }
+      }
+    },
+    "The writing model runs on a real iPhone, not in the simulator.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de redacción funciona en un iPhone real, no en el simulador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle de rédaction fonctionne sur un vrai iPhone, pas dans le simulateur."
+          }
+        }
+      }
+    },
     "This folder is an Obsidian vault": {
       "localizations": {
         "es": {
@@ -1461,8 +2298,38 @@
         }
       }
     },
-    "To review": {},
-    "Transcribed as you talk": {},
+    "To review": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por revisar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À relire"
+          }
+        }
+      }
+    },
+    "Transcribed as you talk": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se transcribe mientras hablas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcrit pendant que vous parlez"
+          }
+        }
+      }
+    },
     "Transcription failed: %@": {
       "localizations": {
         "es": {
@@ -1479,7 +2346,22 @@
         }
       }
     },
-    "Until then, filed notes wait on this iPhone.": {},
+    "Until then, filed notes wait on this iPhone.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta entonces, las notas archivadas esperan en este iPhone."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "D’ici là, les notes rangées attendent sur cet iPhone."
+          }
+        }
+      }
+    },
     "Up one folder": {
       "localizations": {
         "es": {
@@ -1512,7 +2394,22 @@
         }
       }
     },
-    "Up to date, %@": {},
+    "Up to date, %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al día, %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À jour, %@"
+          }
+        }
+      }
+    },
     "Uploads waiting: %@": {
       "localizations": {
         "es": {
@@ -1529,7 +2426,22 @@
         }
       }
     },
-    "Use": {},
+    "Use": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser"
+          }
+        }
+      }
+    },
     "Use an app password instead": {
       "localizations": {
         "es": {
@@ -1578,8 +2490,38 @@
         }
       }
     },
-    "Walk and talk. Your iPhone writes it up as a note, on the iPhone.": {},
-    "Watch the words arrive. Pause when you need to.": {},
+    "Walk and talk. Your iPhone writes it up as a note, on the iPhone.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camina y habla. Tu iPhone lo convierte en una nota, en el propio iPhone."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marchez et parlez. Votre iPhone en fait une note, sur l’iPhone."
+          }
+        }
+      }
+    },
+    "Watch the words arrive. Pause when you need to.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mira cómo llegan las palabras. Haz una pausa cuando lo necesites."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regardez les mots arriver. Faites une pause quand il le faut."
+          }
+        }
+      }
+    },
     "WebDAV": {
       "localizations": {
         "es": {
@@ -1644,10 +2586,70 @@
         }
       }
     },
-    "Where notes go": {},
-    "Write it as": {},
-    "Write notes in styles with %@": {},
-    "Writes notes in your styles and suggests titles and tags. Without it, notes keep the transcript as spoken.": {},
+    "Where notes go": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adónde van las notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Où vont les notes"
+          }
+        }
+      }
+    },
+    "Write it as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redactar como"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédiger en"
+          }
+        }
+      }
+    },
+    "Write notes in styles with %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redactar las notas con estilos usando %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédiger les notes dans des styles avec %@"
+          }
+        }
+      }
+    },
+    "Writes notes in your styles and suggests titles and tags. Without it, notes keep the transcript as spoken.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redacta las notas en tus estilos y sugiere títulos y etiquetas. Sin él, las notas conservan la transcripción tal como se dijo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédige les notes dans vos styles et suggère des titres et des tags. Sans lui, les notes gardent la transcription telle que dite."
+          }
+        }
+      }
+    },
     "Writing": {
       "localizations": {
         "es": {
