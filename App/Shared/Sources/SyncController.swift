@@ -2,7 +2,11 @@ import APCore
 import APModels
 import APStorage
 import APSync
+#if os(macOS)
 import AppKit
+#else
+import UIKit
+#endif
 import Network
 
 /// Keeps the vault's settings file in step with the app and uploads the offline queue.
@@ -35,7 +39,12 @@ final class SyncController {
     private(set) var lastRetention: RetentionKeeper.Report?
     /// First-run files were just created in this vault: show the board walkthrough once.
     var showWalkthrough = false
+    #if os(macOS)
     let deviceName = Host.current().localizedName ?? "Mac"
+    #else
+    /// iOS only shares the model name ("iPhone") without a special entitlement.
+    let deviceName = UIDevice.current.name
+    #endif
 
     /// Builds the local side of the merge from the last agreed version.
     @ObservationIgnored var localConfig: ((SharedConfig?) -> SharedConfig)?
@@ -93,7 +102,12 @@ final class SyncController {
                 self?.syncSoon(after: .zero)
             }
         }
-        activationObserver = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+        #if os(macOS)
+        let becameActive = NSApplication.didBecomeActiveNotification
+        #else
+        let becameActive = UIApplication.didBecomeActiveNotification
+        #endif
+        activationObserver = NotificationCenter.default.addObserver(forName: becameActive, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.lastRetentionRun = .distantPast // "the next time the app is aware": check on activation too
                 self?.syncSoon(after: .milliseconds(500))

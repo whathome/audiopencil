@@ -94,16 +94,6 @@ extension AppModel {
         }
     }
 
-    /// Style prompt, with the closest writing samples for "Like me".
-    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context, language: SpokenLanguage) -> StylePrompt {
-        let vocabulary = settings.vocabulary(for: language)
-        guard style.tone == .likeMe else {
-            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language)
-        }
-        let examples = WritingSampleSelector.pick(for: transcript, from: writingSamples, language: language)
-        return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language, examples: examples)
-    }
-
     static func loadStyleMemory() -> StyleMemory {
         guard let data = UserDefaults.standard.data(forKey: styleMemoryKey),
               let memory = try? JSONDecoder().decode(StyleMemory.self, from: data)
@@ -196,7 +186,7 @@ extension AppModel {
         let prompt = stylePrompt(for: style, transcript: transcript, context: .quick, language: language)
         let swapStart = ContinuousClock.now
         writingModelState = .loading(firstTime: false)
-        modelState = .idle
+        speechModelWillUnload()
         try await coordinator.ensureLoaded(engine)
         writingModelState = .ready
         let swapTime = ContinuousClock.now - swapStart
@@ -213,6 +203,10 @@ extension AppModel {
         }
         Log.dictation.notice("Rewrite [\(style.name, privacy: .public)]: swap \(swapTime, privacy: .public), prompt \(output.promptTokens) tok at \(Int(output.promptTokensPerSecond)) tok/s, generated \(output.generatedTokens) tok at \(Int(output.generationTokensPerSecond)) tok/s")
         return OutputCleaner.clean(output.text)
+    }
+
+    func speechModelWillUnload() {
+        modelState = .idle
     }
 
     /// After a rewrite: swap the writing model back out for Whisper so the next dictation streams live.

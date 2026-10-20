@@ -245,6 +245,7 @@ struct LocalFolderStorageTests {
     }
 }
 
+#if os(macOS)
 struct ObsidianVaultsTests {
     @Test func listsObsidiansVaultsWithoutTouchingCloudFolders() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "audiopencil-vaults-\(UUID().uuidString)")
@@ -275,3 +276,4 @@ struct ObsidianVaultsTests {
         #expect(ObsidianVaults.find(config: root.appending(path: "missing.json"), home: home).isEmpty)
     }
 }
+#endif

@@ -3,9 +3,11 @@ import SwiftUI
 
 /// PRD review flow: approve the suggested title, tags and folder, or skip straight away.
 struct ReviewView: View {
-    let maker: NoteMaker
     let item: PendingNote
     let knownTags: [String]
+    /// Approve with the title, tags and folder as edited.
+    let approve: (_ title: String, _ tags: [String], _ folder: String) -> Void
+    let skip: () -> Void
 
     @State private var title: String
     @State private var tags: [String]
@@ -13,10 +15,11 @@ struct ReviewView: View {
     @State private var folder: String
     @State private var newTag = ""
 
-    init(maker: NoteMaker, item: PendingNote, knownTags: [String]) {
-        self.maker = maker
+    init(item: PendingNote, knownTags: [String], approve: @escaping (String, [String], String) -> Void, skip: @escaping () -> Void) {
         self.item = item
         self.knownTags = knownTags
+        self.approve = approve
+        self.skip = skip
         _title = State(initialValue: item.note.title)
         _tags = State(initialValue: item.note.tags)
         _acceptedNewTags = State(initialValue: [])
@@ -32,7 +35,7 @@ struct ReviewView: View {
                     LabeledContent("Recorded") {
                         Text("\(item.note.recorded.formatted(date: .abbreviated, time: .shortened)) · \(Self.minutes(item.note.duration))")
                     }
-                    TextField("Folder", text: $folder, prompt: Text(NoteMaker.defaultFolder))
+                    TextField("Folder", text: $folder, prompt: Text(NoteFiling.defaultFolder))
                 }
 
                 Section {
@@ -80,20 +83,40 @@ struct ReviewView: View {
             }
             .formStyle(.grouped)
 
+            #if os(macOS)
             HStack {
                 Text("Skipped notes are saved as “needs review” for your Obsidian board.")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("Skip") { maker.skip(item) }
+                Button("Skip", action: skip)
                     .keyboardShortcut(.cancelAction)
-                Button("Approve") {
-                    maker.approve(item, title: NoteRenderer.safeTitle(title), tags: tags + item.newTags.filter(acceptedNewTags.contains), folder: folder)
-                }
-                .keyboardShortcut(.defaultAction)
+                Button("Approve", action: approveEdited)
+                    .keyboardShortcut(.defaultAction)
             }
             .padding(16)
+            #else
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    Button(action: skip) { Text("Skip").frame(maxWidth: .infinity) }
+                        .buttonStyle(.bordered)
+                    Button(action: approveEdited) { Text("Approve").frame(maxWidth: .infinity) }
+                        .buttonStyle(.borderedProminent)
+                }
+                .controlSize(.large)
+                Text("Skipped notes are filed as “needs review”.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(.bar)
+            #endif
         }
+        #if os(macOS)
         .frame(minWidth: 560, minHeight: 520)
+        #endif
+    }
+
+    private func approveEdited() {
+        approve(NoteRenderer.safeTitle(title), tags + item.newTags.filter(acceptedNewTags.contains), folder)
     }
 
     private func addTag() {

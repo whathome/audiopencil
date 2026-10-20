@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 
 /// An Obsidian vault already on this Mac, offered in setup.
@@ -51,3 +52,4 @@ public enum ObsidianVaults {
         return FileManager.default.fileExists(atPath: url.appending(path: ".obsidian").path, isDirectory: &isFolder) && isFolder.boolValue
     }
 }
+#endif

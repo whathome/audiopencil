@@ -94,6 +94,15 @@ public final class AudioRecorder: @unchecked Sendable {
         }
     }
 
+    /// Pauses or resumes a recording: the microphone stays on, and nothing is kept while paused, so the
+    /// recording continues where it left off.
+    public func setPaused(_ paused: Bool) {
+        tapState.withLock { state in
+            guard state.onLevel != nil else { return } // not recording
+            state.capturing = !paused
+        }
+    }
+
     /// Replaces the next `seconds` of captured audio with silence (e.g. while the start cue plays).
     public func muteNext(seconds: Double) {
         tapState.withLock { $0.muteSamples = Int(seconds * Self.sampleRate) }

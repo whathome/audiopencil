@@ -26,11 +26,6 @@ extension AppModel {
     /// More than one language in use: show the language badge and menu section.
     var isMultilingual: Bool { offeredLanguages.count > 1 || !activeLanguage.isEnglish }
 
-    /// Whether the current writing model can write `language`; if not, styles paste the raw transcript.
-    func canStyle(in language: SpokenLanguage) -> Bool {
-        WritingLanguages.canWrite(language.code, withModel: settings.writingModel)
-    }
-
     /// Makes `language` the one Whisper transcribes, swapping models when it needs the other one.
     func useLanguage(_ language: SpokenLanguage) {
         activeLanguage = language
@@ -49,26 +44,14 @@ extension AppModel {
 
     // MARK: Best model that's ready
 
-    /// Prepares in about 90 s on an M1: other languages work quickly while the better model prepares.
-    static let starterMultilingualModel = "openai_whisper-small"
+    static let starterMultilingualModel = SpeechModels.starter
 
-    /// The multilingual model to end up with: the one in Settings, unless it's too big for this Mac.
     static func multilingualTarget(_ settings: DictationSettings, machine: MachineProfile = .current) -> String {
-        let chosen = settings.multilingualTranscriptionModel
-        if let megabytes = TranscriptionModelOption.option(for: chosen)?.approximateDownloadMB,
-           UInt64(megabytes) * 1_000_000 > machine.transcriptionModelBudget {
-            return starterMultilingualModel
-        }
-        return chosen
+        SpeechModels.multilingualTarget(settings, machine: machine)
     }
 
-    /// The Whisper model a recording in `language` uses: English as configured; other languages use the
-    /// multilingual model once it's prepared for this Mac, and the quicker starter model until then.
     static func bestVariant(for language: SpokenLanguage, settings: DictationSettings) -> String {
-        let configured = settings.transcriptionVariant(for: language)
-        guard !language.isEnglish, configured == settings.multilingualTranscriptionModel else { return configured }
-        let target = multilingualTarget(settings)
-        return WhisperEngine(variant: target).isReady ? target : starterMultilingualModel
+        SpeechModels.bestVariant(for: language, settings: settings)
     }
 
     func transcriptionVariant(for language: SpokenLanguage) -> String {

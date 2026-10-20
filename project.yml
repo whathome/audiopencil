@@ -7,6 +7,7 @@ options:
   developmentLanguage: en
   deploymentTarget:
     macOS: "15.0"
+    iOS: "26.0"
   createIntermediateGroups: true
 
 packages:
@@ -27,6 +28,7 @@ targets:
     type: application
     platform: macOS
     sources:
+      - App/Shared/Sources
       - App/macOS/Sources
       - App/macOS/Resources
     configFiles:
@@ -79,6 +81,58 @@ targets:
       - package: AudioPencilKit
         product: APSync
 
+  AudioPencilPhone:
+    type: application
+    platform: iOS
+    sources:
+      - App/Shared/Sources
+      - App/iOS/Sources
+      - App/iOS/Resources
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    info:
+      path: App/iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Audio Pencil
+        CFBundleName: Audio Pencil
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+        NSMicrophoneUsageDescription: Audio Pencil listens while you record and transcribes on this iPhone. Audio never leaves the device unless you file it in your own notes folder.
+        # Plain-HTTP Nextcloud on the local network (LAN IPs, .local names); public servers still need HTTPS.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_NAME: Audio Pencil
+        PRODUCT_MODULE_NAME: AudioPencilPhone
+        PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil
+        TARGETED_DEVICE_FAMILY: "1"
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - package: AudioPencilKit
+        product: APCore
+      - package: AudioPencilKit
+        product: APAudio
+      - package: AudioPencilKit
+        product: APModels
+      - package: AudioPencilKit
+        product: APTranscription
+      - package: AudioPencilKit
+        product: APSummary
+      - package: AudioPencilKit
+        product: APStorage
+      - package: AudioPencilKit
+        product: APSync
+
 schemes:
   AudioPencil:
     build:
@@ -96,5 +150,13 @@ schemes:
         - package: AudioPencilKit/APSyncTests
     profile:
       config: Release
+    archive:
+      config: Release
+  AudioPencilPhone:
+    build:
+      targets:
+        AudioPencilPhone: all
+    run:
+      config: Debug
     archive:
       config: Release

@@ -8,17 +8,9 @@ import APTranscription
 import AppKit
 import ServiceManagement
 
-enum TranscriptionModelState: Equatable {
-    case idle
-    case downloading(Double)
-    case loading(firstTime: Bool)
-    case ready
-    case failed(String)
-}
-
 /// App-wide state and wiring: settings, permissions, the Whisper model, hotkeys and the dictation loop.
 @Observable
-final class AppModel {
+final class AppModel: WritingHost {
     static let settingsKey = "dictationSettings"
     static let statsKey = "usageStats"
     static let stylesKey = "styles"

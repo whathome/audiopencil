@@ -23,7 +23,11 @@ extension Style {
     var shortDisplayName: String { isRaw ? String(localized: "Raw") : displayName }
 
     var displayDescription: String {
+        #if os(macOS)
         if isRaw { return String(localized: "Pastes exactly what you said. Holding Fn always gives you this.") }
+        #else
+        if isRaw { return String(localized: "Exactly what you said, as transcribed.") }
+        #endif
         // A preset still under its default name gets the translated summary; the editor shows the real prompt.
         guard let preset, name == preset.name else { return instructions }
         return switch id {

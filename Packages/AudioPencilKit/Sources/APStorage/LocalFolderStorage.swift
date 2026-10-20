@@ -13,12 +13,14 @@ public struct LocalFolderStorage: StorageProvider {
         self.usesTrash = usesTrash
     }
 
+    #if os(macOS)
     /// Obsidian's iCloud container, if Obsidian has created one on this Mac.
     public static var obsidianICloudFolder: URL? {
         let url = FileManager.default.homeDirectoryForCurrentUser
             .appending(path: "Library/Mobile Documents/iCloud~md~obsidian/Documents", directoryHint: .isDirectory)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
+    #endif
 
     private static let keys: [URLResourceKey] = [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey]
 

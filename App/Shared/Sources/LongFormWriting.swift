@@ -1,7 +1,7 @@
 import APCore
 import APModels
 import APSummary
-import AppKit
+import Foundation
 
 struct ProcessedLongForm {
     var body: String
@@ -12,8 +12,49 @@ struct ProcessedLongForm {
     var newTags: [String]
 }
 
+/// Where a model is: shared by the speech and writing models on both platforms.
+enum TranscriptionModelState: Equatable {
+    case idle
+    case downloading(Double)
+    case loading(firstTime: Bool)
+    case ready
+    case failed(String)
+}
+
+/// What writing in styles needs from the app (the Mac's AppModel, the iPhone's PhoneModel).
+protocol WritingHost: AnyObject {
+    var writing: SummaryEngine { get }
+    var settings: DictationSettings { get }
+    var tags: [String] { get }
+    var writingSamples: [WritingSample] { get }
+    var memoryPressure: MemoryPressureMonitor.Level { get }
+    var coordinator: ModelCoordinator { get }
+    var writingModelState: TranscriptionModelState { get set }
+    /// The writing model is about to take the speech model's place in memory.
+    func speechModelWillUnload()
+    /// Writing's done: bring the speech model back.
+    func restoreWhisper()
+}
+
+extension WritingHost {
+    /// Whether the current writing model can write `language`; if not, styles keep the raw transcript.
+    func canStyle(in language: SpokenLanguage) -> Bool {
+        WritingLanguages.canWrite(language.code, withModel: settings.writingModel)
+    }
+
+    /// Style prompt, with the closest writing samples for "Like me".
+    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context, language: SpokenLanguage) -> StylePrompt {
+        let vocabulary = settings.vocabulary(for: language)
+        guard style.tone == .likeMe else {
+            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language)
+        }
+        let examples = WritingSampleSelector.pick(for: transcript, from: writingSamples, language: language)
+        return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language, examples: examples)
+    }
+}
+
 /// Long recordings: rewrite in sections, then suggest a title and tags. One model swap for all of it.
-extension AppModel {
+extension WritingHost {
     func processLongForm(
         transcript: String,
         style: Style,
@@ -36,7 +77,7 @@ extension AppModel {
         do {
             status(String(localized: "Loading the writing model…"))
             writingModelState = .loading(firstTime: false)
-            modelState = .idle
+            speechModelWillUnload()
             try await coordinator.ensureLoaded(engine)
             writingModelState = .ready
 

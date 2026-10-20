@@ -160,7 +160,7 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
         let seconds = Date().timeIntervalSince(start)
         // Seconds mean Core ML already had it compiled (a cache hit), which says nothing about a real run.
         if seconds > 10 { PreparationEstimate.record(seconds, variant: variant) }
-        Log.models.notice("Prepared \(self.variant, privacy: .public) for this Mac in \(Int(seconds)) s (estimated \(Int(estimate)) s)")
+        Log.models.notice("Prepared \(self.variant, privacy: .public) for this device in \(Int(seconds)) s (estimated \(Int(estimate)) s)")
         onPreparation?(nil)
     }
 

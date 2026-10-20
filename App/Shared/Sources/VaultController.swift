@@ -1,6 +1,10 @@
 import APCore
 import APStorage
+#if os(macOS)
 import AppKit
+#else
+import UIKit
+#endif
 
 /// Connects to the vault: Nextcloud sign-in (browser or app password) or a local folder such as
 /// an Obsidian vault in iCloud Drive, plus choosing and checking the vault folder.
@@ -45,6 +49,8 @@ final class VaultController {
     private(set) var browserError: String?
 
     @ObservationIgnored private var signInTask: Task<Void, Never>?
+    /// iPhone: the picked folder, with security-scoped access held.
+    @ObservationIgnored private var accessedFolder: URL?
     /// Called when the vault folder has been checked and is usable.
     @ObservationIgnored var onLocationReady: (() -> Void)?
     /// Called when the layout changes (a new location, or a plain folder adopted as an Obsidian vault).
@@ -99,7 +105,7 @@ final class VaultController {
                 serverDescription = [status.productname, status.versionstring].compactMap { $0 }.joined(separator: " ")
                 let start = try await NextcloudServer.startLogin(server: server)
                 connection = .waitingForBrowser(start.loginURL)
-                NSWorkspace.shared.open(start.loginURL)
+                openInBrowser(start.loginURL)
                 let credentials = try await NextcloudServer.waitForLogin(start)
                 try finishSignIn(credentials)
             } catch is CancellationError {
@@ -236,8 +242,11 @@ final class VaultController {
 
     private var resolvedLocalFolder: URL? {
         guard let bookmark = settings.localBookmark else { return nil }
+        if let accessedFolder { return accessedFolder }
         var stale = false
         guard let url = try? URL(resolvingBookmarkData: bookmark, options: [.withoutUI], bookmarkDataIsStale: &stale) else { return nil }
+        // iPhone: the folder stays reachable while access is held, which is for as long as it's the storage.
+        if url.startAccessingSecurityScopedResource() { accessedFolder = url }
         if stale, let fresh = try? url.bookmarkData() {
             settings.localBookmark = fresh
             settings.localPath = url.path
@@ -307,14 +316,20 @@ final class VaultController {
         onLayoutChanged?()
     }
 
-    /// A folder on this Mac becomes the storage (setup's "vaults on this Mac", or the folder picker).
+    /// A folder on this device becomes the storage (setup's "vaults on this Mac", or a folder picker).
     func useLocalFolder(_ url: URL) {
+        // On iPhone a picked folder is only reachable inside this scope, and the bookmark keeps that access.
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        accessedFolder?.stopAccessingSecurityScopedResource()
+        accessedFolder = nil
         settings.kind = .localFolder
         settings.localBookmark = try? url.bookmarkData()
         settings.localPath = url.path
         locationChanged()
     }
 
+    #if os(macOS)
     /// Folder picker for a vault on this Mac. Starts in Obsidian's iCloud folder when there is one.
     func chooseLocalFolder() {
         let panel = NSOpenPanel()
@@ -328,6 +343,15 @@ final class VaultController {
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }
         useLocalFolder(url)
+    }
+    #endif
+
+    private func openInBrowser(_ url: URL) {
+        #if os(macOS)
+        NSWorkspace.shared.open(url)
+        #else
+        UIApplication.shared.open(url)
+        #endif
     }
 
     /// Confirms the folder exists, whether it's an Obsidian vault, and that we can write to it
@@ -387,12 +411,18 @@ final class VaultController {
     }
 
     static func describe(_ path: String) -> String {
+        for (marker, name) in [("/Mobile Documents/iCloud~md~obsidian/Documents", "iCloud Drive › Obsidian"), ("/Mobile Documents/com~apple~CloudDocs", "iCloud Drive")] {
+            if let range = path.range(of: marker) {
+                return name + path[range.upperBound...].replacingOccurrences(of: "/", with: " › ")
+            }
+        }
+        #if os(macOS)
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let obsidian = home + "/Library/Mobile Documents/iCloud~md~obsidian/Documents"
-        let iCloud = home + "/Library/Mobile Documents/com~apple~CloudDocs"
-        if path.hasPrefix(obsidian) { return "iCloud Drive › Obsidian" + path.dropFirst(obsidian.count).replacingOccurrences(of: "/", with: " › ") }
-        if path.hasPrefix(iCloud) { return "iCloud Drive" + path.dropFirst(iCloud.count).replacingOccurrences(of: "/", with: " › ") }
         if path.hasPrefix(home) { return "~" + path.dropFirst(home.count) }
         return path
+        #else
+        // "On My iPhone" and other providers: the last couple of folders say enough.
+        return path.split(separator: "/").suffix(2).joined(separator: " › ")
+        #endif
     }
 }

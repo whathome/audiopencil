@@ -6,33 +6,11 @@ import AppKit
 import SwiftUI
 import UserNotifications
 
-/// A long-form note waiting for review. Kept on this Mac (with its audio) until approved or skipped.
-struct PendingNote: Codable, Identifiable, Equatable {
-    var note: Note
-    /// Suggested tags that aren't in the vault's tag list yet.
-    var newTags: [String]
-    /// Audio file name in the pending folder.
-    var audioFile: String?
-    var id: UUID { note.id }
-}
-
-/// A note handed to the upload queue, for the Notes page.
-struct RecentNote: Codable, Identifiable, Equatable {
-    var id: UUID
-    var title: String
-    var styleName: String
-    var recorded: Date
-    var path: String
-    var status: Note.Status
-    /// Set from the Notes page: kept forever (archive) or on its way out (delete).
-    var retention: Note.Retention?
-}
-
 /// Turns dictations into vault notes (PRD "Vault layout", "Review flow").
 @Observable
 final class NoteMaker {
-    static let defaultFolder = "/Audio Pencil/Notes"
-    static let recordingsFolder = "/Audio Pencil/Recordings"
+    static let defaultFolder = NoteFiling.defaultFolder
+    static let recordingsFolder = NoteFiling.recordingsFolder
 
     private(set) var pending: [PendingNote] = []
     private(set) var recent: [RecentNote] = []
@@ -139,24 +117,14 @@ final class NoteMaker {
     // MARK: Upload
 
     private func upload(_ note: Note, audio: URL?, styleName: String) async {
-        var note = note
-        let base = NoteRenderer.baseName(for: note)
         do {
-            if let audio, let data = try? Data(contentsOf: audio) {
-                let path = StoragePath.join(Self.recordingsFolder, base + ".m4a")
-                note.audioPath = path
-                try await app.sync.outbox.enqueue(path: path, data: data)
-                try? FileManager.default.removeItem(at: audio)
-            }
-            let path = NoteRenderer.notePath(for: note)
             // Plain until the folder is known to be an Obsidian vault: standard Markdown reads everywhere,
             // Obsidian included.
-            let layout = app.vault.layout ?? .plain
-            try await app.sync.outbox.enqueue(path: path, data: Data(NoteRenderer.markdown(for: note, layout: layout).utf8))
-            recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: path, status: note.status), at: 0)
+            let filed = try await NoteFiling.queue(note, audio: audio, outbox: app.sync.outbox, layout: app.vault.layout ?? .plain)
+            recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: filed.path, status: note.status), at: 0)
             recent = Array(recent.prefix(50))
             saveRecent()
-            Log.dictation.notice("Note queued: \(path, privacy: .public)")
+            Log.dictation.notice("Note queued: \(filed.path, privacy: .public)")
             app.sync.syncSoon(after: .zero)
         } catch {
             Log.dictation.error("Couldn't queue the note: \(error.localizedDescription, privacy: .public)")
@@ -174,7 +142,12 @@ final class NoteMaker {
             window.identifier = NSUserInterfaceItemIdentifier("review")
             reviewWindow = window
         }
-        reviewWindow?.contentView = NSHostingView(rootView: ReviewView(maker: self, item: item, knownTags: app.tags).id(item.id))
+        let review = ReviewView(item: item, knownTags: app.tags) { [weak self] title, tags, folder in
+            self?.approve(item, title: title, tags: tags, folder: folder)
+        } skip: { [weak self] in
+            self?.skip(item)
+        }
+        reviewWindow?.contentView = NSHostingView(rootView: review.id(item.id))
         reviewWindow?.center()
         NSApp.activate()
         reviewWindow?.makeKeyAndOrderFront(nil)
