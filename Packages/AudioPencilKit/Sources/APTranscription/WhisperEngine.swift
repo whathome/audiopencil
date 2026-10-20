@@ -1,5 +1,6 @@
 import APCore
 import APModels
+import CoreML
 import Foundation
 import WhisperKit
 
@@ -13,6 +14,20 @@ public enum WhisperEngineError: LocalizedError {
         case .notLoaded: String(localized: "The transcription model isn't loaded.", bundle: .module)
         }
     }
+}
+
+/// Where a first-time preparation is: Core ML compiling each part of the model for this Mac's Neural
+/// Engine. Minutes for large models, and done by a system process, so the app needs to show it's moving.
+public struct ModelPreparation: Equatable, Sendable {
+    public var variant: String
+    /// 1-based step and the number of steps.
+    public var step: Int
+    public var steps: Int
+    /// The part being prepared, e.g. "audio encoder".
+    public var part: String
+    public var startedAt: Date
+    /// Expected total, from earlier runs on this Mac or the model's size.
+    public var estimatedSeconds: Double
 }
 
 /// WhisperKit wrapper. Residency is owned by `ModelCoordinator`; call `load`/`unload` only through it.
@@ -84,9 +99,13 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
     }
 
     private func createKit() async throws {
-        // The first load compiles the model for the Neural Engine, which can take minutes.
-        // Prewarming does that one model at a time, keeping peak memory down.
-        let firstLoad = needsFirstTimePreparation
+        // The first load compiles the model for the Neural Engine, which can take minutes. Done here one
+        // part at a time, exactly as WhisperKit's prewarm would (same parts, order and compute units), so
+        // progress can be shown and WhisperKit's own load below finds everything compiled.
+        if needsFirstTimePreparation {
+            try await prepare()
+            FileManager.default.createFile(atPath: prewarmMarker.path, contents: nil)
+        }
 
         let config = WhisperKitConfig(
             downloadBase: root,
@@ -94,14 +113,40 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
             tokenizerFolder: root,
             verbose: false,
             logLevel: .error,
-            prewarm: firstLoad,
+            prewarm: false,
             load: true,
             download: false
         )
         kit = try await WhisperKit(config)
-        if firstLoad {
-            FileManager.default.createFile(atPath: prewarmMarker.path, contents: nil)
+    }
+
+    /// Called as each part of a first-time preparation starts. Set before loading.
+    private var onPreparation: (@Sendable (ModelPreparation?) -> Void)?
+
+    public func setPreparationHandler(_ handler: (@Sendable (ModelPreparation?) -> Void)?) {
+        onPreparation = handler
+    }
+
+    private func prepare() async throws {
+        let compute = ModelComputeOptions()
+        let parts: [(file: String, name: String, units: MLComputeUnits)] = [
+            ("MelSpectrogram", String(localized: "audio features", bundle: .module), compute.melCompute),
+            ("TextDecoder", String(localized: "text decoder", bundle: .module), compute.textDecoderCompute),
+            ("AudioEncoder", String(localized: "audio encoder", bundle: .module), compute.audioEncoderCompute),
+        ]
+        let estimate = PreparationEstimate.seconds(variant: variant, folder: folder)
+        let start = Date()
+        for (index, part) in parts.enumerated() {
+            onPreparation?(ModelPreparation(variant: variant, step: index + 1, steps: parts.count, part: part.name, startedAt: start, estimatedSeconds: estimate))
+            let configuration = MLModelConfiguration()
+            configuration.computeUnits = part.units
+            let url = ModelUtilities.detectModelURL(inFolder: folder, named: part.file)
+            _ = try await MLModel.load(contentsOf: url, configuration: configuration) // compiled, cached, released
         }
+        let seconds = Date().timeIntervalSince(start)
+        PreparationEstimate.record(seconds, variant: variant)
+        Log.models.notice("Prepared \(self.variant, privacy: .public) for this Mac in \(Int(seconds)) s (estimated \(Int(estimate)) s)")
+        onPreparation?(nil)
     }
 
     public func unload() async {

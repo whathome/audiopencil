@@ -1,4 +1,5 @@
 import APCore
+import APTranscription
 import AppKit
 import SwiftUI
 
@@ -34,6 +35,8 @@ final class IndicatorModel {
     var styleChoices: [Style] = []
     /// Chosen from the chip's menu while recording.
     @ObservationIgnored var onSelectStyle: ((Style) -> Void)?
+    /// A first-time model preparation in progress: shown while waiting, and as a heads-up while recording.
+    var preparation: ModelPreparation?
     /// Language of the current recording, shown as a badge when more than one is in use.
     var currentLanguage: SpokenLanguage?
     /// Languages offered in the menu; one or none hides the badge and the menu section.
@@ -306,6 +309,23 @@ struct IndicatorView: View {
     var body: some View {
         VStack(spacing: 8) {
             Spacer(minLength: 0)
+            if model.mode == .listening, let preparation = model.preparation {
+                // Said at the start, not after you've talked for minutes.
+                TimelineView(.periodic(from: preparation.startedAt, by: 1)) { context in
+                    let left = max(0, preparation.estimatedSeconds - context.date.timeIntervalSince(preparation.startedAt))
+                    Text(left >= 120
+                         ? "The speech model is being prepared for this Mac, about \(Int((left / 60).rounded())) min left. Keep talking; your text arrives when it's ready."
+                         : left > 15
+                         ? "The speech model is being prepared for this Mac, about \(Int((left / 10).rounded()) * 10) s left. Keep talking; your text arrives when it's ready."
+                         : "The speech model is almost ready. Keep talking; your text arrives when it's ready.")
+                        .font(.callout)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: 460)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.82)))
+                }
+            }
             if model.showLiveText, model.mode == .listening, !model.liveText.isEmpty {
                 Text(model.liveText)
                     .font(.callout)
@@ -363,7 +383,14 @@ struct IndicatorView: View {
                     .frame(width: 90)
             case .preparingModel(let firstTime):
                 ProgressView().controlSize(.small).tint(.white)
-                Text(firstTime ? "Preparing the model for this Mac (first time only, up to 15 min)…" as LocalizedStringResource : "Preparing model…").font(.callout)
+                if let preparation = model.preparation {
+                    TimelineView(.periodic(from: preparation.startedAt, by: 1)) { context in
+                        Text("Preparing for this Mac · step \(preparation.step) of \(preparation.steps) · \(PreparationStatus.progressText(elapsed: context.date.timeIntervalSince(preparation.startedAt), estimate: preparation.estimatedSeconds))")
+                            .font(.callout.monospacedDigit())
+                    }
+                } else {
+                    Text(firstTime ? "Preparing the model for this Mac (first time only)…" as LocalizedStringResource : "Preparing model…").font(.callout)
+                }
             case .processing:
                 ProgressView().controlSize(.small).tint(.white)
             case .clipboard:

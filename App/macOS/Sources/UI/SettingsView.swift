@@ -287,13 +287,8 @@ private struct DictationLanguagesSection: View {
                 LabeledContent("Downloading the multilingual model") {
                     ProgressView(value: fraction).frame(width: 160)
                 }
-            } else if app.multilingualPreparing {
-                LabeledContent {
-                    ProgressView().controlSize(.small)
-                } label: {
-                    Text("Preparing the multilingual model for this Mac")
-                    Text("One time only, up to 15 minutes. Dictation waits until it's done.")
-                }
+            } else if let preparation = app.preparation {
+                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation)
             }
             Picker("Add a language", selection: Binding<String>(get: { "" }, set: { add($0) })) {
                 Text("Choose…").tag("")

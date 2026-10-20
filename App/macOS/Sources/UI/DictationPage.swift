@@ -143,6 +143,9 @@ private struct TranscriptionCard: View {
                 Spacer()
                 modelBadge
             }
+            if let preparation = app.preparation {
+                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation)
+            }
             Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 6) {
                 if app.isMultilingual {
                     GridRow {
@@ -184,7 +187,7 @@ private struct TranscriptionCard: View {
         case .ready: StatusBadge(text: "Ready", color: .green)
         case .idle: StatusBadge(text: "Not loaded", color: .secondary)
         case .downloading(let fraction): StatusBadge(text: "Downloading \(Int(fraction * 100))%", color: .orange, showsProgress: true)
-        case .loading(let firstTime): StatusBadge(text: firstTime ? "Preparing for this Mac (first time, up to 15 min)" : "Loading", color: .orange, showsProgress: true)
+        case .loading(let firstTime): StatusBadge(text: firstTime || app.preparation != nil ? "Preparing for this Mac" : "Loading", color: .orange, showsProgress: true)
         case .failed: StatusBadge(text: "Failed", color: .red)
         }
     }

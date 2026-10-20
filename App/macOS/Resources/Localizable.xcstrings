@@ -1,9 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "": {
-      "localizations": {}
-    },
+    "": {},
     "#%@": {
       "localizations": {
         "es": {
@@ -54,6 +52,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ ne sait pas écrire en %@"
+          }
+        }
+      }
+    },
+    "%@ of about %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ of about %2$lld min"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ de unos %lld min"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sur environ %lld min"
+          }
+        }
+      }
+    },
+    "%@ of about %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ of about %2$lld s"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ de unos %lld s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sur environ %lld s"
           }
         }
       }
@@ -1790,6 +1832,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Raccourci de dictée"
+          }
+        }
+      }
+    },
+    "Dictation in your other languages is ready": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado en tus otros idiomas está listo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée dans vos autres langues est prête"
+          }
+        }
+      }
+    },
+    "Dictation is ready": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado está listo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée est prête"
           }
         }
       }
@@ -3954,22 +4028,6 @@
         }
       }
     },
-    "One time only, up to 15 minutes. Dictation waits until it's done.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solo una vez, hasta 15 minutos. El dictado espera a que termine."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Une seule fois, jusqu’à 15 minutes. La dictée attend la fin."
-          }
-        }
-      }
-    },
     "Open Audio Pencil": {
       "localizations": {
         "es": {
@@ -4306,34 +4364,56 @@
         }
       }
     },
-    "Preparing for this Mac (first time, a minute or two)…": {
+    "Preparing for this Mac": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preparando para este Mac (la primera vez, uno o dos minutos)…"
+            "value": "Preparando para este Mac"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Préparation pour ce Mac (la première fois, une à deux minutes)…"
+            "value": "Préparation pour ce Mac"
           }
         }
       }
     },
-    "Preparing for this Mac (first time, up to 15 min)": {
+    "Preparing for this Mac (first time)…": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preparando para este Mac (la primera vez, hasta 15 min)"
+            "value": "Preparando para este Mac (la primera vez)…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Préparation pour ce Mac (la première fois, jusqu’à 15 min)"
+            "value": "Préparation pour ce Mac (la première fois)…"
+          }
+        }
+      }
+    },
+    "Preparing for this Mac · step %lld of %lld · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Preparing for this Mac · step %1$lld of %2$lld · %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando para este Mac · paso %lld de %lld · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation pour ce Mac · étape %lld sur %lld · %@"
           }
         }
       }
@@ -4354,18 +4434,18 @@
         }
       }
     },
-    "Preparing the model for this Mac (first time only, up to 15 min)…": {
+    "Preparing the model for this Mac (first time only)…": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preparando el modelo para este Mac (solo la primera vez, hasta 15 min)…"
+            "value": "Preparando el modelo para este Mac (solo la primera vez)…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Préparation du modèle pour ce Mac (une seule fois, jusqu’à 15 min)…"
+            "value": "Préparation du modèle pour ce Mac (une seule fois)…"
           }
         }
       }
@@ -4382,6 +4462,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Préparation du modèle multilingue pour ce Mac"
+          }
+        }
+      }
+    },
+    "Preparing the transcription model for this Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando el modelo de transcripción para este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation du modèle de transcription pour ce Mac"
           }
         }
       }
@@ -5544,6 +5640,50 @@
         }
       }
     },
+    "Step %lld of %lld: %@. Happens once per model; dictation waits until it's done.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step %1$lld of %2$lld: %3$@. Happens once per model; dictation waits until it's done."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso %lld de %lld: %@. Solo una vez por modelo; el dictado espera a que termine."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étape %lld sur %lld : %@. Une seule fois par modèle ; la dictée attend la fin."
+          }
+        }
+      }
+    },
+    "Step %lld of %lld: %@. Taking longer than usual, still working. Happens once per model.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step %1$lld of %2$lld: %3$@. Taking longer than usual, still working. Happens once per model."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso %lld de %lld: %@. Tarda más de lo normal, pero sigue trabajando. Solo una vez por modelo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étape %lld sur %lld : %@. Plus long que d’habitude, mais ça avance. Une seule fois par modèle."
+          }
+        }
+      }
+    },
     "Stop": {
       "localizations": {
         "es": {
@@ -6016,6 +6156,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "La note reste. Les notes déplacées vers Archive sur le tableau gardent leur audio. Les fichiers supprimés vont dans la corbeille."
+          }
+        }
+      }
+    },
+    "The speech model is almost ready. Keep talking; your text arrives when it's ready.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de voz está casi listo. Sigue hablando; tu texto llegará en cuanto esté listo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle vocal est presque prêt. Continuez à parler ; votre texte arrivera dès qu’il sera prêt."
+          }
+        }
+      }
+    },
+    "The speech model is being prepared for this Mac, about %lld min left. Keep talking; your text arrives when it's ready.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se está preparando el modelo de voz para este Mac, faltan unos %lld min. Sigue hablando; tu texto llegará en cuanto esté listo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle vocal est en préparation pour ce Mac, encore environ %lld min. Continuez à parler ; votre texte arrivera dès qu’il sera prêt."
+          }
+        }
+      }
+    },
+    "The speech model is being prepared for this Mac, about %lld s left. Keep talking; your text arrives when it's ready.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se está preparando el modelo de voz para este Mac, faltan unos %lld s. Sigue hablando; tu texto llegará en cuanto esté listo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle vocal est en préparation pour ce Mac, encore environ %lld s. Continuez à parler ; votre texte arrivera dès qu’il sera prêt."
+          }
+        }
+      }
+    },
+    "The speech model is prepared for this Mac. This only happens once.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de voz ya está preparado en este Mac. Solo pasa una vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle vocal est prêt sur ce Mac. Cela n’arrive qu’une fois."
           }
         }
       }
@@ -7136,22 +7340,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "jour ce mois-ci"
-          }
-        }
-      }
-    },
-    "days this month": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "días este mes"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "jours ce mois-ci"
           }
         }
       }

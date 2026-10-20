@@ -97,6 +97,9 @@ final class AppModel {
     var multilingualDownload: Double?
     /// The multilingual model is being prepared for this Mac (once per model, up to ~15 min on an M1).
     var multilingualPreparing = false
+    /// A first-time model preparation in progress (step, clock, estimate), for every status display.
+    var preparation: ModelPreparation?
+    @ObservationIgnored var preparationActivity: (any NSObjectProtocol)?
     @ObservationIgnored var multilingualDownloadTask: Task<Void, Never>?
     @ObservationIgnored var multilingualDownloadVariant: String?
     /// Connected input devices, kept current as devices come and go.
@@ -447,6 +450,7 @@ final class AppModel {
         let prefetch = multilingualDownloadVariant == engine.variant ? multilingualDownloadTask : nil
         modelTask = Task {
             if let old { await coordinator.unload(old) }
+            await observePreparation(of: engine)
             await prefetch?.value
             await engine.setVocabulary(vocabulary)
             await engine.setLanguage(language.code)

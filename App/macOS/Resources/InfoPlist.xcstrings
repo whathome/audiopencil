@@ -1,37 +1,68 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "CFBundleDisplayName": {
-      "shouldTranslate": false
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Audio Pencil"
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
-    "CFBundleName": {
-      "shouldTranslate": false
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Audio Pencil"
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
-    "NSHumanReadableCopyright": {
-      "shouldTranslate": false
+    "NSHumanReadableCopyright" : {
+      "comment" : "Copyright (human-readable)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : ""
+          }
+        }
+      },
+      "shouldTranslate" : false
     },
-    "NSMicrophoneUsageDescription": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio Pencil listens while you dictate and transcribes on this Mac. Audio never leaves the device."
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio Pencil listens while you dictate and transcribes on this Mac. Audio never leaves the device."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio Pencil te escucha mientras dictas y transcribe en este Mac. El audio nunca sale del dispositivo."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio Pencil te escucha mientras dictas y transcribe en este Mac. El audio nunca sale del dispositivo."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio Pencil vous écoute pendant la dictée et transcrit sur ce Mac. L’audio ne quitte jamais l’appareil."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio Pencil vous écoute pendant la dictée et transcrit sur ce Mac. L’audio ne quitte jamais l’appareil."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

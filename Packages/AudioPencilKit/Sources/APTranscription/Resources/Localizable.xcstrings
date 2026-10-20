@@ -33,6 +33,38 @@
         }
       }
     },
+    "audio encoder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codificador de audio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "encodeur audio"
+          }
+        }
+      }
+    },
+    "audio features": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rasgos del audio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "caractéristiques audio"
+          }
+        }
+      }
+    },
     "more accurate English than your current model; supported on %@; may be slower to keep up live": {
       "localizations": {
         "es": {
@@ -61,6 +93,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "plus précis pour vos autres langues ; pris en charge sur %@ ; peut avoir du mal à suivre en direct"
+          }
+        }
+      }
+    },
+    "text decoder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "decodificador de texto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "décodeur de texte"
           }
         }
       }

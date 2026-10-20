@@ -68,6 +68,7 @@ extension AppModel {
                 // When it's already the current model, loading it for dictation prepares it anyway.
                 if engine.needsFirstTimePreparation, engine.variant != whisper.variant {
                     multilingualPreparing = true
+                    await observePreparation(of: engine)
                     let start = ContinuousClock.now
                     try await coordinator.ensureLoaded(engine) // swaps the current Whisper model out meanwhile
                     await coordinator.unload(engine)

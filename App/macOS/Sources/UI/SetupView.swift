@@ -110,10 +110,15 @@ struct SetupView: View {
                 Text("Downloading \(Int(fraction * 100))%").foregroundStyle(.secondary)
             }
         case .loading(let firstTime):
-            HStack {
-                ProgressView().controlSize(.small)
-                Text(firstTime ? "Preparing for this Mac (first time, a minute or two)…" : "Loading…")
-                    .foregroundStyle(.secondary)
+            if let preparation = app.preparation {
+                PreparationStatus(title: app.preparationTitle(preparation), preparation: preparation)
+                    .frame(maxWidth: 360)
+            } else {
+                HStack {
+                    ProgressView().controlSize(.small)
+                    Text(firstTime ? "Preparing for this Mac (first time)…" : "Loading…")
+                        .foregroundStyle(.secondary)
+                }
             }
         case .ready:
             Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
