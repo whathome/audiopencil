@@ -17,6 +17,7 @@ extension AppModel {
     func processLongForm(
         transcript: String,
         style: Style,
+        language: SpokenLanguage,
         status: @escaping @MainActor (String) -> Void
     ) async -> ProcessedLongForm {
         let fallback = ProcessedLongForm(body: transcript, title: nil, knownTags: [], newTags: [])
@@ -26,6 +27,10 @@ extension AppModel {
             return fallback
         }
         guard memoryPressure != .critical else { return fallback }
+        guard canStyle(in: language) else {
+            Log.dictation.notice("Long-form: \(self.settings.writingModel, privacy: .public) can't write \(language.code, privacy: .public); keeping the transcript")
+            return fallback
+        }
         defer { restoreWhisper() }
 
         do {
@@ -37,26 +42,26 @@ extension AppModel {
 
             var body = transcript
             if !style.isRaw {
-                let vocabulary = settings.customVocabulary
+                let vocabulary = settings.vocabulary(for: language)
                 let sections = PromptBuilder.sections(of: transcript)
                 if sections.count == 1 {
                     status("Writing the note…")
-                    body = try await generateText(stylePrompt(for: style, transcript: transcript, context: .longForm))
+                    body = try await generateText(stylePrompt(for: style, transcript: transcript, context: .longForm, language: language))
                 } else if style.intensity == .heavy {
                     // Summaries: notes per section, then one note in the style from those.
                     var notes: [String] = []
                     for (index, section) in sections.enumerated() {
                         status("Summarising part \(index + 1) of \(sections.count)…")
-                        notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary)))
+                        notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary, language: language)))
                     }
                     status("Writing the note…")
-                    body = try await generateText(stylePrompt(for: style, transcript: notes.joined(separator: "\n\n"), context: .longForm))
+                    body = try await generateText(stylePrompt(for: style, transcript: notes.joined(separator: "\n\n"), context: .longForm, language: language))
                 } else {
                     // Tidy or rewrite: section by section, kept in order.
                     var parts: [String] = []
                     for (index, section) in sections.enumerated() {
                         status("Writing part \(index + 1) of \(sections.count)…")
-                        parts.append(try await generateText(stylePrompt(for: style, transcript: section, context: .longForm)))
+                        parts.append(try await generateText(stylePrompt(for: style, transcript: section, context: .longForm, language: language)))
                     }
                     body = parts.joined(separator: "\n\n")
                 }
@@ -64,7 +69,7 @@ extension AppModel {
             }
 
             status("Suggesting a title and tags…")
-            let answer = try await generateText(PromptBuilder.titleAndTagsPrompt(text: body, knownTags: tags))
+            let answer = try await generateText(PromptBuilder.titleAndTagsPrompt(text: body, knownTags: tags, language: language))
             let suggestion = TitleAndTags.parse(answer)
             return ProcessedLongForm(
                 body: body,

@@ -53,7 +53,7 @@ public struct MachineProfile: Sendable, Equatable {
 
 /// A model found by discovery that fits this machine and isn't the one in use.
 public struct ModelSuggestion: Codable, Identifiable, Equatable, Sendable {
-    public enum Kind: String, Codable, Sendable { case transcription, writing }
+    public enum Kind: String, Codable, Sendable { case transcription, multilingualTranscription, writing }
 
     /// Hugging Face repo (writing) or WhisperKit folder name (transcription).
     public var id: String

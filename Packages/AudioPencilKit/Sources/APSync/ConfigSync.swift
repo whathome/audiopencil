@@ -151,6 +151,7 @@ extension ConfigSync {
                     switch key {
                     case "version": repaired.version = partial.version
                     case "vocabulary": repaired.vocabulary = partial.vocabulary
+                    case "vocabulary_by_language": repaired.languageVocabulary = partial.languageVocabulary
                     case "tags": repaired.tags = partial.tags
                     case "styles": repaired.styles = partial.styles
                     case "writing_samples": repaired.writingSamples = partial.writingSamples

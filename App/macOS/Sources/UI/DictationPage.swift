@@ -136,9 +136,16 @@ private struct TranscriptionCard: View {
                 modelBadge
             }
             Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 6) {
+                if app.isMultilingual {
+                    GridRow {
+                        Label("Language", systemImage: "globe").foregroundStyle(.secondary)
+                        Text("\(app.activeLanguage.name()) · each app keeps its own")
+                    }
+                }
                 GridRow {
+                    let variant = app.settings.transcriptionVariant(for: app.activeLanguage)
                     Label("Model", systemImage: "cpu").foregroundStyle(.secondary)
-                    Text("Whisper \(TranscriptionModelOption.option(for: app.settings.transcriptionModel)?.name ?? app.settings.transcriptionModel)")
+                    Text("Whisper \(TranscriptionModelOption.option(for: variant)?.name ?? variant)")
                 }
                 GridRow {
                     Label("Writing", systemImage: "pencil.and.scribble").foregroundStyle(.secondary)
@@ -169,7 +176,7 @@ private struct TranscriptionCard: View {
         case .ready: StatusBadge(text: "Ready", color: .green)
         case .idle: StatusBadge(text: "Not loaded", color: .secondary)
         case .downloading(let fraction): StatusBadge(text: "Downloading \(Int(fraction * 100))%", color: .orange, showsProgress: true)
-        case .loading(let firstTime): StatusBadge(text: firstTime ? "Preparing (first time)" : "Loading", color: .orange, showsProgress: true)
+        case .loading(let firstTime): StatusBadge(text: firstTime ? "Preparing for this Mac (first time, up to 15 min)" : "Loading", color: .orange, showsProgress: true)
         case .failed: StatusBadge(text: "Failed", color: .red)
         }
     }

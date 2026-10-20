@@ -14,8 +14,16 @@ public struct TranscriptionModelOption: Identifiable, Hashable, Sendable {
         .init(id: "openai_whisper-tiny.en", name: "Tiny (English)", note: "Fastest; for testing", approximateDownloadMB: 75),
     ]
 
+    /// Models for languages other than English (any Whisper language). Notes from
+    /// docs/benchmarks/multilingual-whisper.md.
+    public static let multilingualCatalogue: [TranscriptionModelOption] = [
+        .init(id: "openai_whisper-large-v3-v20240930_turbo_632MB", name: "Large v3 Turbo (multilingual)", note: "Recommended: far more accurate, about as fast; first use prepares for ~12 min", approximateDownloadMB: 632),
+        .init(id: "openai_whisper-small", name: "Small (multilingual)", note: "Lighter; can drop words, especially in Spanish", approximateDownloadMB: 480),
+        .init(id: "openai_whisper-base", name: "Base (multilingual)", note: "Faster, less accurate", approximateDownloadMB: 140),
+    ]
+
     public static func option(for id: String) -> TranscriptionModelOption? {
-        catalogue.first { $0.id == id }
+        (catalogue + multilingualCatalogue).first { $0.id == id }
     }
 }
 
@@ -36,6 +44,23 @@ public struct WritingModelOption: Identifiable, Hashable, Sendable {
 
     public static func option(for id: String) -> WritingModelOption? {
         catalogue.first { $0.id == id }
+    }
+}
+
+/// Which languages a writing model can write well, from its model card. Styles in other languages
+/// fall back to the raw transcript.
+public enum WritingLanguages {
+    /// nil means broadly multilingual (dozens of languages, including all common ones).
+    public static func supported(byModel id: String) -> Set<String>? {
+        let name = id.lowercased()
+        if name.contains("smollm3") { return ["en", "fr", "es", "de", "it", "pt"] }
+        if name.contains("llama-3") { return ["en", "de", "fr", "it", "pt", "hi", "es", "th"] }
+        if name.contains("qwen") || name.contains("gemma") || name.contains("aya") || name.contains("mistral-small") { return nil }
+        return ["en"] // unknown: only promise English
+    }
+
+    public static func canWrite(_ language: String, withModel id: String) -> Bool {
+        supported(byModel: id)?.contains(language) ?? true
     }
 }
 

@@ -1,9 +1,11 @@
+import APCore
 import APModels
 import Foundation
 import WhisperKit
 
-/// Finds English WhisperKit models this device supports (Argmax's per-chip support list) that fit the
-/// machine's transcription budget and are a step up from the current one. Suggests only.
+/// Finds WhisperKit models this device supports (Argmax's per-chip support list) that fit the machine's
+/// transcription budget and are a step up from the current ones: English-only models for English, and
+/// multilingual ones when other languages are in use. Suggests only.
 public enum TranscriptionModelDiscovery {
     /// Rough accuracy ladder; distil-large-v3 is English-only and close to large-v3.
     static func tier(_ variant: String) -> Int {
@@ -15,24 +17,34 @@ public enum TranscriptionModelDiscovery {
         return 0
     }
 
-    /// The PRD wants an English-only model: ".en" variants, or distil-whisper (English-only).
     static func isEnglishOnly(_ variant: String) -> Bool {
-        variant.contains(".en") || variant.lowercased().contains("distil")
+        DictationSettings.isEnglishOnly(variant)
     }
 
+    /// `multilingualCurrent` is the model for other languages, or nil when only English is in use.
     public static func suggestions(
         for machine: MachineProfile = .current,
         current: String,
+        multilingualCurrent: String? = nil,
         session: URLSession = .shared
     ) async throws -> [ModelSuggestion] {
         let support = await WhisperKit.recommendedRemoteModels()
-        let currentTier = tier(current)
         var result: [ModelSuggestion] = []
-        for variant in support.supported where isEnglishOnly(variant) && variant != current && tier(variant) > currentTier {
+        for variant in support.supported {
+            let kind: ModelSuggestion.Kind
+            if isEnglishOnly(variant), variant != current, tier(variant) > tier(current) {
+                kind = .transcription
+            } else if let multilingualCurrent, !isEnglishOnly(variant), variant != multilingualCurrent, tier(variant) > tier(multilingualCurrent) {
+                kind = .multilingualTranscription
+            } else {
+                continue
+            }
             let bytes = (try? await HubAPI.size(ofRepo: ModelLocations.whisperRepository, folder: variant, suffix: "", session: session)) ?? 0
             guard bytes > 0, bytes <= machine.transcriptionModelBudget else { continue }
-            let reason = "more accurate than your current model; supported on \(machine.chip); may be slower to keep up live"
-            result.append(ModelSuggestion(id: variant, kind: .transcription, name: variant.replacingOccurrences(of: "openai_whisper-", with: "Whisper "), sizeBytes: bytes, reason: reason))
+            let reason = kind == .transcription
+                ? "more accurate English than your current model; supported on \(machine.chip); may be slower to keep up live"
+                : "more accurate for your other languages; supported on \(machine.chip); may be slower to keep up live"
+            result.append(ModelSuggestion(id: variant, kind: kind, name: variant.replacingOccurrences(of: "openai_whisper-", with: "Whisper "), sizeBytes: bytes, reason: reason))
         }
         return result.sorted { tier($0.id) < tier($1.id) } // smallest step up first
     }

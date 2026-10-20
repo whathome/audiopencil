@@ -19,7 +19,7 @@ public enum WordErrorRate {
     }
 
     static func words(_ text: String) -> [String] {
-        text.lowercased()
+        text.lowercased().replacingOccurrences(of: "’", with: "'") // French "l’heure" and "l'heure" are one word
             .split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "'" })
             .map(String.init)
     }

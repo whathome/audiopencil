@@ -8,7 +8,8 @@ final class IndicatorModel {
     enum Mode: Equatable {
         case hidden
         case listening
-        case preparingModel
+        /// Waiting for Whisper. `firstTime`: compiling for this Mac, which can take minutes (once per model).
+        case preparingModel(firstTime: Bool)
         case processing
         /// Style picker after stop.
         case picking
@@ -33,6 +34,12 @@ final class IndicatorModel {
     var styleChoices: [Style] = []
     /// Chosen from the chip's menu while recording.
     @ObservationIgnored var onSelectStyle: ((Style) -> Void)?
+    /// Language of the current recording, shown as a badge when more than one is in use.
+    var currentLanguage: SpokenLanguage?
+    /// Languages offered in the menu; one or none hides the badge and the menu section.
+    var languageChoices: [SpokenLanguage] = []
+    @ObservationIgnored var onSelectLanguage: ((SpokenLanguage) -> Void)?
+    var showsLanguage: Bool { languageChoices.count > 1 || currentLanguage?.isEnglish == false }
     /// Clicked in the post-stop picker.
     @ObservationIgnored var onPick: ((Style) -> Void)?
     /// Set by the panel: show the style menu at the chip.
@@ -42,6 +49,7 @@ final class IndicatorModel {
     /// Frames in the panel's content view (SwiftUI global, top-left origin), for AppKit click handling.
     @ObservationIgnored var pillFrame: CGRect = .zero
     @ObservationIgnored var chipFrame: CGRect = .zero
+    @ObservationIgnored var languageFrame: CGRect = .zero
     @ObservationIgnored var pickerFrames: [String: CGRect] = [:]
     /// When the current recording started, for the elapsed clock; nil when not recording.
     var recordingStartedAt: Date?
@@ -121,7 +129,8 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
         if model.mode == .picking, let id = model.pickerFrames.first(where: { $0.value.contains(point) })?.key,
            let style = model.styleChoices.first(where: { $0.id == id }) {
             model.onPick?(style)
-        } else if model.mode == .listening, model.chipFrame.insetBy(dx: -4, dy: -4).contains(point) {
+        } else if model.mode == .listening,
+                  model.chipFrame.insetBy(dx: -4, dy: -4).contains(point) || model.languageFrame.insetBy(dx: -4, dy: -4).contains(point) {
             model.showStyleMenu?()
         } else {
             super.mouseDown(with: event)
@@ -247,6 +256,20 @@ final class IndicatorPanelController: NSObject {
             item.state = style.id == model.currentStyle?.id ? .on : .off
             menu.addItem(item)
         }
+        if model.mode == .listening, model.showsLanguage {
+            // One language per recording: switching transcribes what you've said again in the new one.
+            menu.addItem(.separator())
+            let languageHeader = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
+            languageHeader.isEnabled = false
+            menu.addItem(languageHeader)
+            for language in model.languageChoices {
+                let item = NSMenuItem(title: language.name(), action: #selector(chooseLanguage(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = language.code
+                item.state = language == model.currentLanguage ? .on : .off
+                menu.addItem(item)
+            }
+        }
         menu.addItem(.separator())
         let tip = NSMenuItem(title: "Tip: press the number while you talk", action: nil, keyEquivalent: "")
         tip.isEnabled = false
@@ -260,6 +283,11 @@ final class IndicatorPanelController: NSObject {
         menu.popUp(positioning: current, at: anchor, in: content) // runs until the menu closes
         model.isMenuOpen = false
         openMenu = nil
+    }
+
+    @objc private func chooseLanguage(_ item: NSMenuItem) {
+        guard let code = item.representedObject as? String else { return }
+        model.onSelectLanguage?(SpokenLanguage(code: code))
     }
 
     @objc private func choose(_ item: NSMenuItem) {
@@ -312,6 +340,11 @@ struct IndicatorView: View {
                         RecordingClock(elapsed: context.date.timeIntervalSince(started), threshold: model.longFormThreshold)
                     }
                 }
+                if model.showsLanguage, let language = model.currentLanguage {
+                    // Clicked via IndicatorHostingView (opens the menu at its Language section).
+                    LanguageBadge(language: language)
+                        .background(FrameReporter { model.languageFrame = $0 })
+                }
                 if let style = model.currentStyle {
                     // Clicked via IndicatorHostingView (opens the style menu).
                     StyleChip(style: style)
@@ -328,9 +361,9 @@ struct IndicatorView: View {
                     .progressViewStyle(.linear)
                     .tint(Color.accentColor)
                     .frame(width: 90)
-            case .preparingModel:
+            case .preparingModel(let firstTime):
                 ProgressView().controlSize(.small).tint(.white)
-                Text("Preparing model…").font(.callout)
+                Text(firstTime ? "Preparing the model for this Mac (first time only, up to 15 min)…" : "Preparing model…").font(.callout)
             case .processing:
                 ProgressView().controlSize(.small).tint(.white)
             case .clipboard:
@@ -352,6 +385,22 @@ struct IndicatorView: View {
         .background(Capsule().fill(.black.opacity(0.82)))
         .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
         .background(FrameReporter { model.pillFrame = $0 })
+    }
+}
+
+/// The recording's language, e.g. "FR". Only shown when more than one language is in use.
+private struct LanguageBadge: View {
+    let language: SpokenLanguage
+
+    var body: some View {
+        Text(language.badge)
+            .font(.caption2.weight(.bold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(Color.white.opacity(0.18)))
+            .accessibilityLabel("Language: \(language.name())")
+            .accessibilityHint("Click to choose another language.")
+            .accessibilityAddTraits(.isButton)
     }
 }
 

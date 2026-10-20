@@ -10,6 +10,10 @@ public enum ConfigMerger {
         var merged = remote
         merged.version = max(local.version, remote.version)
         merged.vocabulary = mergeList(base: base?.vocabulary, local: local.vocabulary, remote: remote.vocabulary)
+        let languages = Set(local.languageVocabulary.keys).union(remote.languageVocabulary.keys).union(base.map { Array($0.languageVocabulary.keys) } ?? [])
+        merged.languageVocabulary = Dictionary(uniqueKeysWithValues: languages.map { code in
+            (code, mergeList(base: base.map { $0.languageVocabulary[code] ?? [] }, local: local.languageVocabulary[code] ?? [], remote: remote.languageVocabulary[code] ?? []))
+        }).filter { !$0.value.isEmpty }
         merged.tags = mergeList(base: base?.tags, local: local.tags, remote: remote.tags)
         merged.styles = mergeStyles(base: base?.styles, local: local.styles, remote: remote.styles)
         if let base, local.expireRegularAudio != base.expireRegularAudio, remote.expireRegularAudio == base.expireRegularAudio {

@@ -87,6 +87,18 @@ final class AppModel {
     var styleMemory: StyleMemory {
         didSet { saveStyleMemory() }
     }
+    /// Language last spoken in each app, on this Mac only.
+    var languageMemory: LanguageMemory {
+        didSet { saveLanguageMemory() }
+    }
+    /// The language Whisper is set up for: the next recording's, or the current one's.
+    var activeLanguage: SpokenLanguage = .english
+    /// 0…1 while the multilingual model downloads in the background; nil otherwise.
+    var multilingualDownload: Double?
+    /// The multilingual model is being prepared for this Mac (once per model, up to ~15 min on an M1).
+    var multilingualPreparing = false
+    @ObservationIgnored var multilingualDownloadTask: Task<Void, Never>?
+    @ObservationIgnored var multilingualDownloadVariant: String?
     /// Connected input devices, kept current as devices come and go.
     private(set) var microphones: [Microphone] = MicrophoneCatalog.current()
     private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -133,7 +145,10 @@ final class AppModel {
     init() {
         let settings = Self.loadSettings()
         self.settings = settings
-        self.whisper = WhisperEngine(variant: settings.transcriptionModel)
+        let memory = Self.loadLanguageMemory()
+        self.languageMemory = memory
+        self.activeLanguage = memory.language(forApp: nil)
+        self.whisper = WhisperEngine(variant: settings.transcriptionVariant(for: memory.language(forApp: nil)))
         self.writing = SummaryEngine(modelID: settings.writingModel)
         self.styles = Self.loadStyles()
         self.styleMemory = Self.loadStyleMemory()
@@ -148,6 +163,8 @@ final class AppModel {
         )
         indicator.showLiveText = settings.showLiveText
         dictation.onStyleUsed = { [unowned self] style, app in styleMemory.remember(style.id, forApp: app) }
+        dictation.onLanguageUsed = { [unowned self] language, app in languageMemory.remember(language, forApp: app) }
+        dictation.onLanguageSelected = { [unowned self] language in useLanguage(language) }
         sync = SyncController(vault: vault)
         sync.localConfig = { [unowned self] base in localConfig(from: base) }
         sync.apply = { [unowned self] config in apply(config) }
@@ -191,6 +208,7 @@ final class AppModel {
             Task { @MainActor [weak self] in self?.microphones = microphones }
         }
         applyAppPresence()
+        prefetchMultilingualModel()
         sync.start()
         permissions.refresh()
         startHotkeysIfPossible()
@@ -237,7 +255,16 @@ final class AppModel {
                         frame.size.height = 760
                         window.setFrame(frame, display: true)
                     }
-                case "scroll:end", "scroll:top":
+                case let command where command.hasPrefix("languages:"):
+                    // e.g. languages:en,fr,es — the list offered in the pill and Settings.
+                    settings.dictationLanguages = command.dropFirst("languages:".count).split(separator: ",").map(String.init)
+                case let command where command.hasPrefix("language:"):
+                    // Switches the recording's language, or the default when idle (as Settings does).
+                    let language = SpokenLanguage(code: String(command.dropFirst("language:".count)))
+                    if dictation.phase == .idle { chooseDefaultLanguage(language) } else { dictation.select(language) }
+                case "report:language":
+                    Log.dictation.notice("Language: active \(self.activeLanguage.code, privacy: .public), whisper \(self.whisper.variant, privacy: .public), offered \(self.offeredLanguages.map(\.code).joined(separator: ","), privacy: .public), memory \(String(describing: self.languageMemory), privacy: .public)")
+                case let command where command.hasPrefix("scroll:"):
                     // Scrolls the main window's page, so captures can reach content below the fold.
                     if let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }),
                        let content = window.contentView {
@@ -249,7 +276,9 @@ final class AppModel {
                             let clip = page.contentView
                             let bottom = document.isFlipped ? max(0, document.frame.height - clip.bounds.height) : 0
                             let top = document.isFlipped ? 0 : max(0, document.frame.height - clip.bounds.height)
-                            clip.scroll(to: NSPoint(x: 0, y: command == "scroll:end" ? bottom : top))
+                            let offset = Double(command.dropFirst("scroll:".count)).map { CGFloat($0) }
+                            let y = offset.map { document.isFlipped ? min($0, bottom) : max(top - $0, 0) } ?? (command == "scroll:end" ? bottom : top)
+                            clip.scroll(to: NSPoint(x: 0, y: y))
                             page.reflectScrolledClipView(clip)
                         }
                     }
@@ -408,11 +437,19 @@ final class AppModel {
 
     // MARK: Model
 
-    func prepareModel() {
+    /// Loads the current Whisper model; `old` (a model being switched away from) is unloaded first.
+    /// `modelTask` is replaced right away, so anything waiting for a model waits for this one.
+    func prepareModel(unloading old: WhisperEngine? = nil) {
         let engine = whisper
-        let vocabulary = settings.customVocabulary
+        let vocabulary = settings.vocabulary(for: activeLanguage)
+        let language = activeLanguage
+        // Already fetching this model in the background: wait for that rather than fetch it twice.
+        let prefetch = multilingualDownloadVariant == engine.variant ? multilingualDownloadTask : nil
         modelTask = Task {
+            if let old { await coordinator.unload(old) }
+            await prefetch?.value
             await engine.setVocabulary(vocabulary)
+            await engine.setLanguage(language.code)
             do {
                 if !engine.isDownloaded {
                     modelState = .downloading(0)
@@ -434,17 +471,18 @@ final class AppModel {
 
     private func waitForModel() async throws {
         if modelTask == nil { prepareModel() }
-        try await modelTask?.value
+        // A model switch while waiting replaces modelTask: keep waiting for whichever is current.
+        while let task = modelTask {
+            try await task.value
+            if task == modelTask { break }
+        }
     }
 
-    private func switchModel(to variant: String) {
+    func switchModel(to variant: String) {
         let old = whisper
         whisper = WhisperEngine(variant: variant)
         modelState = .idle
-        Task {
-            await coordinator.unload(old)
-            prepareModel()
-        }
+        prepareModel(unloading: old)
     }
 
     // MARK: Hotkeys
@@ -588,10 +626,16 @@ final class AppModel {
         permissions.refresh()
         let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         let style = raw ? Style.raw : styleMemory.defaultStyle(forApp: app, among: styles)
+        let language = languageMemory.language(forApp: app)
+        if language != activeLanguage || whisper.variant != settings.transcriptionVariant(for: language) {
+            useLanguage(language) // the mic starts meanwhile; transcription catches up once the model is in
+        }
+        indicator.languageChoices = offeredLanguages
         dictation.start(
             microphoneGranted: permissions.microphone == .granted,
             deviceID: currentMicrophone?.deviceID,
             style: style,
+            language: language,
             targetApp: app,
             remembersStyle: !raw
         )
@@ -612,12 +656,16 @@ final class AppModel {
         }
         detector.configuration.maxGapBetweenTaps = settings.doubleTapWindow
         indicator.showLiveText = settings.showLiveText
-        if settings.transcriptionModel != old.transcriptionModel {
-            switchModel(to: settings.transcriptionModel)
-        } else if settings.customVocabulary != old.customVocabulary {
+        if whisper.variant != settings.transcriptionVariant(for: activeLanguage) {
+            switchModel(to: settings.transcriptionVariant(for: activeLanguage))
+        } else if settings.vocabulary(for: activeLanguage) != old.vocabulary(for: activeLanguage) {
             let engine = whisper
-            let vocabulary = settings.customVocabulary
+            let vocabulary = settings.vocabulary(for: activeLanguage)
             Task { await engine.setVocabulary(vocabulary) }
+        }
+        indicator.languageChoices = offeredLanguages
+        if settings.dictationLanguages != old.dictationLanguages || settings.multilingualTranscriptionModel != old.multilingualTranscriptionModel {
+            prefetchMultilingualModel()
         }
         if settings.menuBarMode != old.menuBarMode {
             applyAppPresence()

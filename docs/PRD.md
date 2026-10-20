@@ -18,7 +18,7 @@ Audio Pencil is a private, fully on-device AudioPen equivalent for Mac and iPhon
 - Cloud transcription or cloud LLMs of any kind.
 - An in-app library, search, or review screens beyond a minimal recent list.
 - AudioPen extras: combining notes into one summary, importing audio files, rewriting old notes in a new style.
-- Languages other than English.
+- Mixing languages within one recording (each recording has one language; see Languages).
 - App lock (passcode or Face ID).
 - A custom server on the Raspberry Pi.
 
@@ -31,7 +31,7 @@ Phase 1 is the Mac app, built and run locally without a paid Apple Developer acc
 | Mac target | M1 MacBook Air, 8 GB RAM (the binding constraint) |
 | iPhone target | iPhone 17 Pro Max |
 | Language / UI | Native Swift, SwiftUI; shared core package for Mac and iOS |
-| Transcription | WhisperKit, English-only model, streaming while recording |
+| Transcription | WhisperKit, streaming while recording: an English-only model for English, a multilingual model for every other language |
 | Summarization | Open-weight LLM via MLX Swift, about 3B parameters, 4-bit quantised on Mac |
 | Memory rule | Load transcription and summary models sequentially on 8 GB, never both at once |
 | Repo | User's Forgejo instance, private |
@@ -97,7 +97,15 @@ All inference runs on device; the user picks from a curated, swappable model lis
 
 - App ships a curated catalogue of recommended models per device class; user can switch at any time.
 - Model discovery is automatic: the app periodically searches Hugging Face for compatible WhisperKit and MLX models that fit the device's memory, ranks them, and suggests upgrades. Nothing switches without the user's approval, and there is no list for the user to maintain.
-- Custom vocabulary list (names, places, tech terms) from the config file is fed to transcription as prompt context and to the LLM as spelling guidance.
+- Custom vocabulary list (names, places, tech terms) from the config file is fed to transcription as prompt context and to the LLM as spelling guidance. One list applies to every language, plus an optional list per language.
+
+**Languages** (added Oct 2026)
+
+- Dictation works in any language Whisper supports; several can be in use on one machine. One language per recording.
+- Language is chosen from the recording indicator or Settings. The default is the language last spoken in the frontmost app, per machine (not synced); new apps start in the language last used anywhere on that machine.
+- Styles write in the spoken language. Writing models declare which languages they handle; others fall back to the raw transcript, and model discovery favours models covering the languages in use.
+- Like me samples record their language and same-language samples are used first.
+- The interface follows the system language: English, French and Spanish.
 
 **Styles**
 

@@ -8,18 +8,23 @@ public struct WritingSample: Codable, Equatable, Hashable, Sendable, Identifiabl
     public var text: String
     /// Interview prompt this answers, if any.
     public var promptID: String?
+    /// Whisper code of the language it's written in; nil for samples from before languages (English).
+    public var language: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, kind, text
+        case id, kind, text, language
         case promptID = "prompt"
     }
 
-    public init(id: String = UUID().uuidString.prefix(8).lowercased(), kind: String, text: String, promptID: String? = nil) {
+    public init(id: String = UUID().uuidString.prefix(8).lowercased(), kind: String, text: String, promptID: String? = nil, language: String? = nil) {
         self.id = id
         self.kind = kind
         self.text = text
         self.promptID = promptID
+        self.language = language
     }
+
+    public var spokenLanguage: SpokenLanguage { SpokenLanguage(code: language ?? "en") }
 
     public var wordCount: Int { UsageStats.wordCount(text) }
 }
@@ -74,12 +79,14 @@ public enum WritingSampleSelector {
         "feedback": ["feedback", "suggest", "liked", "improve"],
     ]
 
-    /// Up to `limit` samples, most similar first, within `wordBudget` words in total.
-    public static func pick(for text: String, from samples: [WritingSample], limit: Int = 2, wordBudget: Int = 450) -> [WritingSample] {
+    /// Up to `limit` samples, most similar first, within `wordBudget` words in total. With a `language`,
+    /// samples written in it come first; others only fill the gap when there aren't enough.
+    public static func pick(for text: String, from samples: [WritingSample], language: SpokenLanguage? = nil, limit: Int = 2, wordBudget: Int = 450) -> [WritingSample] {
         let target = vector(text)
         let lowered = text.lowercased()
         let scored = samples.filter { $0.wordCount > 0 }.map { sample -> (WritingSample, Double) in
             var score = cosine(target, vector(sample.text))
+            if let language, sample.spokenLanguage == language { score += 10 } // outranks any similarity
             let hits = cues[sample.kind, default: []].filter { lowered.contains($0) }.count
             score += 0.05 * Double(min(hits, 3))
             return (sample, score)
@@ -120,8 +127,8 @@ public enum WritingSampleSelector {
 
 extension PromptBuilder {
     /// "Like me": the style prompt plus the user's closest writing samples as examples of voice.
-    public static func prompt(for style: Style, transcript: String, context: Context, vocabulary: [String], examples: [WritingSample]) -> StylePrompt {
-        var prompt = prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary)
+    public static func prompt(for style: Style, transcript: String, context: Context, vocabulary: [String], language: SpokenLanguage = .english, examples: [WritingSample]) -> StylePrompt {
+        var prompt = prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language)
         guard !examples.isEmpty else { return prompt }
         let blocks = examples.map { "<example kind=\"\($0.kind)\">\n\($0.text)\n</example>" }.joined(separator: "\n")
         prompt.instructions += """

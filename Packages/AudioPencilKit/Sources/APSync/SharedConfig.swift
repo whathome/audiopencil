@@ -8,10 +8,13 @@ public struct SharedConfig: Codable, Equatable, Sendable {
         case version, vocabulary, tags, styles, devices
         case writingSamples = "writing_samples"
         case expireRegularAudio = "expire_regular_audio_after_a_year"
+        case languageVocabulary = "vocabulary_by_language"
     }
 
     public var version: Int = 1
     public var vocabulary: [String] = []
+    /// Extra vocabulary for one language only, keyed by Whisper code ("fr"). Added to `vocabulary`.
+    public var languageVocabulary: [String: [String]] = [:]
     /// Master tag list (used from milestone 5).
     public var tags: [String] = []
     public var styles: [ConfigStyle] = []
@@ -28,6 +31,7 @@ public struct SharedConfig: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
         vocabulary = try c.decodeIfPresent([String].self, forKey: .vocabulary) ?? []
+        languageVocabulary = try c.decodeIfPresent([String: [String]].self, forKey: .languageVocabulary) ?? [:]
         tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
         styles = try c.decodeIfPresent([ConfigStyle].self, forKey: .styles) ?? []
         writingSamples = try c.decodeIfPresent([WritingSample].self, forKey: .writingSamples) ?? []
@@ -134,6 +138,9 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public var doubleTapWindow: Double = 0.4
     public var warmMicOnFirstTap: Bool = true
     public var transcriptionModel: String = DictationSettings().transcriptionModel
+    public var multilingualModel: String = DictationSettings().multilingualTranscriptionModel
+    /// Dictation languages offered on this device (Whisper codes). Empty: English plus the Mac's languages.
+    public var languages: [String] = []
     public var writingModel: String = DictationSettings().writingModel
     public var pickStyleAfterStop: Bool = false
     public var pickerAutoConfirm: Double = 1.0
@@ -147,6 +154,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         case returnStops = "return_stops", holdForRaw = "hold_for_raw", fallbackShortcut = "fallback_shortcut"
         case doubleTapWindow = "double_tap_window", warmMicOnFirstTap = "warm_mic_on_first_tap"
         case transcriptionModel = "transcription_model", writingModel = "writing_model"
+        case multilingualModel = "multilingual_transcription_model", languages
         case pickStyleAfterStop = "pick_style_after_stop", pickerAutoConfirm = "picker_auto_confirm"
         case longFormThreshold = "long_form_threshold_seconds", saveQuickDictations = "save_quick_dictations"
         case sounds, soundVolume = "sound_volume"
@@ -163,6 +171,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         doubleTapWindow = settings.doubleTapWindow
         warmMicOnFirstTap = settings.warmMicOnFirstTap
         transcriptionModel = settings.transcriptionModel
+        multilingualModel = settings.multilingualTranscriptionModel
+        languages = settings.dictationLanguages
         writingModel = settings.writingModel
         pickStyleAfterStop = settings.pickStyleAfterStop
         pickerAutoConfirm = settings.pickerAutoConfirm
@@ -183,6 +193,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         doubleTapWindow = try c.decodeIfPresent(Double.self, forKey: .doubleTapWindow) ?? defaults.doubleTapWindow
         warmMicOnFirstTap = try c.decodeIfPresent(Bool.self, forKey: .warmMicOnFirstTap) ?? defaults.warmMicOnFirstTap
         transcriptionModel = try c.decodeIfPresent(String.self, forKey: .transcriptionModel) ?? defaults.transcriptionModel
+        multilingualModel = try c.decodeIfPresent(String.self, forKey: .multilingualModel) ?? defaults.multilingualModel
+        languages = try c.decodeIfPresent([String].self, forKey: .languages) ?? defaults.languages
         writingModel = try c.decodeIfPresent(String.self, forKey: .writingModel) ?? defaults.writingModel
         pickStyleAfterStop = try c.decodeIfPresent(Bool.self, forKey: .pickStyleAfterStop) ?? defaults.pickStyleAfterStop
         pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
@@ -202,6 +214,9 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         settings.doubleTapWindow = min(max(doubleTapWindow, 0.2), 0.8)
         settings.warmMicOnFirstTap = warmMicOnFirstTap
         settings.transcriptionModel = transcriptionModel
+        // An English-only model can't be the multilingual one; keep the local choice instead.
+        if !DictationSettings.isEnglishOnly(multilingualModel) { settings.multilingualTranscriptionModel = multilingualModel }
+        settings.dictationLanguages = languages.map { $0.lowercased() }.filter(SpokenLanguage.whisperCodes.contains)
         settings.writingModel = writingModel
         settings.pickStyleAfterStop = pickStyleAfterStop
         settings.pickerAutoConfirm = min(max(pickerAutoConfirm, 0.25), 5)

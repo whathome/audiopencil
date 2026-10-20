@@ -67,6 +67,9 @@ struct WritingPage: View {
                             Text(sample.kind).font(.caption.weight(.semibold))
                                 .padding(.horizontal, 7).padding(.vertical, 2)
                                 .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                            if app.isMultilingual {
+                                Text(sample.spokenLanguage.badge).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                            }
                             Text(sample.text).lineLimit(1).foregroundStyle(.secondary)
                             Spacer()
                             Button("Edit…") { editingPrompt = nil; editing = sample }
@@ -74,7 +77,7 @@ struct WritingPage: View {
                     }
                     Button {
                         editingPrompt = nil
-                        editing = WritingSample(kind: "other", text: "")
+                        editing = WritingSample(kind: "other", text: "", language: app.isMultilingual ? app.activeLanguage.code : nil)
                     } label: {
                         Label("Add a sample", systemImage: "plus")
                     }
@@ -84,7 +87,7 @@ struct WritingPage: View {
             .frame(maxWidth: 980, alignment: .leading)
         }
         .sheet(item: $editing) { sample in
-            SampleEditor(sample: sample, prompt: editingPrompt) { saved in
+            SampleEditor(sample: sample, prompt: editingPrompt, languages: app.isMultilingual ? app.offeredLanguages : []) { saved in
                 app.saveSample(saved)
             } delete: {
                 app.writingSamples.removeAll { $0.id == sample.id }
@@ -96,13 +99,15 @@ struct WritingPage: View {
 extension WritingPage {
     private func open(_ prompt: InterviewPrompt, answer: WritingSample?) {
         editingPrompt = prompt
-        editing = answer ?? WritingSample(kind: prompt.kind, text: "", promptID: prompt.id)
+        editing = answer ?? WritingSample(kind: prompt.kind, text: "", promptID: prompt.id, language: app.isMultilingual ? app.activeLanguage.code : nil)
     }
 }
 
 private struct SampleEditor: View {
     @State var sample: WritingSample
     let prompt: InterviewPrompt?
+    /// Languages to choose from; empty when only English is in use (no picker).
+    var languages: [SpokenLanguage] = []
     let save: (WritingSample) -> Void
     let delete: () -> Void
     @Environment(\.dismiss) private var dismiss
@@ -118,6 +123,16 @@ private struct SampleEditor: View {
                     ForEach(InterviewPrompt.kinds, id: \.self) { Text($0).tag($0) }
                 }
                 .fixedSize()
+            }
+            if !languages.isEmpty {
+                Picker("Written in", selection: Binding(
+                    get: { sample.spokenLanguage },
+                    set: { sample.language = $0.code }
+                )) {
+                    ForEach(languages) { Text($0.name()).tag($0) }
+                }
+                .fixedSize()
+                .help("Like me uses samples in the language you're dictating first.")
             }
             TextEditor(text: $sample.text)
                 .font(.system(.body, design: .serif))

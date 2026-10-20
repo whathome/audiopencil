@@ -276,8 +276,12 @@ private struct PerAppDefaults: View {
                     }
                     Spacer()
                     Text(app.styles.first { $0.id == styleID }?.name ?? styleID).foregroundStyle(.secondary)
+                    if app.isMultilingual, let code = app.languageMemory.perApp[bundleID] {
+                        Text(SpokenLanguage(code: code).name()).foregroundStyle(.secondary)
+                    }
                     Button {
                         app.styleMemory.forget(app: bundleID)
+                        app.languageMemory.forget(app: bundleID)
                     } label: {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
                     }

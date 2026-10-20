@@ -145,7 +145,6 @@ private struct FirstSectionHeader: View {
 private struct GeneralSettings: View {
     @Bindable var app: AppModel
     var embedded = false
-    @State private var vocabularyText = ""
 
     var body: some View {
         Form {
@@ -201,23 +200,11 @@ private struct GeneralSettings: View {
             }
             .onChange(of: app.settings.cueTheme) { app.dictation.previewSounds() }
 
+            DictationLanguagesSection(app: app)
+
             MicrophonePriorityList(app: app)
 
-            Section {
-                TextEditor(text: $vocabularyText)
-                    .font(.body)
-                    .frame(minHeight: 70)
-                    .onChange(of: vocabularyText) { _, text in
-                        app.settings.customVocabulary = text
-                            .split(whereSeparator: \.isNewline)
-                            .map { $0.trimmingCharacters(in: .whitespaces) }
-                            .filter { !$0.isEmpty }
-                    }
-            } header: {
-                Text("Custom vocabulary")
-            } footer: {
-                FormFooter("One name, place or term per line. Whisper gets them as spelling hints.")
-            }
+            VocabularySection(app: app)
 
             Section {
                 LabeledContent {
@@ -258,7 +245,121 @@ private struct GeneralSettings: View {
         }
         .formStyle(.grouped)
         .pageAligned(embedded)
-        .onAppear { vocabularyText = app.settings.customVocabulary.joined(separator: "\n") }
+    }
+}
+
+/// Languages offered in the recording pill, which one new apps start in, and whether styles work in each.
+private struct DictationLanguagesSection: View {
+    @Bindable var app: AppModel
+
+    var body: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { app.languageMemory.language(forApp: nil) },
+                set: { app.chooseDefaultLanguage($0) }
+            )) {
+                ForEach(app.offeredLanguages) { Text($0.name()).tag($0) }
+            } label: {
+                Text("Start new apps in")
+                Text("Each app starts in the language you last spoke there.")
+            }
+            ForEach(app.offeredLanguages) { language in
+                HStack {
+                    Text(language.name())
+                    Text(language.badge).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                    Spacer()
+                    if !app.canStyle(in: language) {
+                        Text("Raw only with \(app.writingModelOption?.name ?? "this writing model")")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .help("Styles need a writing model that writes this language. Raw transcripts still work.")
+                    }
+                    Button {
+                        remove(language)
+                    } label: {
+                        Image(systemName: "minus.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(app.offeredLanguages.count == 1)
+                    .accessibilityLabel("Remove \(language.name())")
+                }
+            }
+            if let fraction = app.multilingualDownload {
+                LabeledContent("Downloading the multilingual model") {
+                    ProgressView(value: fraction).frame(width: 160)
+                }
+            } else if app.multilingualPreparing {
+                LabeledContent {
+                    ProgressView().controlSize(.small)
+                } label: {
+                    Text("Preparing the multilingual model for this Mac")
+                    Text("One time only, up to 15 minutes. Dictation waits until it's done.")
+                }
+            }
+            Picker("Add a language", selection: Binding<String>(get: { "" }, set: { add($0) })) {
+                Text("Choose…").tag("")
+                ForEach(SpokenLanguage.all().filter { !app.offeredLanguages.contains($0) }) { Text($0.name()).tag($0.code) }
+            }
+        } header: {
+            Text("Dictation languages")
+        } footer: {
+            FormFooter("One language per recording. Switch it from the language badge on the recording indicator. English uses the English model; other languages use the multilingual one (Settings › Models).")
+        }
+    }
+
+    private func add(_ code: String) {
+        guard !code.isEmpty else { return }
+        app.settings.dictationLanguages = app.offeredLanguages.map(\.code) + [code]
+    }
+
+    private func remove(_ language: SpokenLanguage) {
+        app.settings.dictationLanguages = app.offeredLanguages.map(\.code).filter { $0 != language.code }
+        if app.languageMemory.language(forApp: nil) == language, let first = app.settings.offeredLanguages().first {
+            app.chooseDefaultLanguage(first)
+        }
+    }
+}
+
+/// One list for every language, plus a list per language; a recording uses both.
+private struct VocabularySection: View {
+    @Bindable var app: AppModel
+    /// "" edits the list for all languages; otherwise a Whisper code.
+    @State private var list = ""
+    @State private var text = ""
+
+    var body: some View {
+        Section {
+            if app.isMultilingual {
+                Picker("List", selection: $list) {
+                    Text("All languages").tag("")
+                    ForEach(app.offeredLanguages) { Text($0.name()).tag($0.code) }
+                }
+            }
+            TextEditor(text: $text)
+                .font(.body)
+                .frame(minHeight: 70)
+                .onChange(of: text) { _, text in save(text) }
+        } header: {
+            Text("Custom vocabulary")
+        } footer: {
+            FormFooter(list.isEmpty
+                ? "One name, place or term per line, used in every language. Whisper gets them as spelling hints."
+                : "Used only when dictating in \(SpokenLanguage(code: list).name()), on top of the list for all languages.")
+        }
+        .onAppear { load() }
+        .onChange(of: list) { load() }
+    }
+
+    private func load() {
+        text = (list.isEmpty ? app.settings.customVocabulary : app.settings.languageVocabulary[list] ?? []).joined(separator: "\n")
+    }
+
+    private func save(_ text: String) {
+        let words = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        if list.isEmpty {
+            if words != app.settings.customVocabulary { app.settings.customVocabulary = words }
+        } else if words != app.settings.languageVocabulary[list] ?? [] {
+            app.settings.languageVocabulary[list] = words.isEmpty ? nil : words
+        }
     }
 }
 
@@ -309,12 +410,21 @@ private struct ModelSettings: View {
             }
 
             Section("Transcription") {
-                Picker("Model", selection: $app.settings.transcriptionModel) {
+                Picker("English", selection: $app.settings.transcriptionModel) {
                     ForEach(TranscriptionModelOption.catalogue) { option in
                         Text("\(option.name) – \(option.note)").tag(option.id)
                     }
                     if TranscriptionModelOption.option(for: app.settings.transcriptionModel) == nil {
                         Text(app.settings.transcriptionModel + " – from discovery").tag(app.settings.transcriptionModel)
+                    }
+                }
+                .disabled(app.dictation.isActive)
+                Picker("Other languages", selection: $app.settings.multilingualTranscriptionModel) {
+                    ForEach(TranscriptionModelOption.multilingualCatalogue) { option in
+                        Text("\(option.name) – \(option.note)").tag(option.id)
+                    }
+                    if TranscriptionModelOption.option(for: app.settings.multilingualTranscriptionModel) == nil {
+                        Text(app.settings.multilingualTranscriptionModel + " – from discovery").tag(app.settings.multilingualTranscriptionModel)
                     }
                 }
                 .disabled(app.dictation.isActive)

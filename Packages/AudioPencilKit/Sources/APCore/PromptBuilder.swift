@@ -18,7 +18,8 @@ public enum PromptBuilder {
         for style: Style,
         transcript: String,
         context: Context,
-        vocabulary: [String] = []
+        vocabulary: [String] = [],
+        language: SpokenLanguage = .english
     ) -> StylePrompt {
         // Kept short: every prompt token costs prefill time on an M1 (~160 tokens/s).
         var rules: [String] = [
@@ -50,6 +51,7 @@ public enum PromptBuilder {
         if !vocabulary.isEmpty {
             rules.append("Spellings: \(vocabulary.joined(separator: ", ")).")
         }
+        if let rule = languageRule(language) { rules.append(rule) }
 
         let instructions = style.instructions + "\n\nRules:\n" + rules.map { "- " + $0 }.joined(separator: "\n")
         let input = "<transcript>\n\(transcript)\n</transcript>"
@@ -63,6 +65,15 @@ public enum PromptBuilder {
         case .heavy: min(max(Int(Double(transcriptTokens) * 1.5), 300), 1200)
         }
         return StylePrompt(instructions: instructions, input: input, maxTokens: maxTokens)
+    }
+}
+
+extension PromptBuilder {
+    /// Instructions stay in English (small models follow English instructions best); the output follows
+    /// the speaker's language. Nothing is added for English.
+    public static func languageRule(_ language: SpokenLanguage) -> String? {
+        guard !language.isEnglish else { return nil }
+        return "The speaker spoke \(language.englishName). Write in \(language.englishName); never translate."
     }
 }
 
@@ -81,7 +92,7 @@ public enum OutputCleaner {
         // A first line like "Here's the tidied entry:" or "Sure! Here is the text:".
         let lines = result.components(separatedBy: "\n")
         if let first = lines.first, lines.count > 1,
-           first.range(of: #"^(sure|okay|ok|certainly|here('s| is| are))\b.*:\s*$"#, options: [.regularExpression, .caseInsensitive]) != nil {
+           first.range(of: #"^(sure|okay|ok|certainly|here('s| is| are)|voici|voilà|bien sûr|d'accord|aquí (está|tienes|va)|claro|por supuesto|desde luego)\b.*:\s*$"#, options: [.regularExpression, .caseInsensitive]) != nil {
             result = lines.dropFirst().joined(separator: "\n")
         }
         result = result.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -124,7 +135,7 @@ extension PromptBuilder {
     }
 
     /// Notes on one section of a long recording, to be combined afterwards.
-    public static func sectionNotesPrompt(section: String, index: Int, count: Int, vocabulary: [String]) -> StylePrompt {
+    public static func sectionNotesPrompt(section: String, index: Int, count: Int, vocabulary: [String], language: SpokenLanguage = .english) -> StylePrompt {
         var instructions = """
             This is part \(index) of \(count) of a long spoken recording. Write concise bullet-point notes of \
             this part: every topic, fact, name, number, decision and commitment. No introduction.
@@ -135,19 +146,20 @@ extension PromptBuilder {
             - Write as the speaker (first person).
             """
         if !vocabulary.isEmpty { instructions += "\n- Spellings: \(vocabulary.joined(separator: ", "))." }
+        if let rule = languageRule(language) { instructions += "\n- " + rule }
         let words = UsageStats.wordCount(section)
         return StylePrompt(instructions: instructions, input: "<transcript>\n\(section)\n</transcript>", maxTokens: min(max(Int(Double(words) * 0.5), 200), 700))
     }
 
     /// Suggests a title and tags. Prefers the vault's tag list; may propose new tags.
-    public static func titleAndTagsPrompt(text: String, knownTags: [String]) -> StylePrompt {
+    public static func titleAndTagsPrompt(text: String, knownTags: [String], language: SpokenLanguage = .english) -> StylePrompt {
         let excerpt = text.split(separator: " ").prefix(1_200).joined(separator: " ")
         let tagHint = knownTags.isEmpty
             ? "Suggest up to 4 short lowercase tags."
             : "Pick up to 4 tags, preferably from this list: \(knownTags.joined(separator: ", ")). Only add a new tag if none fit."
         let instructions = """
             Suggest a short title (at most 8 words, no quotes) for this note. \(tagHint)
-            Answer in exactly this format and nothing else:
+            \(language.isEnglish ? "" : "Write the title (and any new tags) in \(language.englishName).\n")Answer in exactly this format and nothing else:
             Title: <title>
             Tags: <tag>, <tag>
             """
@@ -181,7 +193,7 @@ public struct TitleAndTags: Equatable, Sendable {
     public static func normaliseTag(_ tag: String) -> String {
         tag.trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: "#\"'.")))
             .lowercased()
-            .replacingOccurrences(of: #"[^a-z0-9/_-]+"#, with: "-", options: .regularExpression)
+            .replacingOccurrences(of: #"[^\p{L}\p{N}/_-]+"#, with: "-", options: .regularExpression) // keeps "été", "año"
             .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
     }
 }

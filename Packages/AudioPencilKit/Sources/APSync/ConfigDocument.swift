@@ -94,6 +94,15 @@ public enum ConfigDocument {
     static func renderYAML(_ config: SharedConfig) -> String {
         var out = "version: \(config.version)\n"
         out += list("vocabulary", config.vocabulary)
+        let languages = config.languageVocabulary.filter { !$0.value.isEmpty }
+        if languages.isEmpty {
+            out += "vocabulary_by_language: {}  # e.g. fr: [Loïc-William]\n"
+        } else {
+            out += "vocabulary_by_language:\n"
+            for code in languages.keys.sorted() {
+                out += "  " + list("\"\(code)\"", languages[code] ?? []) // quoted: "no" (Norwegian) is a YAML boolean.replacingOccurrences(of: "\n  - ", with: "\n    - ")
+            }
+        }
         out += list("tags", config.tags)
         out += "expire_regular_audio_after_a_year: \(config.expireRegularAudio)\n"
         if config.styles.isEmpty {
@@ -125,6 +134,7 @@ public enum ConfigDocument {
                 out += "  - id: \(scalar(sample.id))\n"
                 out += "    kind: \(scalar(sample.kind))\n"
                 if let prompt = sample.promptID { out += "    prompt: \(scalar(prompt))\n" }
+                if let language = sample.language { out += "    language: \(scalar(language))\n" }
                 out += "    text: " + block(sample.text, indent: 6)
             }
         }
@@ -148,7 +158,9 @@ public enum ConfigDocument {
                 out += "    fallback_shortcut: \(device.fallbackShortcut)\n"
                 out += "    double_tap_window: \(number(device.doubleTapWindow))\n"
                 out += "    warm_mic_on_first_tap: \(device.warmMicOnFirstTap)\n"
-                out += "    transcription_model: \(scalar(device.transcriptionModel))\n"
+                out += "    transcription_model: \(scalar(device.transcriptionModel))  # used for English\n"
+                out += "    multilingual_transcription_model: \(scalar(device.multilingualModel))  # every other language\n"
+                out += "    " + list("languages", device.languages).replacingOccurrences(of: "\n  - ", with: "\n      - ")
                 out += "    writing_model: \(scalar(device.writingModel))\n"
                 out += "    pick_style_after_stop: \(device.pickStyleAfterStop)\n"
                 out += "    picker_auto_confirm: \(number(device.pickerAutoConfirm))\n"

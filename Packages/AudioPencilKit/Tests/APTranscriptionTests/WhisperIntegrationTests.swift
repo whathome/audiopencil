@@ -56,12 +56,12 @@ struct WhisperIntegrationTests {
     }
 
     /// Uses the system `say` voice to make 16 kHz mono speech.
-    static func synthesise(_ text: String) throws -> [Float] {
+    static func synthesise(_ text: String, voice: String? = nil) throws -> [Float] {
         let url = FileManager.default.temporaryDirectory.appending(path: "audiopencil-\(UUID().uuidString).wav")
         defer { try? FileManager.default.removeItem(at: url) }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/say")
-        process.arguments = ["-o", url.path, "--file-format=WAVE", "--data-format=LEF32@16000", text]
+        process.arguments = (voice.map { ["-v", $0] } ?? []) + ["-o", url.path, "--file-format=WAVE", "--data-format=LEF32@16000", text]
         try process.run()
         process.waitUntilExit()
 

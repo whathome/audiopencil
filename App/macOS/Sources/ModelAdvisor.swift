@@ -61,7 +61,11 @@ final class ModelAdvisor {
         do {
             let knownWriting = Set(WritingModelOption.catalogue.map(\.id)).union(dismissed).union([app.settings.writingModel])
             async let writing = WritingModelDiscovery.suggestions(for: machine, excluding: knownWriting)
-            async let transcription = TranscriptionModelDiscovery.suggestions(for: machine, current: app.settings.transcriptionModel)
+            async let transcription = TranscriptionModelDiscovery.suggestions(
+                for: machine,
+                current: app.settings.transcriptionModel,
+                multilingualCurrent: app.isMultilingual ? app.settings.multilingualTranscriptionModel : nil
+            )
             let found = try await transcription.filter { !dismissed.contains($0.id) } + writing
             suggestions = found
             lastChecked = Date()
@@ -86,6 +90,7 @@ final class ModelAdvisor {
         switch suggestion.kind {
         case .writing: app.settings.writingModel = suggestion.id
         case .transcription: app.settings.transcriptionModel = suggestion.id
+        case .multilingualTranscription: app.settings.multilingualTranscriptionModel = suggestion.id
         }
         suggestions.removeAll { $0.id == suggestion.id }
     }
@@ -100,7 +105,7 @@ final class ModelAdvisor {
             do {
                 let lines = switch suggestion.kind {
                 case .writing: try await tryWriting(suggestion)
-                case .transcription: try await tryTranscription(suggestion)
+                case .transcription, .multilingualTranscription: try await tryTranscription(suggestion)
                 }
                 trials[suggestion.id] = .done(lines)
             } catch {
@@ -158,8 +163,12 @@ final class ModelAdvisor {
             return (text, seconds(ContinuousClock.now - start))
         }
         let new = try await run(candidate, name: suggestion.name)
-        let current = try await run(app.whisper, name: "current model")
+        // Compared with the model it would replace: the English one, or the one for other languages.
+        let replaced = suggestion.kind == .multilingualTranscription ? WhisperEngine(variant: app.settings.multilingualTranscriptionModel) : app.whisper
+        if !replaced.isDownloaded { try await replaced.download(progress: progress(suggestion.id)) }
+        let current = try await run(replaced, name: "current model")
         await app.coordinator.unload(candidate)
+        if replaced !== app.whisper { await app.coordinator.unload(replaced) }
         return [TrialLine(
             label: "\(Int(Double(samples.count) / 16_000)) s of speech",
             candidate: new.0, candidateSeconds: new.1, current: current.0, currentSeconds: current.1,

@@ -43,12 +43,15 @@ public struct Note: Codable, Equatable, Sendable, Identifiable {
     public var body: String
     /// Raw transcript, shown in a collapsed callout under rewritten text.
     public var transcript: String?
+    /// Whisper code of the spoken language.
+    public var language: String
 
     public init(
         id: UUID = UUID(), title: String, styleID: String, status: Status, recorded: Date, duration: TimeInterval,
         device: String = "mac", mode: Mode, tags: [String] = [], folder: String, audioPath: String? = nil,
-        body: String, transcript: String? = nil
+        language: String = "en", body: String, transcript: String? = nil
     ) {
+        self.language = language
         self.id = id
         self.title = title
         self.styleID = styleID
@@ -117,6 +120,7 @@ public enum NoteRenderer {
         lines.append("duration: \(Int(note.duration.rounded()))")
         lines.append("device: \(YAMLText.scalar(note.device))")
         lines.append("mode: \(note.mode.rawValue)")
+        lines.append("language: \(YAMLText.scalar(note.language))")
         lines.append("retention: \(note.retention.rawValue)")
         if note.tags.isEmpty {
             lines.append("tags: []")

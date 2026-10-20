@@ -65,6 +65,7 @@ final class NoteMaker {
             duration: capture.duration,
             mode: .quick,
             folder: folder(for: style),
+            language: capture.language.code,
             body: capture.text,
             transcript: keepsTranscript(style) ? capture.transcript : nil
         )
@@ -83,7 +84,7 @@ final class NoteMaker {
             let savedAudio = await Task.detached(priority: .userInitiated) { () -> Bool in
                 (try? AudioFileWriter.writeM4A(samples: samples, to: audioURL)) != nil
             }.value
-            let result = await app.processLongForm(transcript: capture.transcript, style: capture.style) { [weak self] status in
+            let result = await app.processLongForm(transcript: capture.transcript, style: capture.style, language: capture.language) { [weak self] status in
                 self?.processing = status
             }
             let note = Note(
@@ -96,6 +97,7 @@ final class NoteMaker {
                 mode: .longForm,
                 tags: result.knownTags,
                 folder: folder(for: capture.style),
+                language: capture.language.code,
                 body: result.body,
                 transcript: keepsTranscript(capture.style) ? capture.transcript : nil
             )

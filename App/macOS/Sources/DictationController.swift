@@ -27,11 +27,13 @@ typealias StyleRewriter = (_ transcript: String, _ style: Style, _ progress: @es
 enum RewriteError: LocalizedError {
     case modelNotDownloaded
     case lowMemory
+    case languageUnsupported(language: String, model: String)
 
     var errorDescription: String? {
         switch self {
         case .modelNotDownloaded: "The writing model isn't downloaded yet"
         case .lowMemory: "Memory is low"
+        case .languageUnsupported(let language, let model): "\(model) can't write \(language)"
         }
     }
 }
@@ -41,6 +43,7 @@ struct LongFormCapture {
     var transcript: String
     var samples: [Float]
     var style: Style
+    var language: SpokenLanguage
     var recorded: Date
     var duration: TimeInterval
 }
@@ -50,6 +53,7 @@ struct QuickCapture {
     var text: String
     var transcript: String
     var style: Style
+    var language: SpokenLanguage
     var recorded: Date
     var duration: TimeInterval
 }
@@ -70,6 +74,8 @@ final class DictationController {
     private(set) var lastError: String?
     /// Style the current recording will be delivered in. Number keys change it while recording.
     private(set) var style: Style = .raw
+    /// Language of the current recording. One per recording; switching restarts transcription.
+    private(set) var language: SpokenLanguage = .english
     /// The style picker is showing after stop (optional, Settings).
     private(set) var isPicking = false
 
@@ -77,6 +83,11 @@ final class DictationController {
     var onDelivered: ((_ words: Int, _ audioSeconds: Double) -> Void)?
     /// Called when a dictation is delivered in a style, with the app it was dictated into (for per-app defaults).
     var onStyleUsed: ((_ style: Style, _ app: String?) -> Void)?
+    /// A dictation in `language` finished in `app` (remembered per app on this Mac).
+    var onLanguageUsed: ((_ language: SpokenLanguage, _ app: String?) -> Void)?
+    /// The language was switched from the pill while recording; the app swaps in the right Whisper
+    /// model before `engine()` is asked for it again.
+    var onLanguageSelected: ((SpokenLanguage) -> Void)?
     /// Show a style picker after stop instead of delivering straight away.
     var pickAfterStop = false
     var pickerAutoConfirm: Double = 1.0
@@ -140,6 +151,7 @@ final class DictationController {
         self.waitForModel = waitForModel
         self.rewrite = rewrite
         indicator.onSelectStyle = { [weak self] style in self?.select(style) }
+        indicator.onSelectLanguage = { [weak self] language in self?.select(language) }
         indicator.onPick = { [weak self] style in self?.pick(style) }
     }
 
@@ -158,7 +170,7 @@ final class DictationController {
     }
 
     /// `remembersStyle`: false for push-to-talk, which is always raw and shouldn't change per-app defaults.
-    func start(microphoneGranted: Bool, deviceID: UInt32?, style: Style, targetApp: String?, remembersStyle: Bool = true) {
+    func start(microphoneGranted: Bool, deviceID: UInt32?, style: Style, language: SpokenLanguage = .english, targetApp: String?, remembersStyle: Bool = true) {
         guard phase == .idle else { return }
         guard microphoneGranted else {
             cues.play(.cancel)
@@ -170,9 +182,11 @@ final class DictationController {
         let generation = self.generation
         stopWhenStarted = false
         self.style = style
+        self.language = language
         self.targetApp = targetApp
         self.remembersStyle = remembersStyle
         indicator.currentStyle = style
+        indicator.currentLanguage = language
         phase = .starting
         let requestedAt = ContinuousClock.now
         let indicator = self.indicator
@@ -201,15 +215,7 @@ final class DictationController {
             indicator.show(.listening)
             markLongForm(after: longFormThreshold, generation: generation)
 
-            let engine = self.engine()
-            let streamer = StreamingTranscriber(
-                engine: engine,
-                source: recorder.samples,
-                isEngineReady: { await engine.isLoaded },
-                onUpdate: { confirmed, pending in
-                    Task { @MainActor in indicator.liveText = [confirmed, pending].filter { !$0.isEmpty }.joined(separator: " ") }
-                }
-            )
+            let streamer = makeStreamer()
             self.streamer = streamer
             await streamer.start()
             Log.dictation.notice("Recording started \(ContinuousClock.now - requestedAt, privacy: .public) after the request")
@@ -217,6 +223,37 @@ final class DictationController {
                 stopWhenStarted = false
                 stop()
             }
+        }
+    }
+
+    /// Live transcription of the whole recording so far, in the current engine's language.
+    private func makeStreamer() -> StreamingTranscriber {
+        let engine = self.engine()
+        let indicator = self.indicator
+        return StreamingTranscriber(
+            engine: engine,
+            source: recorder.samples,
+            isEngineReady: { await engine.isLoaded },
+            onUpdate: { confirmed, pending in
+                Task { @MainActor in indicator.liveText = [confirmed, pending].filter { !$0.isEmpty }.joined(separator: " ") }
+            }
+        )
+    }
+
+    /// Language chosen in the pill while recording. One language per recording, so what's been said
+    /// so far is transcribed again from the start in the new language.
+    func select(_ language: SpokenLanguage) {
+        guard phase == .recording || phase == .starting, language != self.language else { return }
+        self.language = language
+        indicator.currentLanguage = language
+        onLanguageSelected?(language) // may swap the Whisper model
+        Log.dictation.notice("Language: \(language.code, privacy: .public)")
+        guard phase == .recording, let old = streamer else { return } // .starting: the streamer is made with the new engine
+        let streamer = makeStreamer()
+        self.streamer = streamer
+        Task {
+            await old.cancel()
+            await streamer.start()
         }
     }
 
@@ -266,6 +303,8 @@ final class DictationController {
         cues.play(.stop)
         indicator.show(.processing)
         let audioSeconds = Double(recorder.samples.count) / AudioRecorder.sampleRate
+        let peak = recorder.samples.samples(from: 0).reduce(Float(0)) { max($0, abs($1)) }
+        Log.audio.notice("Stopped: \(audioSeconds, format: .fixed(precision: 1)) s, peak level \(peak, format: .fixed(precision: 3))")
         let generation = self.generation
         let targetApp = self.targetApp
         let recorded = recordingStartedAt
@@ -303,9 +342,10 @@ final class DictationController {
                     indicator.show(.processing)
                 }
 
-                if !(await engine.isLoaded) { indicator.show(.preparingModel) }
+                if !(await engine.isLoaded) { indicator.show(.preparingModel(firstTime: engine.needsFirstTimePreparation)) }
                 let heard = try await transcription.value
                 let transcript = TranscriptCleaner.hasSpeech(heard) ? heard : ""
+                if transcript.isEmpty { Log.dictation.notice("Nothing heard: raw transcript \(heard.count) characters [\(heard, privacy: .private)]") }
                 let textReady = ContinuousClock.now
                 guard generation == self.generation else { return } // cancelled while finishing
 
@@ -344,7 +384,7 @@ final class DictationController {
                     outcome = result.rawValue
                     onDelivered?(UsageStats.wordCount(transcript), audioSeconds)
                     if savesQuickDictations {
-                        onQuickNote?(QuickCapture(text: text, transcript: transcript, style: style, recorded: recorded, duration: audioSeconds))
+                        onQuickNote?(QuickCapture(text: text, transcript: transcript, style: style, language: language, recorded: recorded, duration: audioSeconds))
                     }
                     if let fallbackNote {
                         indicator.flash(.error(fallbackNote), seconds: 3)
@@ -355,6 +395,7 @@ final class DictationController {
                     }
                 }
                 if !text.isEmpty, remembersStyle { onStyleUsed?(style, targetApp) }
+                if !text.isEmpty { onLanguageUsed?(language, targetApp) }
                 let delivered = ContinuousClock.now
                 lastReport = DictationReport(
                     finishedAt: Date(),
@@ -387,11 +428,13 @@ final class DictationController {
     private func finishLongForm(streamer: StreamingTranscriber, audioSeconds: Double, recorded: Date, generation: Int) {
         let samples = recorder.samples.samples(from: 0)
         let style = self.style
+        let language = self.language
+        let targetApp = self.targetApp
         finishTask = Task {
             do {
                 let engine = self.engine()
                 if !(await engine.isLoaded) {
-                    indicator.show(.preparingModel)
+                    indicator.show(.preparingModel(firstTime: engine.needsFirstTimePreparation))
                     try await waitForModel()
                 }
                 let transcript = try await streamer.finish()
@@ -401,12 +444,13 @@ final class DictationController {
                     indicator.flash(.nothingHeard)
                 } else if dryRun {
                     Log.dictation.notice("Dry-run long-form [\(style.name, privacy: .public)]: \(transcript.count) characters")
-                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, recorded: recorded, duration: audioSeconds))
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds))
                     indicator.flash(.notice("Long recording: making a note"), seconds: 2.5)
                 } else {
-                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, recorded: recorded, duration: audioSeconds))
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds))
                     indicator.flash(.notice("Long recording: making a note"), seconds: 2.5)
                 }
+                if TranscriptCleaner.hasSpeech(transcript) { onLanguageUsed?(language, targetApp) }
                 Log.dictation.notice("Long-form recording handed off: \(audioSeconds, format: .fixed(precision: 0))s")
             } catch {
                 if generation == self.generation { fail("Transcription failed: \(error.localizedDescription)") }

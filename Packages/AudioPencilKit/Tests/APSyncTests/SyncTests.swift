@@ -17,8 +17,14 @@ private func sampleConfig() -> SharedConfig {
     config.styles = Style.presets.map(ConfigStyle.init) + [custom]
     var device = DeviceSection()
     device.microphones = [.init(name: "MacBook Air Microphone", uid: "BuiltInMicrophoneDevice")]
+    device.languages = ["en", "fr", "no"]
+    device.multilingualModel = "openai_whisper-small"
     config.devices = ["Wes’s MacBook Air": device, "iPhone": DeviceSection()]
-    config.writingSamples = [WritingSample(id: "s1", kind: "diary", text: "Today: fine.\n\nSecond paragraph, with \"quotes\".", promptID: "diary")]
+    config.writingSamples = [
+        WritingSample(id: "s1", kind: "diary", text: "Today: fine.\n\nSecond paragraph, with \"quotes\".", promptID: "diary"),
+        WritingSample(id: "s2", kind: "work-email", text: "Bonjour, le projet a du retard.", language: "fr"),
+    ]
+    config.languageVocabulary = ["fr": ["Loïc-William", "Marie-Diane"], "no": ["Bjørn"]]
     return config
 }
 
@@ -94,6 +100,18 @@ struct ConfigDocumentTests {
 
 struct ConfigMergerTests {
     private let device = "Mac"
+
+    @Test func languageVocabularyMergesPerLanguage() {
+        var base = SharedConfig()
+        base.languageVocabulary = ["fr": ["Loïc"]]
+        var local = base
+        local.languageVocabulary["fr"] = ["Loïc", "Marie-Diane"] // added here
+        local.languageVocabulary["es"] = ["Tío Pepe"]
+        var remote = base
+        remote.languageVocabulary["fr"] = [] // Loïc removed in Obsidian
+        let merged = ConfigMerger.merge(base: base, local: local, remote: remote, device: "Mac")
+        #expect(merged.languageVocabulary == ["fr": ["Marie-Diane"], "es": ["Tío Pepe"]])
+    }
 
     @Test func listsMergeAdditionsAndRemovalsFromBothSides() {
         #expect(ConfigMerger.mergeList(base: ["a", "b"], local: ["a", "b", "c"], remote: ["b", "d"]) == ["b", "d", "c"])

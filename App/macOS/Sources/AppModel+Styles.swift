@@ -95,12 +95,13 @@ extension AppModel {
     }
 
     /// Style prompt, with the closest writing samples for "Like me".
-    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context) -> StylePrompt {
+    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context, language: SpokenLanguage) -> StylePrompt {
+        let vocabulary = settings.vocabulary(for: language)
         guard style.tone == .likeMe else {
-            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: settings.customVocabulary)
+            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language)
         }
-        let examples = WritingSampleSelector.pick(for: transcript, from: writingSamples)
-        return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: settings.customVocabulary, examples: examples)
+        let examples = WritingSampleSelector.pick(for: transcript, from: writingSamples, language: language)
+        return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language, examples: examples)
     }
 
     static func loadStyleMemory() -> StyleMemory {
@@ -186,9 +187,13 @@ extension AppModel {
         let engine = writing
         guard engine.isDownloaded else { throw RewriteError.modelNotDownloaded }
         guard memoryPressure != .critical else { throw RewriteError.lowMemory }
+        let language = dictation.language
+        guard canStyle(in: language) else {
+            throw RewriteError.languageUnsupported(language: language.name(), model: writingModelOption?.name ?? "The writing model")
+        }
         defer { restoreWhisper() }
 
-        let prompt = stylePrompt(for: style, transcript: transcript, context: .quick)
+        let prompt = stylePrompt(for: style, transcript: transcript, context: .quick, language: language)
         let swapStart = ContinuousClock.now
         writingModelState = .loading(firstTime: false)
         modelState = .idle
