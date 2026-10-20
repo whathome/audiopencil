@@ -41,10 +41,15 @@ final class AppModel {
     let indicator = IndicatorModel()
     let vault = VaultController()
     @ObservationIgnored private(set) var sync: SyncController!
-    /// Master tag list from the vault settings file (used from milestone 5).
-    var tags: [String] = []
+    @ObservationIgnored private(set) var notes: NoteMaker!
+    /// Master tag list from the vault settings file. Approving new tags in a review adds them here.
+    var tags: [String] = [] {
+        didSet { if !applyingSync, tags != oldValue { sync?.syncSoon() } }
+    }
     /// Set while applying a synced config, so the change doesn't schedule another sync.
     @ObservationIgnored var applyingSync = false
+    /// Debug builds: a short long-form threshold for testing (not saved or synced).
+    @ObservationIgnored var debugLongFormThreshold: Double?
     var modelState: TranscriptionModelState = .idle
     private(set) var hotkeyActive = false
     /// Recent Fn events and gesture decisions, newest last.
@@ -127,6 +132,10 @@ final class AppModel {
         sync.localConfig = { [unowned self] base in localConfig(from: base) }
         sync.apply = { [unowned self] config in apply(config) }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
+        notes = NoteMaker(app: self)
+        dictation.onLongForm = { [unowned self] capture in notes.makeLongFormNote(capture) }
+        dictation.onQuickNote = { [unowned self] capture in notes.saveQuick(capture) }
+        applyNoteSettings()
         dictation.onPrepareRewrite = { [unowned self] _ in prefetchWritingModel() }
         applyPickerSettings()
         dictation.onDelivered = { [unowned self] words, audioSeconds in
@@ -213,6 +222,13 @@ final class AppModel {
                         Log.dictation.notice("Simulated Obsidian edit (\(adding ? "add" : "remove") \(word, privacy: .public)): \(wrote ? "written" : "failed", privacy: .public)")
                     }
                 case "vault:sync": sync.syncSoon(after: .zero)
+                case let command where command.hasPrefix("longform-threshold:"):
+                    debugLongFormThreshold = Double(command.dropFirst("longform-threshold:".count))
+                    applyNoteSettings()
+                case "review": notes.review()
+                case "review:skip": if let first = notes.pending.first { notes.skip(first) }
+                case "review:approve":
+                    if let first = notes.pending.first { notes.approve(first, title: first.note.title, tags: first.note.tags, folder: first.note.folder) }
                 case "report:vocabulary":
                     Log.dictation.notice("App vocabulary: \(self.settings.customVocabulary.joined(separator: ", "), privacy: .public); sync \(String(describing: self.sync.status), privacy: .public)")
                 case let command where command.hasPrefix("mouse:") || command.hasPrefix("click:"):
@@ -267,6 +283,12 @@ final class AppModel {
     /// Writes the main window (including title bar) to Application Support/AudioPencil/Debug/snapshot.png,
     /// so UI changes can be checked without screen-recording permission.
     private func snapshotMainWindow() {
+        if let review = NSApp.windows.first(where: { $0.isVisible && $0.title == "Review note" }),
+           let view = review.contentView?.superview, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            view.cacheDisplay(in: view.bounds, to: rep)
+            let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Debug")
+            try? rep.representation(using: .png, properties: [:])?.write(to: folder.appending(path: "review.png"))
+        }
         guard let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }),
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds)
@@ -522,11 +544,17 @@ final class AppModel {
         if settings.menuBarMode != old.menuBarMode {
             applyAppPresence()
         }
+        applyNoteSettings()
         if !applyingSync { sync?.syncSoon() }
         if settings.writingModel != old.writingModel {
             switchWritingModel(to: settings.writingModel)
         }
         applyPickerSettings()
+    }
+
+    private func applyNoteSettings() {
+        dictation?.longFormThreshold = debugLongFormThreshold ?? settings.longFormThreshold
+        dictation?.savesQuickDictations = settings.saveQuickDictations
     }
 
     // MARK: App presence

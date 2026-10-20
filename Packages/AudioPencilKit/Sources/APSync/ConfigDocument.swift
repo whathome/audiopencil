@@ -1,3 +1,4 @@
+import APCore
 import Foundation
 import Yams
 
@@ -139,6 +140,8 @@ public enum ConfigDocument {
                 out += "    writing_model: \(scalar(device.writingModel))\n"
                 out += "    pick_style_after_stop: \(device.pickStyleAfterStop)\n"
                 out += "    picker_auto_confirm: \(number(device.pickerAutoConfirm))\n"
+                out += "    long_form_threshold_seconds: \(number(device.longFormThreshold))\n"
+                out += "    save_quick_dictations: \(device.saveQuickDictations)\n"
             }
         }
         return out
@@ -161,25 +164,6 @@ public enum ConfigDocument {
         return "|-\n" + body + "\n"
     }
 
-    private static let reserved: Set<String> = ["true", "false", "yes", "no", "on", "off", "null", "~", "y", "n"]
-
     /// Plain when unambiguous, otherwise double-quoted with escapes.
-    static func scalar(_ value: String) -> String {
-        let plain = value.range(of: #"^[A-Za-z][A-Za-z0-9 ._/-]*$"#, options: .regularExpression) != nil
-            && !value.hasSuffix(" ")
-            && !reserved.contains(value.lowercased())
-        if plain { return value }
-        var escaped = ""
-        for character in value.unicodeScalars {
-            switch character {
-            case "\\": escaped += "\\\\"
-            case "\"": escaped += "\\\""
-            case "\n": escaped += "\\n"
-            case "\t": escaped += "\\t"
-            case "\r": escaped += "\\r"
-            default: escaped.unicodeScalars.append(character)
-            }
-        }
-        return "\"\(escaped)\""
-    }
+    static func scalar(_ value: String) -> String { YAMLText.scalar(value) }
 }

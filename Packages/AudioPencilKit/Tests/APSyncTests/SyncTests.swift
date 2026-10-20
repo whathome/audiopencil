@@ -3,6 +3,7 @@ import APStorage
 @testable import APSync
 import Foundation
 import Testing
+import Yams
 import os
 
 private func sampleConfig() -> SharedConfig {
@@ -286,5 +287,48 @@ struct OutboxTests {
     @Test func suffixRule() {
         #expect(StoragePath.withSuffix("/Notes/2026-10-19 1430 Title.md", 2) == "/Notes/2026-10-19 1430 Title-2.md")
         #expect(StoragePath.withSuffix("/audio/clip", 3) == "/audio/clip-3")
+    }
+}
+
+struct StarterKitTests {
+    @Test func createsBoardGuideAndSamplesOnceWithoutOverwriting() async throws {
+        let (storage, root) = try tempVault()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = try await StarterKit.ensure(in: storage, vaultPath: "/Vault", includeSamples: true)
+        guard case .created(let files) = first else { Issue.record("expected files"); return }
+        #expect(files.count == 5)
+        #expect(files.contains(StarterKit.basePath))
+        #expect(files.filter { $0.hasPrefix(StarterKit.samplesFolder) }.count == 3)
+
+        // The user edits the guide; a later run must not touch it, and samples aren't recreated.
+        let guide = StoragePath.join("/Vault", StarterKit.guidePath)
+        try await storage.write(guide, data: Data("mine".utf8), ifMatch: nil, createOnly: false)
+        let samples = try await storage.list(StoragePath.join("/Vault", StarterKit.samplesFolder))
+        for sample in samples { try await storage.delete(sample.path) }
+        let second = try await StarterKit.ensure(in: storage, vaultPath: "/Vault", includeSamples: false)
+        #expect(second == .alreadyThere)
+        #expect(try await storage.read(guide).data == Data("mine".utf8))
+        #expect(try await storage.list(StoragePath.join("/Vault", StarterKit.samplesFolder)).isEmpty)
+
+        // A deleted board comes back (PRD: created when missing).
+        try await storage.delete(StoragePath.join("/Vault", StarterKit.basePath))
+        #expect(try await StarterKit.ensure(in: storage, vaultPath: "/Vault", includeSamples: false) == .created(files: [StarterKit.basePath]))
+    }
+
+    @Test func boardIsValidYAMLWithTheThreeViews() throws {
+        let parsed = try #require(try Yams.load(yaml: StarterKit.base) as? [String: Any])
+        let views = try #require(parsed["views"] as? [[String: Any]])
+        #expect(views.compactMap { $0["name"] as? String } == ["Professional review", "Diary", "All recordings"])
+        #expect(views.first?["type"] as? String == "kanban")
+        #expect((views.first?["groupOrder"] as? [String]) == ["needs-review", "reviewed", "actioned"])
+    }
+
+    @Test func samplesRenderAsAudioPencilNotes() {
+        for note in StarterKit.samples() {
+            let markdown = NoteRenderer.markdown(for: note)
+            #expect(markdown.contains("type: audio-pencil\n"))
+            #expect(markdown.contains("  - sample\n"))
+        }
+        #expect(StarterKit.samples().map(\.status) == [.reviewed, .reviewed, .needsReview])
     }
 }

@@ -58,6 +58,10 @@ public struct DictationSettings: Codable, Equatable, Sendable {
     public var pickStyleAfterStop: Bool = false
     /// Seconds before the picker accepts the preselected style.
     public var pickerAutoConfirm: Double = 1.0
+    /// Hotkey recordings longer than this become long-form notes (audio kept, review prompt) instead of pasting.
+    public var longFormThreshold: Double = 300
+    /// Also save quick dictations as notes in the vault (PRD default: paste and forget).
+    public var saveQuickDictations: Bool = false
 
     public init() {}
 
@@ -79,5 +83,7 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         writingModel = try c.decodeIfPresent(String.self, forKey: .writingModel) ?? defaults.writingModel
         pickStyleAfterStop = try c.decodeIfPresent(Bool.self, forKey: .pickStyleAfterStop) ?? defaults.pickStyleAfterStop
         pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
+        longFormThreshold = try c.decodeIfPresent(Double.self, forKey: .longFormThreshold) ?? defaults.longFormThreshold
+        saveQuickDictations = try c.decodeIfPresent(Bool.self, forKey: .saveQuickDictations) ?? defaults.saveQuickDictations
     }
 }

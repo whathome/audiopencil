@@ -61,6 +61,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let app = AppModel()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Use the bundled icon directly: Launch Services can cache a stale, generic one for builds
+        // that were registered before the icon existed.
+        if let icon = Bundle.main.image(forResource: "AppIcon") {
+            NSApp.applicationIconImage = icon
+        }
         app.bootstrap()
     }
 

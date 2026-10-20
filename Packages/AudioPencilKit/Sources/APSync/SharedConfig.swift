@@ -125,6 +125,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public var writingModel: String = DictationSettings().writingModel
     public var pickStyleAfterStop: Bool = false
     public var pickerAutoConfirm: Double = 1.0
+    public var longFormThreshold: Double = 300
+    public var saveQuickDictations: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case microphones, stop
@@ -132,6 +134,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         case doubleTapWindow = "double_tap_window", warmMicOnFirstTap = "warm_mic_on_first_tap"
         case transcriptionModel = "transcription_model", writingModel = "writing_model"
         case pickStyleAfterStop = "pick_style_after_stop", pickerAutoConfirm = "picker_auto_confirm"
+        case longFormThreshold = "long_form_threshold_seconds", saveQuickDictations = "save_quick_dictations"
     }
 
     public init() {}
@@ -148,6 +151,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         writingModel = settings.writingModel
         pickStyleAfterStop = settings.pickStyleAfterStop
         pickerAutoConfirm = settings.pickerAutoConfirm
+        longFormThreshold = settings.longFormThreshold
+        saveQuickDictations = settings.saveQuickDictations
     }
 
     public init(from decoder: any Decoder) throws {
@@ -164,6 +169,8 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         writingModel = try c.decodeIfPresent(String.self, forKey: .writingModel) ?? defaults.writingModel
         pickStyleAfterStop = try c.decodeIfPresent(Bool.self, forKey: .pickStyleAfterStop) ?? defaults.pickStyleAfterStop
         pickerAutoConfirm = try c.decodeIfPresent(Double.self, forKey: .pickerAutoConfirm) ?? defaults.pickerAutoConfirm
+        longFormThreshold = try c.decodeIfPresent(Double.self, forKey: .longFormThreshold) ?? defaults.longFormThreshold
+        saveQuickDictations = try c.decodeIfPresent(Bool.self, forKey: .saveQuickDictations) ?? defaults.saveQuickDictations
     }
 
     /// Writes this section's values into the app's settings, leaving local-only fields alone.
@@ -179,5 +186,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         settings.writingModel = writingModel
         settings.pickStyleAfterStop = pickStyleAfterStop
         settings.pickerAutoConfirm = min(max(pickerAutoConfirm, 0.25), 5)
+        settings.longFormThreshold = min(max(longFormThreshold, 60), 3_600)
+        settings.saveQuickDictations = saveQuickDictations
     }
 }

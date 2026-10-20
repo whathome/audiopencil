@@ -40,7 +40,7 @@ struct MainWindow: View {
                 switch app.page {
                 case .dictation: DictationPage(app: app)
                 case .styles: StylesPage(app: app)
-                case .notes: ComingSoonPage(title: "Notes", symbol: "book.closed", message: "Long recordings become notes in your Obsidian vault, synced through Nextcloud.")
+                case .notes: NotesPage(app: app, notes: app.notes)
                 case .vault: VaultPage(vault: app.vault, sync: app.sync)
                 case .setup: SetupView(app: app)
                 case .settings: SettingsView(app: app, embedded: true)
@@ -63,7 +63,7 @@ private struct Sidebar: View {
             Section {
                 row(.dictation)
                 row(.styles)
-                row(.notes, soon: true)
+                row(.notes)
             }
             Section {
                 row(.vault)
@@ -106,6 +106,9 @@ private struct Sidebar: View {
             Spacer()
             if soon {
                 Text("Soon").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
+            } else if page == .notes, !app.notes.pending.isEmpty {
+                Text("\(app.notes.pending.count)").font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 1)
+                    .background(Capsule().fill(Color.pencil)).foregroundStyle(.black.opacity(0.8))
             } else if page == .vault, !app.vault.settings.isConfigured {
                 Text("Set up").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
             } else if page == .setup, app.needsSetup {

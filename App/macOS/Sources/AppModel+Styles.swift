@@ -41,6 +41,7 @@ extension AppModel {
         var config = base ?? SharedConfig()
         config.styles = styles.map(ConfigStyle.init)
         config.vocabulary = settings.customVocabulary
+        config.tags = tags
         config.devices[sync.deviceName] = DeviceSection(settings)
         return config
     }

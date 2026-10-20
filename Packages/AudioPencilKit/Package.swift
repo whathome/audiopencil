@@ -86,7 +86,7 @@ let package = Package(
             swiftSettings: concurrency
         ),
         .testTarget(name: "APStorageTests", dependencies: ["APStorage"], swiftSettings: concurrency),
-        .testTarget(name: "APSyncTests", dependencies: ["APSync", "APStorage", "APCore"], swiftSettings: concurrency),
+        .testTarget(name: "APSyncTests", dependencies: ["APSync", "APStorage", "APCore", .product(name: "Yams", package: "Yams")], swiftSettings: concurrency),
         .testTarget(
             name: "APSummaryTests",
             dependencies: ["APSummary", "APModels", "APCore"],

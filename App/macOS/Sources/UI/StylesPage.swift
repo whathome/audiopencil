@@ -176,6 +176,16 @@ private struct StyleEditor: View {
                     }
                     Toggle("Enabled", isOn: $style.isEnabled)
                 }
+                Section {
+                    TextField("Folder in the vault", text: Binding(
+                        get: { style.folder ?? "" },
+                        set: { style.folder = $0.isEmpty ? nil : $0 }
+                    ), prompt: Text(String(NoteMaker.defaultFolder.dropFirst())))
+                } header: {
+                    Text("Notes")
+                } footer: {
+                    Text("Where long recordings (and saved quick dictations) in this style land.")
+                }
             }
             .formStyle(.grouped)
 

@@ -23,6 +23,8 @@ final class SyncController {
     private(set) var status: Status = .notConfigured
     private(set) var lastSynced: Date?
     private(set) var queuedUploads = 0
+    /// First-run files were just created in this vault: show the board walkthrough once.
+    var showWalkthrough = false
     let deviceName = Host.current().localizedName ?? "Mac"
 
     /// Builds the local side of the merge from the last agreed version.
@@ -39,6 +41,8 @@ final class SyncController {
     @ObservationIgnored private var poller: Task<Void, Never>?
     @ObservationIgnored private var running: Task<Void, Never>?
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
+    /// Vaults whose board and guide were checked this launch.
+    @ObservationIgnored private var starterChecked: Set<String> = []
 
     init(vault: VaultController) {
         self.vault = vault
@@ -121,6 +125,7 @@ final class SyncController {
                 apply(config)
                 Log.models.notice("Settings synced\(wrote ? " (file updated)" : "", privacy: .public)")
             }
+            await ensureStarterKit(provider: location.provider, vaultPath: location.path)
             let drained = await outbox.drain(to: location.provider, vaultPath: location.path)
             queuedUploads = await outbox.pending.count
             if let reason = drained.stoppedBecause {
@@ -135,6 +140,25 @@ final class SyncController {
             status = isOnline ? .failed(detail) : .offline
         } catch {
             status = .failed(error.localizedDescription)
+        }
+    }
+
+    /// PRD first run: the board and guide whenever they're missing; samples once per vault.
+    private func ensureStarterKit(provider: any StorageProvider, vaultPath: String) async {
+        let key = locationKey
+        guard !starterChecked.contains(key) else { return }
+        let samplesKey = "starterSamples:" + key
+        let firstTime = !UserDefaults.standard.bool(forKey: samplesKey)
+        do {
+            let outcome = try await StarterKit.ensure(in: provider, vaultPath: vaultPath, includeSamples: firstTime)
+            starterChecked.insert(key)
+            UserDefaults.standard.set(true, forKey: samplesKey)
+            if case .created(let files) = outcome {
+                Log.models.notice("Created in the vault: \(files.joined(separator: ", "), privacy: .public)")
+                if firstTime { showWalkthrough = true }
+            }
+        } catch {
+            Log.models.error("Couldn't create the board and guide: \(error.localizedDescription, privacy: .public)")
         }
     }
 

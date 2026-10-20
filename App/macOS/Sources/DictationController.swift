@@ -36,6 +36,24 @@ enum RewriteError: LocalizedError {
     }
 }
 
+/// A recording past the long-form threshold, handed off for note processing instead of pasting.
+struct LongFormCapture {
+    var transcript: String
+    var samples: [Float]
+    var style: Style
+    var recorded: Date
+    var duration: TimeInterval
+}
+
+/// A delivered quick dictation, for the optional "save quick dictations" notes.
+struct QuickCapture {
+    var text: String
+    var transcript: String
+    var style: Style
+    var recorded: Date
+    var duration: TimeInterval
+}
+
 /// Quick-dictation loop: record → stream to Whisper → stop → (rewrite in a style) → paste.
 @Observable
 final class DictationController {
@@ -66,6 +84,13 @@ final class DictationController {
     var pickerStyles: [Style] = [] {
         didSet { indicator.styleChoices = pickerStyles }
     }
+    /// Recordings at least this long (seconds) become long-form notes instead of pasting.
+    var longFormThreshold: Double = 300
+    /// Long recording finished and transcribed: make a note from it.
+    var onLongForm: ((LongFormCapture) -> Void)?
+    /// A quick dictation was delivered (only when saving quick dictations is on).
+    var onQuickNote: ((QuickCapture) -> Void)?
+    var savesQuickDictations = false
     /// Called when the picker opens with a styled default, so the writing model can start loading early.
     var onPrepareRewrite: ((Style) -> Void)?
 
@@ -83,6 +108,7 @@ final class DictationController {
     private let rewrite: StyleRewriter
     /// Frontmost app when recording started: where the text is going.
     private var targetApp: String?
+    private var recordingStartedAt = Date()
     private var remembersStyle = true
     private var finishTask: Task<Void, Never>?
     private var pickerContinuation: CheckedContinuation<Style?, Never>?
@@ -159,6 +185,7 @@ final class DictationController {
             guard generation == self.generation else { return } // cancelled while the mic came on
 
             phase = .recording
+            recordingStartedAt = Date()
             cues.play(.start)
             recorder.muteNext(seconds: 0.3) // keep the start cue out of the transcript
             indicator.show(.listening)
@@ -219,6 +246,12 @@ final class DictationController {
         let audioSeconds = Double(recorder.samples.count) / AudioRecorder.sampleRate
         let generation = self.generation
         let targetApp = self.targetApp
+        let recorded = recordingStartedAt
+
+        if audioSeconds >= longFormThreshold {
+            finishLongForm(streamer: streamer, audioSeconds: audioSeconds, recorded: recorded, generation: generation)
+            return
+        }
 
         finishTask = Task {
             do {
@@ -287,6 +320,9 @@ final class DictationController {
                     let result = Paster.deliver(text)
                     outcome = result.rawValue
                     onDelivered?(UsageStats.wordCount(transcript), audioSeconds)
+                    if savesQuickDictations {
+                        onQuickNote?(QuickCapture(text: text, transcript: transcript, style: style, recorded: recorded, duration: audioSeconds))
+                    }
                     if let fallbackNote {
                         indicator.flash(.error(fallbackNote), seconds: 3)
                     } else if result == .clipboardOnly {
@@ -315,6 +351,41 @@ final class DictationController {
                 if generation == self.generation {
                     fail("Transcription failed: \(error.localizedDescription)")
                 }
+            }
+            if generation == self.generation {
+                phase = .idle
+                self.streamer = nil
+                indicator.currentStyle = nil
+            }
+        }
+    }
+
+    /// Long recording: no paste. Finish the transcript, hand the recording off, and say so.
+    private func finishLongForm(streamer: StreamingTranscriber, audioSeconds: Double, recorded: Date, generation: Int) {
+        let samples = recorder.samples.samples(from: 0)
+        let style = self.style
+        finishTask = Task {
+            do {
+                let engine = self.engine()
+                if !(await engine.isLoaded) {
+                    indicator.show(.preparingModel)
+                    try await waitForModel()
+                }
+                let transcript = try await streamer.finish()
+                guard generation == self.generation else { return }
+                if transcript.isEmpty {
+                    indicator.flash(.nothingHeard)
+                } else if dryRun {
+                    Log.dictation.notice("Dry-run long-form [\(style.name, privacy: .public)]: \(transcript.count) characters")
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, recorded: recorded, duration: audioSeconds))
+                    indicator.flash(.notice("Long recording: making a note"), seconds: 2.5)
+                } else {
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, recorded: recorded, duration: audioSeconds))
+                    indicator.flash(.notice("Long recording: making a note"), seconds: 2.5)
+                }
+                Log.dictation.notice("Long-form recording handed off: \(audioSeconds, format: .fixed(precision: 0))s")
+            } catch {
+                if generation == self.generation { fail("Transcription failed: \(error.localizedDescription)") }
             }
             if generation == self.generation {
                 phase = .idle

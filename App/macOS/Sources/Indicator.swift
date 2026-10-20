@@ -16,6 +16,7 @@ final class IndicatorModel {
         case rewriting(String)
         case clipboard
         case nothingHeard
+        case notice(String)
         case error(String)
     }
 
@@ -333,6 +334,9 @@ struct IndicatorView: View {
             case .nothingHeard:
                 Image(systemName: "mic.slash")
                 Text("Nothing heard").font(.callout)
+            case .notice(let message):
+                Image(systemName: "doc.badge.clock")
+                Text(message).font(.callout).lineLimit(1)
             case .error(let message):
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
                 Text(message).font(.callout).lineLimit(1)

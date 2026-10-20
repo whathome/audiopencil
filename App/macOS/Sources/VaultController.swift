@@ -255,6 +255,12 @@ final class VaultController {
         }
     }
 
+    /// The Obsidian vault's name: its folder's name.
+    var vaultName: String? {
+        let path = settings.kind == .nextcloud ? settings.remoteVaultPath : settings.localPath
+        return path?.split(separator: "/").last.map(String.init)
+    }
+
     /// "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/Work" → "iCloud Drive › Obsidian › Work"
     var localPathDescription: String? {
         guard let path = settings.localPath else { return nil }

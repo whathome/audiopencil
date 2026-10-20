@@ -99,8 +99,9 @@ extension Style {
     public static let professional = Style(
         id: "professional", name: "Professional", shortcut: 3,
         instructions: """
-            Write a short summary paragraph, then the key points as bullets grouped by theme. Keep facts, \
-            names, numbers and decisions; drop rambling.
+            Write in the first person, as me ("I'm…", "we decided…"), never "the speaker". A short summary \
+            paragraph, then the key points as bullets grouped by theme. Keep facts, names, numbers and \
+            decisions; drop rambling.
             """,
         intensity: .heavy, tone: .professional, length: .shorter, suggestTags: true, extractActionItems: true
     )
