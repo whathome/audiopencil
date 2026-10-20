@@ -35,10 +35,11 @@ struct DictationPage: View {
     }
 
     private var cards: some View {
+        // What you said comes first; the reference and the machinery follow.
         VStack(spacing: 16) {
+            LastDictationCard(app: app)
             HotkeyCard(app: app)
             TranscriptionCard(app: app)
-            LastDictationCard(app: app)
         }
     }
 }
@@ -71,23 +72,28 @@ private struct HotkeyCard: View {
             // Gestures flow into as many columns as fit: 2 × 2 in a normal window, one column when tiny.
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 185), spacing: 12, alignment: .topLeading)], alignment: .leading, spacing: 14) {
                 if app.settings.holdFnForRaw {
-                    Gesture(title: "Push to talk", detail: "Hold, release to paste") {
+                    Gesture(title: "Push to talk", detail: "Hold, release to paste", keys: "Hold Fn") {
                         KeyCap(label: "hold fn")
                     }
                 }
-                Gesture(title: "In a style", detail: "Double-tap; 1–9 to switch") {
+                Gesture(title: "In a style", detail: "Double-tap; 1–9 to switch", keys: "Double-tap Fn") {
                     KeyCap(label: "fn"); KeyCap(label: "fn")
                 }
-                Gesture(title: "Stop and paste", detail: stopDetail) {
+                Gesture(title: "Stop and paste", detail: stopDetail, keys: stopKeys) {
                     KeyCap(label: "fn")
                     if app.settings.stopGesture == .doubleTapFn { KeyCap(label: "fn") }
                     if app.settings.returnStops { KeyCap(label: "return", symbol: "return") }
                 }
-                Gesture(title: "Cancel", detail: "Nothing is pasted") {
+                Gesture(title: "Cancel", detail: "Nothing is pasted", keys: "Escape") {
                     KeyCap(label: "esc")
                 }
             }
         }
+    }
+
+    private var stopKeys: String {
+        let fn = app.settings.stopGesture == .singleTapFn ? "Tap Fn" : "Double-tap Fn"
+        return app.settings.returnStops ? "\(fn) or Return" : fn
     }
 
     private var stopDetail: String {
@@ -99,16 +105,21 @@ private struct HotkeyCard: View {
 private struct Gesture<Keys: View>: View {
     let title: String
     let detail: String
-    @ViewBuilder var keys: Keys
+    /// The keys in words, for VoiceOver (keycaps alone read as "fn fn").
+    let keys: String
+    @ViewBuilder var keycaps: Keys
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 4) { keys }.fixedSize()
+            HStack(spacing: 4) { keycaps }.fixedSize()
             Text(title).font(.headline)
             Text(detail).font(.callout).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(keys)")
+        .accessibilityHint(detail)
     }
 }
 
@@ -233,7 +244,7 @@ private struct StatsColumn: View {
                     Text("After a few dictations").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            StatTile(label: "Usage", value: "\(stats.activeDaysThisMonth())", unit: "days this month") {
+            StatTile(label: "Usage", value: "\(stats.activeDaysThisMonth())", unit: stats.activeDaysThisMonth() == 1 ? "day this month" : "days this month") {
                 ActivityGrid(days: stats.recentDays())
                     .padding(.top, 6)
             }

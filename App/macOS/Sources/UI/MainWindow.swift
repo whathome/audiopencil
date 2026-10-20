@@ -59,6 +59,7 @@ struct MainWindow: View {
                     Image(systemName: "sidebar.left")
                 }
                 .help(collapsed ? "Show sidebar" : "Collapse sidebar to icons")
+                .accessibilityLabel(collapsed ? "Show sidebar" : "Collapse sidebar")
             }
         }
         .toolbar(removing: .title)
@@ -175,6 +176,19 @@ private struct Sidebar: View {
         .buttonStyle(.plain)
         .focusEffectDisabled() // the filled highlight already shows the selection
         .help(rail ? page.title : "")
+        .accessibilityLabel(page.title) // the rail shows only the icon
+        .accessibilityValue(attentionDescription(page) ?? "")
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    /// What the badge or rail dot says, in words, for VoiceOver.
+    private func attentionDescription(_ page: Page) -> String? {
+        switch page {
+        case .notes where !app.notes.pending.isEmpty: "\(app.notes.pending.count) waiting for review"
+        case .vault where !app.vault.settings.isConfigured: "Not set up"
+        case .settings where app.needsSetup: "Permissions need attention"
+        default: nil
+        }
     }
 
     @ViewBuilder

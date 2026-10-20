@@ -196,7 +196,10 @@ final class DictationController {
             recordingStartedAt = Date()
             cues.play(.start)
             recorder.muteNext(seconds: 0.3) // keep the start cue out of the transcript
+            indicator.recordingStartedAt = recordingStartedAt
+            indicator.longFormThreshold = longFormThreshold
             indicator.show(.listening)
+            markLongForm(after: longFormThreshold, generation: generation)
 
             let engine = self.engine()
             let streamer = StreamingTranscriber(
@@ -237,6 +240,17 @@ final class DictationController {
     /// Picker showing: Return confirms the highlighted style.
     func confirmPick() {
         pick(indicator.picker?.selected ?? style)
+    }
+
+    /// One soft cue when a recording crosses the long-form threshold, so the switch from paste to note
+    /// is never a surprise at stop. The pill shows it too.
+    private func markLongForm(after seconds: Double, generation: Int) {
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard let self, generation == self.generation, phase == .recording else { return }
+            cues.play(.mark)
+            recorder.muteNext(seconds: 0.4) // keep the cue out of the transcript
+        }
     }
 
     func stop() {

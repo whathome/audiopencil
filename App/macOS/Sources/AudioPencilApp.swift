@@ -10,6 +10,16 @@ struct AudioPencilApp: App {
             MainWindow(app: delegate.app)
         }
         .windowResizability(.contentMinSize)
+        .commands {
+            // ⌘1–⌘6 switch pages, like the sidebar order.
+            CommandGroup(after: .sidebar) {
+                Divider()
+                ForEach(Array(Page.allCases.enumerated()), id: \.element) { index, page in
+                    Button(page.title) { delegate.app.page = page }
+                        .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+                }
+            }
+        }
 
         Settings {
             SettingsView(app: delegate.app)

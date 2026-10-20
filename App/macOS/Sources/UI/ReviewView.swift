@@ -32,11 +32,7 @@ struct ReviewView: View {
                     LabeledContent("Recorded") {
                         Text("\(item.note.recorded.formatted(date: .abbreviated, time: .shortened)) · \(Self.minutes(item.note.duration))")
                     }
-                    LabeledContent("Folder") {
-                        TextField("", text: $folder, prompt: Text(NoteMaker.defaultFolder))
-                            .labelsHidden()
-                            .multilineTextAlignment(.trailing)
-                    }
+                    TextField("Folder", text: $folder, prompt: Text(NoteMaker.defaultFolder))
                 }
 
                 Section {
@@ -73,8 +69,9 @@ struct ReviewView: View {
 
                 Section("Note") {
                     ScrollView {
-                        Text(item.note.body)
+                        Text(Self.preview(item.note.body))
                             .font(.system(.body, design: .serif))
+                            .lineSpacing(2)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -105,6 +102,19 @@ struct ReviewView: View {
         newTag = ""
     }
 
+    /// The note's Markdown as it will read in Obsidian: inline emphasis rendered, list dashes as bullets,
+    /// line breaks kept.
+    static func preview(_ markdown: String) -> AttributedString {
+        let text = markdown
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { line in
+                line.hasPrefix("- ") ? "•  " + line.dropFirst(2) : String(line)
+            }
+            .joined(separator: "\n")
+        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
+    }
+
     static func minutes(_ seconds: TimeInterval) -> String {
         let minutes = Int(seconds / 60)
         return minutes >= 1 ? "\(minutes) min" : "\(Int(seconds)) s"
@@ -126,6 +136,7 @@ private struct FlowTags: View {
                         Text("#\(tag)")
                         Button { remove(tag) } label: { Image(systemName: "xmark.circle.fill") }
                             .buttonStyle(.borderless)
+                            .accessibilityLabel("Remove tag \(tag)")
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)

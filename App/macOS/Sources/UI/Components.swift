@@ -81,6 +81,9 @@ struct Chip: View {
         .foregroundStyle(isOn ? Color.primary : Color.secondary)
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(isOn ? Color.pencil.opacity(0.18) : Color.clear))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(isOn ? Color.pencil.opacity(0.8) : Color.secondary.opacity(0.35), lineWidth: 0.5))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(isOn ? "On" : "Off")
     }
 }
 
@@ -120,7 +123,7 @@ struct StatTile<Detail: View>: View {
             SectionLabel(label)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
-                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .font(.system(.title, design: .rounded).weight(.semibold)) // supporting figures, not the page's headline
                     .foregroundStyle(accent ? Color.pencil : Color.primary)
                     .contentTransition(.numericText())
                 if let unit {
@@ -133,6 +136,7 @@ struct StatTile<Detail: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.background.secondary))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.separator.opacity(0.6), lineWidth: 0.5))
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -158,6 +162,9 @@ struct ActivityGrid: View {
             }
         }
         .frame(width: 7 * 14 + 6 * 5, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Activity over the last five weeks")
+        .accessibilityValue("Dictated on \(days.filter { $0.count > 0 }.count) of \(days.count) days")
     }
 }
 

@@ -90,7 +90,7 @@ struct SetupView: View {
             }
         }
         .formStyle(.grouped)
-
+        .pageAligned(settingsHeader)
     }
 
     private var stopDescription: String {

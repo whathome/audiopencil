@@ -43,7 +43,7 @@ Input Monitoring is shown for diagnosis but isn't requested: the active event ta
 | --- | --- |
 | Raw transcript (push to talk) | Hold **Fn**, talk, release. Another key while holding cancels, so Fn still works as a modifier |
 | Dictate in a style | Double-tap **Fn** (or ⌃⌥Space). Starts in the style last used in this app |
-| Switch style while talking | Click the style name in the recording indicator for a menu, or press **1–9** (**0** for raw). The menu shows each style's number |
+| Switch style while talking | Click the style name in the recording indicator for a menu, or press **1–9** (**0** for raw). The indicator and the menu show each style's number |
 | Stop and paste | Single tap **Fn** or **Return** (configurable: double-tap Fn; Return can be turned off) |
 | Cancel | **Esc**, at any point, including during a rewrite; nothing is pasted |
 
@@ -61,7 +61,7 @@ Settings (⌘,) also has:
 
 ### Notes
 
-A hotkey recording longer than the long-form threshold (5 minutes by default; Notes page) doesn't paste. Instead, Audio Pencil:
+A hotkey recording longer than the long-form threshold (5 minutes by default; Settings › General › Notes) doesn't paste. While you talk, the indicator shows the elapsed time after 30 s, counts down "Note in 0:25" for the last 30 s, then shows "Note" and plays one soft cue when the recording crosses over. Instead, Audio Pencil:
 
 1. Keeps the audio (`Audio Pencil/Recordings/*.m4a`, AAC mono, about 1.2 MB for 5 minutes).
 2. Writes it up in the recording's style. Long transcripts go section by section, and summaries are combined from per-section notes.
@@ -86,7 +86,7 @@ Every note has `retention: regular | archive | delete`, shown as the **Retention
 
 - **delete:** the note and its audio are removed.
 - **archive:** kept forever.
-- **regular:** the audio is removed a year after recording (Notes page switch, on by default, shared by all devices). The note stays and gets `audio_expired`.
+- **regular:** the audio is removed a year after recording (Settings › General › Notes, on by default, shared by all devices). The note stays and gets `audio_expired`.
 
 Removed files go to Nextcloud's trash, or the macOS Trash for a local vault. Recordings expiring within 30 days are listed on the Notes page with **Keep forever**. Older notes without the property are marked `regular`.
 

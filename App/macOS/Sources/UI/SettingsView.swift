@@ -80,6 +80,36 @@ struct SettingsHeader: View {
         }
         .padding(.top, 8)
         .padding(.bottom, 10)
+        // Section headers sit inset to the form's rows; pull the page title back to the 24 pt edge
+        // the other pages' titles use.
+        .padding(.leading, -10)
+    }
+}
+
+extension View {
+    /// Grouped forms centre themselves in the space they get. As a page in the main window, pin the form
+    /// to the same left edge and width as the other pages, so titles line up when switching pages.
+    func pageAligned(_ enabled: Bool) -> some View {
+        modifier(PageAlignedForm(enabled: enabled))
+    }
+}
+
+private struct PageAlignedForm: ViewModifier {
+    let enabled: Bool
+    /// A grouped form caps its sections at about 600 pt and centres them in the space it gets. Give it just
+    /// over that, so the sections (and the title in the first header) start at the other pages' 24 pt edge.
+    static let maxWidth: CGFloat = 620
+
+    func body(content: Content) -> some View {
+        if enabled {
+            GeometryReader { geometry in
+                content
+                    .contentMargins(.leading, 4, for: .scrollContent)
+                    .contentMargins(.trailing, max(4, geometry.size.width - Self.maxWidth), for: .scrollContent)
+            }
+        } else {
+            content
+        }
     }
 }
 
@@ -175,6 +205,31 @@ private struct GeneralSettings: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            Section {
+                LabeledContent {
+                    HStack(spacing: 6) {
+                        Text("\(Int(app.settings.longFormThreshold / 60)) min").monospacedDigit()
+                        Stepper("", value: $app.settings.longFormThreshold, in: 60...3_600, step: 60).labelsHidden()
+                    }
+                } label: {
+                    Text("Make a note instead of pasting after")
+                    Text("Longer recordings are kept with their audio and filed in the vault for review.")
+                }
+                Toggle(isOn: $app.settings.saveQuickDictations) {
+                    Text("Save quick dictations as notes too")
+                    Text("They still paste as usual; a copy is filed in the vault.")
+                }
+                Toggle(isOn: $app.expireRegularAudio) {
+                    Text("Remove a recording's audio after a year")
+                    Text("The note stays. Notes you move to Archive on the board keep their audio. Removed files go to the trash.")
+                }
+            } header: {
+                Text("Notes")
+            } footer: {
+                Text("Notes go to each style's folder (set on the Styles page), or \(NoteMaker.defaultFolder.dropFirst()). Audio goes to \(NoteMaker.recordingsFolder.dropFirst()).")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             Section("App") {
                 Toggle(isOn: $app.settings.menuBarMode) {
                     Text("Menu bar only")
@@ -189,6 +244,7 @@ private struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
+        .pageAligned(embedded)
         .onAppear { vocabularyText = app.settings.customVocabulary.joined(separator: "\n") }
     }
 }
@@ -256,6 +312,7 @@ private struct ModelSettings: View {
             ModelSuggestionsSection(advisor: app.advisor)
         }
         .formStyle(.grouped)
+        .pageAligned(embedded)
     }
 }
 
@@ -285,9 +342,12 @@ private struct MicrophonePriorityList: View {
                     Spacer()
                     Button { move(index, by: -1) } label: { Image(systemName: "chevron.up") }
                         .disabled(index == 0)
+                        .accessibilityLabel("Move up")
                     Button { move(index, by: 1) } label: { Image(systemName: "chevron.down") }
                         .disabled(index == preferences.count - 1)
+                        .accessibilityLabel("Move down")
                     Button { app.settings.preferredMicrophones.remove(at: index) } label: { Image(systemName: "minus.circle") }
+                        .accessibilityLabel("Remove from list")
                 }
                 .buttonStyle(.borderless)
             }
@@ -393,6 +453,7 @@ private struct SuggestionRow: View {
                 Button { advisor.dismiss(suggestion) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
                     .buttonStyle(.borderless)
                     .help("Don't suggest this again")
+                    .accessibilityLabel("Don't suggest this again")
             }
             switch advisor.trials[suggestion.id] {
             case .testing(let status):

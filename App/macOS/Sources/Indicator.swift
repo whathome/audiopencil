@@ -43,6 +43,10 @@ final class IndicatorModel {
     @ObservationIgnored var pillFrame: CGRect = .zero
     @ObservationIgnored var chipFrame: CGRect = .zero
     @ObservationIgnored var pickerFrames: [String: CGRect] = [:]
+    /// When the current recording started, for the elapsed clock; nil when not recording.
+    var recordingStartedAt: Date?
+    /// Recordings this long become notes instead of pasting; the pill warns as it approaches.
+    var longFormThreshold: Double = 300
     /// 0…1 while rewriting.
     var rewriteProgress: Double = 0
     var picker: PickerState?
@@ -64,6 +68,8 @@ final class IndicatorModel {
             noAudio = false
             quietSince = nil
             liveText = ""
+        } else {
+            recordingStartedAt = nil
         }
         self.mode = mode
     }
@@ -80,6 +86,7 @@ final class IndicatorModel {
 
     func hide() {
         flashGeneration += 1
+        recordingStartedAt = nil
         mode = .hidden
     }
 
@@ -297,20 +304,18 @@ struct IndicatorView: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(.red)
+                        .accessibilityLabel("No audio heard")
                 }
                 LevelBars(levels: model.levels)
+                if let started = model.recordingStartedAt {
+                    TimelineView(.periodic(from: started, by: 1)) { context in
+                        RecordingClock(elapsed: context.date.timeIntervalSince(started), threshold: model.longFormThreshold)
+                    }
+                }
                 if let style = model.currentStyle {
                     // Clicked via IndicatorHostingView (opens the style menu).
-                    HStack(spacing: 3) {
-                        Text(style.isRaw ? "Raw" : style.name)
-                        Image(systemName: "chevron.up").font(.system(size: 8, weight: .bold))
-                    }
-                    .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(style.isRaw ? Color.white.opacity(0.18) : Color.accentColor.opacity(0.9)))
-                    .foregroundStyle(style.isRaw ? Color.white : Color.black.opacity(0.8))
-                    .background(FrameReporter { model.chipFrame = $0 })
+                    StyleChip(style: style)
+                        .background(FrameReporter { model.chipFrame = $0 })
                 }
             case .picking:
                 if let picker = model.picker {
@@ -350,7 +355,79 @@ struct IndicatorView: View {
     }
 }
 
-/// Style choices after stop: number badges, the default highlighted, a shrinking countdown underline.
+/// The current style, with its number key so the switch-while-talking shortcut is learnable at a glance.
+private struct StyleChip: View {
+    let style: Style
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if let shortcut = style.shortcut {
+                Text("\(shortcut)")
+                    .font(.caption2.monospacedDigit().weight(.bold))
+                    .frame(width: 14, height: 14)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(badgeFill))
+            }
+            Text(name)
+            Image(systemName: "chevron.up").font(.system(size: 8, weight: .bold))
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.leading, style.shortcut == nil ? 8 : 4)
+        .padding(.trailing, 8)
+        .padding(.vertical, 3)
+        .background(Capsule().fill(fill))
+        .foregroundStyle(style.isRaw ? Color.white : Color.black.opacity(0.8))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Style: \(name)")
+        .accessibilityHint(hint)
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var name: String { style.isRaw ? "Raw" : style.name }
+    private var fill: Color { style.isRaw ? Color.white.opacity(0.18) : Color.accentColor.opacity(0.9) }
+    private var badgeFill: Color { style.isRaw ? Color.white.opacity(0.18) : Color.black.opacity(0.14) }
+    private var hint: String {
+        if let shortcut = style.shortcut { return "Number key \(shortcut). Click to choose another style." }
+        return "Click to choose another style."
+    }
+}
+
+/// Elapsed time while recording, and what stopping will do once the recording is long enough
+/// to become a note. Quiet for short dictations, so the common case stays a bare meter.
+private struct RecordingClock: View {
+    let elapsed: TimeInterval
+    let threshold: TimeInterval
+
+    /// Short dictations show no clock at all.
+    static let showAfter: TimeInterval = 30
+    /// Warn this long before a recording turns into a note.
+    static let warnBefore: TimeInterval = 30
+
+    var body: some View {
+        Group {
+            if elapsed >= threshold {
+                HStack(spacing: 3) {
+                    Image(systemName: "doc.text")
+                    Text("Note · \(Self.clock(elapsed))")
+                }
+                .foregroundStyle(Color.accentColor)
+            } else if elapsed >= threshold - Self.warnBefore {
+                Text("Note in \(Self.clock(threshold - elapsed))")
+                    .foregroundStyle(Color.accentColor)
+            } else if elapsed >= Self.showAfter {
+                Text(Self.clock(elapsed))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+        }
+        .font(.caption.monospacedDigit().weight(.medium))
+        .fixedSize()
+    }
+
+    static func clock(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds.rounded(.down)))
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+
 /// Reports a view's frame in the hosting view's coordinates.
 private struct FrameReporter: View {
     let report: (CGRect) -> Void
@@ -364,6 +441,7 @@ private struct FrameReporter: View {
     }
 }
 
+/// Style choices after stop: number badges, the default highlighted, a shrinking countdown underline.
 private struct PickerRow: View {
     let picker: IndicatorModel.PickerState
     /// Each choice's frame, so a click can pick it.
@@ -416,5 +494,8 @@ private struct LevelBars: View {
         }
         .frame(height: 22)
         .animation(.linear(duration: 0.08), value: levels)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Listening")
+        .accessibilityValue("Level \(Int((levels.last ?? 0) * 100)) percent")
     }
 }

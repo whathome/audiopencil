@@ -33,6 +33,7 @@ struct StylesPage: View {
                     } label: {
                         Label("New style", systemImage: "plus")
                     }
+                    .keyboardShortcut("n")
                     Spacer()
                 }
 
@@ -92,11 +93,15 @@ private struct StyleCard: View {
                     Text("Last used").font(.caption2.weight(.semibold)).foregroundStyle(Color.pencil)
                 }
                 Spacer()
-                if !style.isRaw {
+                if style.isRaw {
+                    // Raw can't be turned off; say so where the other cards have their switch.
+                    Text("Always on").font(.caption).foregroundStyle(.secondary)
+                } else {
                     Toggle("", isOn: Binding(get: { style.isEnabled }, set: toggle))
                         .toggleStyle(.switch)
                         .controlSize(.small)
                         .labelsHidden()
+                        .accessibilityLabel("Use \(style.name)")
                         .disabled(style.tone == .likeMe && sampleCount < InterviewPrompt.minimumSamples)
                 }
             }
@@ -129,6 +134,8 @@ private struct StyleCard: View {
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.background.secondary))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.separator.opacity(0.6), lineWidth: 0.5))
         .opacity(style.isEnabled ? 1 : 0.6)
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .onTapGesture { if !style.isRaw { edit() } } // the whole card opens the editor, not just the link
     }
 }
 
@@ -276,6 +283,7 @@ private struct PerAppDefaults: View {
                     }
                     .buttonStyle(.borderless)
                     .help("Forget this app's default")
+                    .accessibilityLabel("Forget this app's default")
                 }
             }
         }

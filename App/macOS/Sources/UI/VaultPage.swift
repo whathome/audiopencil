@@ -19,6 +19,7 @@ struct VaultPage: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .fixedSize() // a choice of two, not a tab bar across the card
                     .onChange(of: vault.settings.kind) { vault.verifyLocation() }
                     Text(vault.settings.kind == .nextcloud
                         ? "Notes go to your Nextcloud over WebDAV, from any network. Nothing else leaves this Mac."
@@ -87,6 +88,7 @@ private struct SyncCard: View {
                     Spacer()
                     Button { sync.clearRepairSummary() } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
                         .buttonStyle(.borderless)
+                        .accessibilityLabel("Dismiss")
                 }
             }
             Divider()
@@ -274,6 +276,7 @@ private struct NextcloudFolderBrowser: View {
                     Image(systemName: "chevron.left")
                 }
                 .disabled(vault.browserPath == "/")
+                .accessibilityLabel("Up one folder")
                 Text(vault.browserPath == "/" ? "Files" : vault.browserPath)
                     .font(.headline.monospaced())
                     .lineLimit(1)

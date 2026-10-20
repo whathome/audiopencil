@@ -36,6 +36,8 @@ public final class CuePlayer {
         case stop
         /// Cancelled or failed.
         case cancel
+        /// A recording just became long enough to be saved as a note.
+        case mark
     }
 
     private var players: [Cue: AVAudioPlayer] = [:]
@@ -55,7 +57,7 @@ public final class CuePlayer {
             case .none:
                 player = nil
             case .system:
-                let name = switch cue { case .start: "Tink"; case .stop: "Pop"; case .cancel: "Basso" }
+                let name = switch cue { case .start: "Tink"; case .stop: "Pop"; case .cancel: "Basso"; case .mark: "Glass" }
                 player = try? AVAudioPlayer(contentsOf: URL(fileURLWithPath: "/System/Library/Sounds/\(name).aiff"))
             default:
                 player = try? AVAudioPlayer(data: ToneSynth.wav(for: cue, theme: theme))
@@ -131,6 +133,9 @@ enum ToneSynth {
             [(Chirp(from: 2000, to: 2000, duration: 0.014, warbleDepth: 0, decays: true, harmonic: 0.5), 0)]
         case (.click, .cancel):
             [(Chirp(from: 700, to: 700, duration: 0.03, warbleDepth: 0, decays: true, harmonic: 0.5), 0)]
+        case (_, .mark):
+            // One quiet, low bell whatever the theme: noticeable, not alarming.
+            [(Chirp(from: 784, to: 784, duration: 0.3, warbleDepth: 0, decays: true, harmonic: 0.3), 0)]
         case (_, .start):
             [(Chirp(from: 1900, to: 2500, duration: 0.055), 0), (nil, 0.045), (Chirp(from: 2300, to: 2900, duration: 0.055), 0)]
         case (_, .stop):

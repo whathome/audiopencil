@@ -30,6 +30,8 @@ struct WritingPage: View {
                 Card(title: "Interview") {
                     Text("Answer in 100–300 words, the way you'd normally write it. Skip any that don't fit you.")
                         .font(.callout).foregroundStyle(.secondary)
+                    // The first unanswered prompt gets the prominent button, so there's an obvious place to start.
+                    let next = InterviewPrompt.all.first { prompt in !app.writingSamples.contains { $0.promptID == prompt.id } }
                     ForEach(InterviewPrompt.all) { prompt in
                         let answer = app.writingSamples.first { $0.promptID == prompt.id }
                         HStack(alignment: .top, spacing: 10) {
@@ -43,9 +45,11 @@ struct WritingPage: View {
                                 }
                             }
                             Spacer()
-                            Button(answer == nil ? "Answer…" : "Edit…") {
-                                editingPrompt = prompt
-                                editing = answer ?? WritingSample(kind: prompt.kind, text: "", promptID: prompt.id)
+                            if prompt.id == next?.id {
+                                Button("Answer…") { open(prompt, answer: nil) }
+                                    .buttonStyle(.borderedProminent)
+                            } else {
+                                Button(answer == nil ? "Answer…" : "Edit…") { open(prompt, answer: answer) }
                             }
                         }
                         .padding(.vertical, 4)
@@ -86,6 +90,13 @@ struct WritingPage: View {
                 app.writingSamples.removeAll { $0.id == sample.id }
             }
         }
+    }
+}
+
+extension WritingPage {
+    private func open(_ prompt: InterviewPrompt, answer: WritingSample?) {
+        editingPrompt = prompt
+        editing = answer ?? WritingSample(kind: prompt.kind, text: "", promptID: prompt.id)
     }
 }
 

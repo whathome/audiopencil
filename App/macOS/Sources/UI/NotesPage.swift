@@ -29,6 +29,7 @@ struct NotesPage: View {
                             Button("How it works") { showingWalkthrough = true }
                             if let url = notes.obsidianURL(for: StarterKit.basePath) {
                                 Link("Open board", destination: url)
+                                    .buttonStyle(.borderedProminent)
                             }
                         }
                         if let problem = app.sync.boardProblem {
@@ -93,7 +94,7 @@ struct NotesPage: View {
 
                 Card(title: "Recent") {
                     if notes.recent.isEmpty {
-                        Text("Nothing saved yet. Recordings longer than \(Int(app.settings.longFormThreshold / 60)) minutes become notes; quick dictations too if you turn that on below.")
+                        Text("Nothing saved yet. Recordings longer than \(Int(app.settings.longFormThreshold / 60)) minutes become notes here and in your vault.")
                             .font(.callout).foregroundStyle(.secondary)
                     }
                     ForEach(notes.recent) { note in
@@ -112,24 +113,11 @@ struct NotesPage: View {
                     }
                 }
 
-                Card(title: "Saving") {
-                    Toggle("Save quick dictations as notes too", isOn: $app.settings.saveQuickDictations)
-                    Toggle(isOn: $app.expireRegularAudio) {
-                        Text("Remove a recording's audio a year after it was made")
-                        Text("For notes in the Regular column of the board's Retention view. Archive keeps audio forever; Delete removes the note and audio at the next check. Removed files go to the trash.")
-                    }
-                    HStack {
-                        Text("Recordings longer than")
-                        Stepper(value: $app.settings.longFormThreshold, in: 60...3_600, step: 60) {
-                            Text("\(Int(app.settings.longFormThreshold / 60)) min")
-                                .monospacedDigit()
-                        }
-                        .fixedSize()
-                        Text("become long-form notes instead of pasting.")
-                    }
-                    Text("Notes go to each style's folder (set on the Styles page), or \(NoteMaker.defaultFolder.dropFirst()). Audio goes to \(NoteMaker.recordingsFolder.dropFirst()).")
-                        .font(.caption).foregroundStyle(.secondary)
+                Button("Note saving and audio retention…") {
+                    app.settingsTab = .general
+                    app.page = .settings
                 }
+                .buttonStyle(.link)
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
