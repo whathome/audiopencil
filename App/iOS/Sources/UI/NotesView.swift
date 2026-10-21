@@ -24,6 +24,17 @@ struct NotesView: View {
                         StatusRow(symbol: nil, text: processing)
                     }
                 }
+                if !app.notes.queue.isEmpty {
+                    Section {
+                        ForEach(app.notes.queue) { item in
+                            NoteRow(title: NoteRenderer.fallbackTitle(from: item.transcript), detail: item.recorded.formatted(date: .abbreviated, time: .shortened))
+                        }
+                    } header: {
+                        Text("Waiting to be written")
+                    } footer: {
+                        Text("Written up while Audio Pencil is open; leaving pauses it.")
+                    }
+                }
                 if !app.notes.recent.isEmpty {
                     Section("Filed") {
                         ForEach(app.notes.recent) { note in
@@ -33,7 +44,7 @@ struct NotesView: View {
                 }
             }
             .overlay {
-                if app.notes.recent.isEmpty, app.notes.processing == nil {
+                if app.notes.recent.isEmpty, app.notes.queue.isEmpty, app.notes.processing == nil {
                     ContentUnavailableView {
                         Label("No notes yet", systemImage: "doc.text")
                     } description: {

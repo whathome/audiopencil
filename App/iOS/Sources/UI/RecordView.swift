@@ -42,7 +42,9 @@ struct RecordView: View {
 
     @ViewBuilder
     private var statusLine: some View {
-        if let processing = app.notes.processing {
+        if let reason = recorder.pauseReason, recorder.phase == .paused {
+            StatusRow(symbol: "pause.circle.fill", text: reason, tint: .orange)
+        } else if let processing = app.notes.processing {
             StatusRow(symbol: nil, text: processing)
         } else if let error = recorder.lastError, !recorder.isActive {
             StatusRow(symbol: "exclamationmark.triangle.fill", text: error, tint: .orange)

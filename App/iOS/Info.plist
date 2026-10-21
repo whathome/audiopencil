@@ -29,8 +29,14 @@
 	</dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Audio Pencil listens while you record and transcribes on this iPhone. Audio never leaves the device unless you file it in your own notes folder.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

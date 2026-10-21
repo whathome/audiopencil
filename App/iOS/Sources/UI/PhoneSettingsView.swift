@@ -1,6 +1,7 @@
 import APCore
 import APModels
 import APStorage
+import APAudio
 import APTranscription
 import SwiftUI
 import UniformTypeIdentifiers
@@ -29,6 +30,9 @@ struct PhoneSettingsView: View {
                     }
                     NavigationLink { StylesSettingsView(app: app) } label: {
                         LabeledContent("Styles", value: "\(app.enabledStyles.count)")
+                    }
+                    NavigationLink { RecordingSettingsView(app: app) } label: {
+                        Text("Recording")
                     }
                 }
                 Section {
@@ -421,5 +425,78 @@ struct StylesSettingsView: View {
         }
         .navigationTitle("Styles")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: Recording
+
+/// Walk-and-talk: how a recording sounds and feels, when it stops by itself, and how to start one without
+/// opening the app.
+struct RecordingSettingsView: View {
+    @Bindable var app: PhoneModel
+    @State private var preview = RecordingFeedback()
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle(isOn: $app.reduceNoise) {
+                    Text("Reduce wind and traffic noise")
+                    Text("Uses the iPhone's voice processing on the microphone. Turn it off if voices sound muffled.")
+                }
+                Picker("Stop after quiet", selection: $app.autoStopMinutes) {
+                    ForEach([1, 2, 3, 5], id: \.self) { Text("\($0) min").tag($0) }
+                }
+            } footer: {
+                Text("With no new words for this long, the recording stops, the quiet end is dropped, and the note is made as usual.")
+            }
+            Section {
+                Picker("Heartbeat", selection: $app.heartbeat) {
+                    Text("Off").tag(RecordingFeedback.Heartbeat.off)
+                    Text("One tap").tag(RecordingFeedback.Heartbeat.tap)
+                    Text("Two taps").tag(RecordingFeedback.Heartbeat.doubleTap)
+                }
+                if app.heartbeat != .off {
+                    Picker("Every", selection: $app.heartbeatMinutes) {
+                        ForEach([1, 2, 5], id: \.self) { Text("\($0) min").tag($0) }
+                    }
+                }
+            } header: {
+                Text("While locked")
+            } footer: {
+                Text("A short tap now and then while Audio Pencil isn't on screen, so you can feel it's still recording. Nothing like a message's buzz.")
+            }
+            Section("Sounds") {
+                Picker("Start and stop sounds", selection: $app.settings.cueTheme) {
+                    ForEach(CueTheme.allCases.filter { $0 != .system }, id: \.self) { Text($0.label).tag($0.rawValue) }
+                }
+                Slider(value: $app.settings.cueVolume, in: 0.05...1) {
+                    Text("Volume")
+                } minimumValueLabel: {
+                    Image(systemName: "speaker.fill")
+                } maximumValueLabel: {
+                    Image(systemName: "speaker.wave.3.fill")
+                } onEditingChanged: { editing in
+                    if !editing { playPreview() }
+                }
+                .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
+            }
+            .onChange(of: app.settings.cueTheme) { playPreview() }
+            Section {
+                Label("Action Button: Settings › Action Button › Controls › Audio Pencil", systemImage: "button.vertical.left.press")
+                Label("Control Centre or Lock Screen: add the Record a Note control", systemImage: "switch.2")
+                Label("Siri: “Start recording in Audio Pencil”", systemImage: "waveform")
+            } header: {
+                Text("Without opening the app")
+            } footer: {
+                Text("Recordings started or stopped this way show on the Lock Screen with their clock, and are written up in your last style. If the app isn't open when one stops, it's saved and written up the next time you open Audio Pencil.")
+            }
+        }
+        .navigationTitle("Recording")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func playPreview() {
+        preview.configure(theme: app.settings.cueTheme, volume: app.settings.cueVolume)
+        preview.started()
     }
 }

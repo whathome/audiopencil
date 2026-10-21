@@ -53,6 +53,23 @@ final class PhoneModel: WritingHost {
         didSet { UserDefaults.standard.set(setupCompleted, forKey: Self.setupCompletedKey) }
     }
 
+    // Recording on this iPhone (not synced).
+    /// Apple's voice processing on the microphone: damps wind and traffic.
+    var reduceNoise: Bool = UserDefaults.standard.object(forKey: "reduceNoise") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(reduceNoise, forKey: "reduceNoise") }
+    }
+    /// Stop after this long without new words (5 minutes at most).
+    var autoStopMinutes: Int = UserDefaults.standard.object(forKey: "autoStopMinutes") as? Int ?? 5 {
+        didSet { UserDefaults.standard.set(min(max(autoStopMinutes, 1), 5), forKey: "autoStopMinutes") }
+    }
+    /// A tap now and then while the phone is locked, to feel that it's still recording.
+    var heartbeat: RecordingFeedback.Heartbeat = RecordingFeedback.Heartbeat(rawValue: UserDefaults.standard.string(forKey: "heartbeat") ?? "") ?? .tap {
+        didSet { UserDefaults.standard.set(heartbeat.rawValue, forKey: "heartbeat") }
+    }
+    var heartbeatMinutes: Int = UserDefaults.standard.object(forKey: "heartbeatMinutes") as? Int ?? 2 {
+        didSet { UserDefaults.standard.set(heartbeatMinutes, forKey: "heartbeatMinutes") }
+    }
+
     let vault = VaultController()
     @ObservationIgnored private(set) var sync: SyncController!
     @ObservationIgnored private(set) var recorder: PhoneRecorder!
@@ -101,9 +118,15 @@ final class PhoneModel: WritingHost {
         vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         recorder = PhoneRecorder(app: self)
         notes = PhoneNotes(app: self)
+        // Lock Screen, Control Centre, Action Button, Siri: these can wake the app without a window.
+        RecordingControl.handler = recorder
     }
 
+    @ObservationIgnored private var bootstrapped = false
+
     func bootstrap() {
+        guard !bootstrapped else { return }
+        bootstrapped = true
         memoryMonitor = MemoryPressureMonitor { level in
             Task { @MainActor [weak self] in self?.memoryPressure = level }
         }
@@ -173,6 +196,11 @@ final class PhoneModel: WritingHost {
                 throw error
             }
         }
+    }
+
+    /// Starts loading the speech model if nothing has yet (a recording started before the app's window).
+    func ensureModelLoading() {
+        if modelTask == nil { prepareModel() }
     }
 
     /// Waits for the current model, following any switch made while waiting.

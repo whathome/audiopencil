@@ -58,6 +58,7 @@ public final class AudioRecorder: @unchecked Sendable {
     private var configurationObserver: (any NSObjectProtocol)?
     private var onInterruption: (@Sendable () -> Void)?
     private var recentRestarts: [Date] = []
+    private var voiceProcessing = false
 
     /// Shared with the audio thread.
     private struct TapState {
@@ -91,6 +92,16 @@ public final class AudioRecorder: @unchecked Sendable {
             self.tapState.withLock {
                 $0 = TapState(capturing: true, muteSamples: 0, onLevel: onLevel)
             }
+        }
+    }
+
+    /// iPhone: Apple's voice processing on the input, which damps steady wind and traffic noise. Takes effect
+    /// the next time the microphone starts. Ignored on the Mac.
+    public func setVoiceProcessing(_ enabled: Bool) {
+        queue.sync {
+            guard enabled != voiceProcessing else { return }
+            voiceProcessing = enabled
+            if !tapState.withLock({ $0.capturing }) { teardown() } // rebuilt with the new setting on next start
         }
     }
 
@@ -143,6 +154,15 @@ public final class AudioRecorder: @unchecked Sendable {
             teardown()
             let engine = AVAudioEngine()
             try select(deviceID, on: engine)
+            #if os(iOS)
+            if voiceProcessing {
+                do {
+                    try engine.inputNode.setVoiceProcessingEnabled(true)
+                } catch {
+                    Log.audio.error("Voice processing unavailable: \(error.localizedDescription, privacy: .public)")
+                }
+            }
+            #endif
             try installTap(on: engine)
             self.engine = engine
             self.engineDevice = deviceID

@@ -87,6 +87,7 @@ targets:
     sources:
       - App/Shared/Sources
       - App/iOS/Sources
+      - App/iOS/Intents
       - App/iOS/Resources
     configFiles:
       Debug: Config/Signing.xcconfig
@@ -103,6 +104,9 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
         NSMicrophoneUsageDescription: Audio Pencil listens while you record and transcribes on this iPhone. Audio never leaves the device unless you file it in your own notes folder.
+        # Keeps recording with the phone locked; the Live Activity shows the clock and controls.
+        UIBackgroundModes: [audio]
+        NSSupportsLiveActivities: true
         # Plain-HTTP Nextcloud on the local network (LAN IPs, .local names); public servers still need HTTPS.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
@@ -118,6 +122,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     dependencies:
+      - target: AudioPencilWidgets
+        embed: true
       - package: AudioPencilKit
         product: APCore
       - package: AudioPencilKit
@@ -132,6 +138,35 @@ targets:
         product: APStorage
       - package: AudioPencilKit
         product: APSync
+
+  AudioPencilWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - App/iOSWidgets/Sources
+      - App/iOS/Intents
+      - App/iOSWidgets/Resources
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    info:
+      path: App/iOSWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Audio Pencil
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_NAME: AudioPencilWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.widgets
+        TARGETED_DEVICE_FAMILY: "1"
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        APPLICATION_EXTENSION_API_ONLY: YES
 
 schemes:
   AudioPencil:

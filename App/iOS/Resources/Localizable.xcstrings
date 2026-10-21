@@ -2,6 +2,44 @@
   "sourceLanguage": "en",
   "strings": {
     "": {},
+    "%@ (%lld more waiting)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ (%2$lld more waiting)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (%lld más en espera)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (encore %lld en attente)"
+          }
+        }
+      }
+    },
+    "%@ disconnected": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ desconectado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ déconnecté"
+          }
+        }
+      }
+    },
     "%@ of about %lld min": {
       "localizations": {
         "en": {
@@ -42,6 +80,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ sur environ %lld s"
+          }
+        }
+      }
+    },
+    "%lld min": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
           }
         }
       }
@@ -90,6 +144,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un court résumé, puis les points clés en liste, groupés par thème. Garde les faits, les noms, les chiffres et les décisions ; enlève les digressions."
+          }
+        }
+      }
+    },
+    "A short tap now and then while Audio Pencil isn't on screen, so you can feel it's still recording. Nothing like a message's buzz.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un toque breve de vez en cuando mientras Audio Pencil no está en pantalla, para notar que sigue grabando. Nada que ver con la vibración de un mensaje."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une petite tape de temps en temps quand Audio Pencil n’est pas à l’écran, pour sentir que l’enregistrement continue. Rien à voir avec la vibration d’un message."
+          }
+        }
+      }
+    },
+    "Action Button: Settings › Action Button › Controls › Audio Pencil": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Botón de acción: Ajustes › Botón de acción › Controles › Audio Pencil"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bouton Action : Réglages › Bouton Action › Commandes › Audio Pencil"
           }
         }
       }
@@ -276,6 +362,22 @@
         }
       }
     },
+    "Carries on a paused recording.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanuda una grabación en pausa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprend un enregistrement en pause."
+          }
+        }
+      }
+    },
     "Checking…": {
       "localizations": {
         "es": {
@@ -368,6 +470,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continuer"
+          }
+        }
+      }
+    },
+    "Control Centre or Lock Screen: add the Record a Note control": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centro de control o pantalla bloqueada: añade el control «Grabar una nota»"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centre de contrôle ou écran verrouillé : ajoutez la commande « Enregistrer une note »"
           }
         }
       }
@@ -646,6 +764,22 @@
         }
       }
     },
+    "Every": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toutes les"
+          }
+        }
+      }
+    },
     "Exactly what you said, as transcribed.": {
       "localizations": {
         "es": {
@@ -758,6 +892,22 @@
         }
       }
     },
+    "Heartbeat": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsation"
+          }
+        }
+      }
+    },
     "In use": {
       "localizations": {
         "es": {
@@ -770,6 +920,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utilisé"
+          }
+        }
+      }
+    },
+    "Interrupted": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interrumpida"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interrompu"
           }
         }
       }
@@ -1110,6 +1276,22 @@
         }
       }
     },
+    "Nothing heard": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se oyó nada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien entendu"
+          }
+        }
+      }
+    },
     "Nothing heard.": {
       "localizations": {
         "es": {
@@ -1138,6 +1320,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coffre Obsidian · écriture possible"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivée"
           }
         }
       }
@@ -1206,6 +1404,38 @@
         }
       }
     },
+    "One tap": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un toque"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une tape"
+          }
+        }
+      }
+    },
+    "Open Audio Pencil to write it up as %@.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Audio Pencil para redactarla como %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Audio Pencil pour la rédiger en %@."
+          }
+        }
+      }
+    },
     "Other languages": {
       "localizations": {
         "es": {
@@ -1254,6 +1484,22 @@
         }
       }
     },
+    "Pause Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar la grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre l’enregistrement en pause"
+          }
+        }
+      }
+    },
     "Paused.": {
       "localizations": {
         "es": {
@@ -1266,6 +1512,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "En pause."
+          }
+        }
+      }
+    },
+    "Pauses the recording; resume it to carry on in the same note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa la grabación; reanúdala para seguir en la misma nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met l’enregistrement en pause ; reprenez-le pour continuer dans la même note."
           }
         }
       }
@@ -1430,6 +1692,22 @@
         }
       }
     },
+    "Record or Stop": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabar o parar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer ou arrêter"
+          }
+        }
+      }
+    },
     "Recorded time": {
       "localizations": {
         "es": {
@@ -1446,6 +1724,54 @@
         }
       }
     },
+    "Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement"
+          }
+        }
+      }
+    },
+    "Recording paused": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabación en pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement en pause"
+          }
+        }
+      }
+    },
+    "Recording saved": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabación guardada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement sauvegardé"
+          }
+        }
+      }
+    },
     "Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board.": {
       "localizations": {
         "es": {
@@ -1458,6 +1784,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Les enregistrements deviennent des notes : rédigées dans un style, avec leur audio, classées dans votre dossier de notes. Relisez-les sur votre tableau Obsidian."
+          }
+        }
+      }
+    },
+    "Recordings started or stopped this way show on the Lock Screen with their clock, and are written up in your last style. If the app isn't open when one stops, it's saved and written up the next time you open Audio Pencil.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las grabaciones que empiezan o terminan así aparecen en la pantalla bloqueada con su reloj y se redactan en tu último estilo. Si la app no está abierta cuando una termina, se guarda y se redacta la próxima vez que abras Audio Pencil."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les enregistrements lancés ou arrêtés ainsi apparaissent sur l’écran verrouillé avec leur durée, et sont rédigés dans votre dernier style. Si l’app n’est pas ouverte à l’arrêt, l’enregistrement est sauvegardé et rédigé à la prochaine ouverture d’Audio Pencil."
+          }
+        }
+      }
+    },
+    "Reduce wind and traffic noise": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reducir el ruido del viento y del tráfico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réduire le bruit du vent et de la circulation"
           }
         }
       }
@@ -1490,6 +1848,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reprendre"
+          }
+        }
+      }
+    },
+    "Resume Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar la grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre l’enregistrement"
           }
         }
       }
@@ -1676,6 +2050,22 @@
         }
       }
     },
+    "Siri: “Start recording in Audio Pencil”": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri: «Start recording in Audio Pencil»"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri : « Start recording in Audio Pencil »"
+          }
+        }
+      }
+    },
     "Skip for Now": {
       "localizations": {
         "es": {
@@ -1688,6 +2078,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plus tard"
+          }
+        }
+      }
+    },
+    "Sounds": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonidos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sons"
           }
         }
       }
@@ -1740,6 +2146,22 @@
         }
       }
     },
+    "Start and stop sounds": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonidos de inicio y fin"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sons de début et de fin"
+          }
+        }
+      }
+    },
     "Starting the microphone…": {
       "localizations": {
         "es": {
@@ -1752,6 +2174,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Démarrage du micro…"
+          }
+        }
+      }
+    },
+    "Starts recording a note in Audio Pencil, or stops and saves the recording that's running.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empieza a grabar una nota en Audio Pencil, o para y guarda la grabación en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commence l’enregistrement d’une note dans Audio Pencil, ou arrête et sauvegarde celui en cours."
+          }
+        }
+      }
+    },
+    "Starts recording a note in Audio Pencil.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empieza a grabar una nota en Audio Pencil."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commence l’enregistrement d’une note dans Audio Pencil."
           }
         }
       }
@@ -1838,6 +2292,38 @@
         }
       }
     },
+    "Stop Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parar la grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter l’enregistrement"
+          }
+        }
+      }
+    },
+    "Stop after quiet": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parar tras un silencio de"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter après un silence de"
+          }
+        }
+      }
+    },
     "Stop and make a note": {
       "localizations": {
         "es": {
@@ -1850,6 +2336,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arrêter et créer une note"
+          }
+        }
+      }
+    },
+    "Stopped after %lld minutes of quiet": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parada tras %lld minutos de silencio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêté après %lld minutes de silence"
+          }
+        }
+      }
+    },
+    "Stops the recording and makes it a note in your last style.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para la grabación y la convierte en una nota en tu último estilo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrête l’enregistrement et en fait une note dans votre dernier style."
           }
         }
       }
@@ -2004,6 +2522,54 @@
         }
       }
     },
+    "The microphone stopped": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El micrófono se detuvo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le micro s’est arrêté"
+          }
+        }
+      }
+    },
+    "The recording had no speech in it, so no note was made.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La grabación no tenía voz, así que no se creó ninguna nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’enregistrement ne contenait pas de parole : aucune note n’a été créée."
+          }
+        }
+      }
+    },
+    "The recording is saved. Open Audio Pencil to write it up as %@.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La grabación está guardada. Abre Audio Pencil para redactarla como %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’enregistrement est sauvegardé. Ouvrez Audio Pencil pour le rédiger en %@."
+          }
+        }
+      }
+    },
     "The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.": {
       "localizations": {
         "es": {
@@ -2096,6 +2662,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Échec de la transcription : %@"
+          }
+        }
+      }
+    },
+    "Two taps": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos toques"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deux tapes"
           }
         }
       }
@@ -2228,6 +2810,38 @@
         }
       }
     },
+    "Uses the iPhone's voice processing on the microphone. Turn it off if voices sound muffled.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa el procesado de voz del iPhone en el micrófono. Desactívalo si las voces suenan apagadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilise le traitement de la voix de l’iPhone sur le micro. Désactivez-le si les voix semblent étouffées."
+          }
+        }
+      }
+    },
+    "Volume": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volumen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume"
+          }
+        }
+      }
+    },
     "Waiting for storage": {
       "localizations": {
         "es": {
@@ -2240,6 +2854,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "En attente du stockage"
+          }
+        }
+      }
+    },
+    "Waiting to be written": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a redactarse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de rédaction"
           }
         }
       }
@@ -2356,6 +2986,54 @@
         }
       }
     },
+    "While locked": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con el iPhone bloqueado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verrouillé"
+          }
+        }
+      }
+    },
+    "With no new words for this long, the recording stops, the quiet end is dropped, and the note is made as usual.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si no hay palabras nuevas durante este tiempo, la grabación se detiene, se quita el final en silencio y la nota se crea como siempre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans nouveaux mots pendant cette durée, l’enregistrement s’arrête, la fin silencieuse est retirée et la note est créée comme d’habitude."
+          }
+        }
+      }
+    },
+    "Without opening the app": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin abrir la app"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans ouvrir l’app"
+          }
+        }
+      }
+    },
     "Write it as": {
       "localizations": {
         "es": {
@@ -2454,6 +3132,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rédaction de la note…"
+          }
+        }
+      }
+    },
+    "Written up while Audio Pencil is open; leaving pauses it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se redactan mientras Audio Pencil está abierta; salir la pausa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédigées pendant qu’Audio Pencil est ouvert ; le quitter met en pause."
           }
         }
       }

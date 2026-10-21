@@ -1,6 +1,6 @@
 # Audio Pencil
 
-Private, fully on-device dictation and summarisation for Mac (and later iPhone). See [docs/PRD.md](docs/PRD.md).
+Private, fully on-device dictation and summarisation for Mac and iPhone. See [docs/PRD.md](docs/PRD.md).
 
 **Status:** milestone 8 (guided setup, storage without Obsidian, models ready in the background). Phase 1 (Mac) is feature-complete in English, French and Spanish; phase 2 (iPhone) is next. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or this Mac, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
 
@@ -129,6 +129,20 @@ With the setting off, each dictation stays on the clipboard after pasting, as be
 
 The hotkey doesn't work while macOS Secure Input is on: password fields, Terminal with Secure Keyboard Entry, some password managers.
 
+## iPhone
+
+The iPhone app (`AudioPencilPhone`, iOS 26) is the walk-and-talk recorder. Every recording becomes a note, filed through the same settings file and upload queue as the Mac.
+
+- **Record:** live transcript as you talk, pause and resume, a language switch, then pick a style (it starts on the last one used).
+- **Locked in a pocket:** recording carries on with the phone locked (background audio). A Live Activity on the Lock Screen and in the Dynamic Island shows the clock with Pause, Resume and Stop.
+- **Without opening the app:** the Record a Note control (Control Centre, Lock Screen, Action Button via Settings › Action Button › Controls), and Siri or Shortcuts ("Start recording in Audio Pencil", Stop, Pause, Resume). Recordings stopped this way use the last style.
+- **Feedback:** the Mac's start and stop cues with a haptic; an optional heartbeat tap (one or two taps every 1, 2 or 5 minutes) while the app isn't on screen; a distinct alert and an automatic pause when AirPods or another headset disconnects, or a call interrupts.
+- **Quiet:** with no new words for the chosen time (1–5 minutes, default 5), the recording stops, drops the quiet end, and becomes a note as usual.
+- **Noise:** "Reduce wind and traffic noise" (on by default) uses the iPhone's voice processing on the microphone.
+- **Writing the note:** transcription runs on the Neural Engine and keeps up in the background. The writing model needs the GPU, which iOS only allows while the app is on screen (background GPU needs an entitlement a Personal Team can't have). So notes are written while Audio Pencil is open. Leaving stops the current one and it starts again on return, and a recording stopped from the Lock Screen is saved, with a notification, and written up next time the app opens. Notes → Waiting to be written lists them.
+
+Recording settings are on this iPhone only (Settings › Recording); sounds use the synced device section. Siri phrases are English for now.
+
 ## Layout
 
 ```
@@ -184,3 +198,4 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 6. **Like me, discovery, retention** (done): My writing page and interview, machine-aware model suggestions with on-device trials, Retention board (regular / archive / delete) with one-year audio expiry, board and settings-file repair, sound themes.
 7. **Multilingual** (done): 7a spoken languages (per-app language memory, language badge and menu in the indicator, English and multilingual Whisper models, prompts and notes in the spoken language, per-language vocabulary, Like me samples by language, layout-aware paste); 7b the interface in French and Spanish (String Catalogs in the app and each package target; the vault guide and sample notes are written in the interface language when a vault is first set up; board view names and properties stay English).
 8. **Setup and storage** (done): 8a models prepared in the background (dictation never waits; Small first for other languages, then Large v3 Turbo), configurable dictation key (Fn, Right ⌥ or Right ⌘; double-tap or single tap; a recordable shortcut) and a Try it here box; 8b storage without Obsidian (plain Markdown in any folder, any WebDAV server, Keep forever and Delete on the Notes page, Vault renamed Storage); 8c the six-step setup window.
+9. **iPhone** (phase 2): 9a recorder and notes (done); 9b walk-and-talk: background recording, Live Activity, Control Centre / Action Button / Siri controls, cues and heartbeat, disconnect and silence handling, noise reduction, a queue for writing notes (done); 9d meeting mode with speaker labels (next). The keyboard moves to phase 3.
