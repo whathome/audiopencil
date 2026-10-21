@@ -80,8 +80,10 @@ The iPhone is the long-form, walk-and-talk recorder, usually with the phone's ow
 
 **Meeting mode**
 
-- Chosen deliberately before a long-form recording; enables on-device speaker detection (Speaker 1, Speaker 2…). Default mode assumes a single speaker.
-- Phone sits on the table and picks up the room, including video-call audio from speakers.
+- Chosen deliberately before (or during) a recording; enables on-device speaker detection (Speaker 1, Speaker 2…). Default mode assumes a single speaker, and every recording starts in it.
+- Phone sits on the table and picks up the room, including video-call audio from speakers. Also on the Mac (Oct 2026): the recording indicator's Paste / Note / Meeting toggle and "Record a Meeting" in the menu bar; the Mac's microphone hears the room.
+- The number of speakers is worked out, or chosen (2–6) when known, which helps accuracy.
+- Implemented with Argmax SpeakerKit (pyannote, about 22 MB, downloaded on first use) and a second Whisper pass with word timings; the note keeps the labelled transcript and notes `speakers:` in its frontmatter.
 
 **Keyboard extension**
 
@@ -222,6 +224,6 @@ Obsidian is the library and review surface: the app writes consistent frontmatte
 
 **Future work**
 
-- System-audio capture on the Mac for video calls, enabling meeting mode there.
+- System-audio capture on the Mac for video calls (meeting mode there uses the microphone today).
 - Storage providers beyond Nextcloud WebDAV.
 - View of audio about to roll off the one-year archive.

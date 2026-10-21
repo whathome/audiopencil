@@ -45,13 +45,15 @@ let package = Package(
         // Model residency (one large model at a time), catalogue, on-disk locations.
         .target(name: "APModels", dependencies: ["APCore"], resources: [.process("Resources")], swiftSettings: concurrency),
 
-        // WhisperKit wrapper and streaming confirmation logic.
+        // WhisperKit wrapper, streaming confirmation logic and meeting speaker labels.
         .target(
             name: "APTranscription",
             dependencies: [
                 "APCore",
                 "APModels",
                 .product(name: "WhisperKit", package: "WhisperKit"),
+                // Speaker labels for meeting mode (pyannote), from the same Argmax package as WhisperKit.
+                .product(name: "SpeakerKit", package: "WhisperKit"),
             ],
             resources: [.process("Resources")],
             swiftSettings: concurrency

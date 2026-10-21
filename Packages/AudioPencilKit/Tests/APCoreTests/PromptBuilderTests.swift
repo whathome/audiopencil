@@ -117,3 +117,36 @@ struct OutputCleanerTests {
         #expect(OutputCleaner.clean(text) == text)
     }
 }
+
+struct MeetingPromptTests {
+    @Test func meetingPromptsKeepLabelsAndNameWhoActs() {
+        let prompt = PromptBuilder.prompt(for: .professional, transcript: "Speaker 1: Hi.\n\nSpeaker 2: Hello.", context: .longForm, speakerLabel: "Speaker")
+        #expect(prompt.instructions.contains("speakers labelled \"Speaker 1\""))
+        #expect(prompt.instructions.contains("even if told above to write as me"))
+        #expect(!prompt.instructions.contains("Write as the speaker (first person)."))
+        #expect(prompt.input.contains("starting with who"))
+        #expect(!prompt.input.contains("Write it as me"))
+        let solo = PromptBuilder.prompt(for: .professional, transcript: "Hi.", context: .longForm)
+        #expect(solo.instructions.contains("Write as the speaker (first person)."))
+        let notes = PromptBuilder.sectionNotesPrompt(section: "Speaker 1: Hi.", index: 1, count: 2, vocabulary: [], speakerLabel: "Speaker")
+        #expect(notes.instructions.contains("a recorded meeting"))
+    }
+
+    @Test func meetingSectionsSplitBetweenTurnsAndKeepLabels() {
+        // Sentences of five words: 12 make a 60-word turn, 50 a 250-word one.
+        let turn = { (speaker: Int, sentences: Int) in "Speaker \(speaker): " + Array(repeating: "We talked about the plan.", count: sentences).joined(separator: " ") }
+        let transcript = [turn(1, 12), turn(2, 12), turn(1, 50)].joined(separator: "\n\n")
+        let sections = PromptBuilder.sections(ofTurns: transcript, limit: 100)
+        #expect(sections.count == 5)
+        #expect(sections.allSatisfy { $0.hasPrefix("Speaker ") })
+        #expect(sections[0].hasPrefix("Speaker 1:") && sections[1].hasPrefix("Speaker 2:"))
+        #expect(sections.dropFirst(2).allSatisfy { $0.hasPrefix("Speaker 1:") }) // the long turn's pieces keep its label
+    }
+
+    @Test func meetingNotesRecordTheSpeakerCount() {
+        let note = Note(title: "Planning", styleID: "professional", status: .needsReview, recorded: Date(timeIntervalSince1970: 0),
+                        duration: 600, mode: .meeting, folder: "/Notes", body: "Body", speakers: 3)
+        let markdown = NoteRenderer.markdown(for: note, timeZone: TimeZone(identifier: "UTC")!)
+        #expect(markdown.contains("mode: meeting\nspeakers: 3\n"))
+    }
+}

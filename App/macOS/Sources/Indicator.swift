@@ -3,10 +3,12 @@ import APTranscription
 import AppKit
 import SwiftUI
 
-/// What stopping a recording does: paste the text, or file it as a note (audio kept).
-enum Delivery: Equatable {
+/// What stopping a recording does: paste the text, file it as a note (audio kept), or file it as a
+/// meeting note with speakers labelled.
+enum Delivery: String, Equatable {
     case paste
     case note
+    case meeting
 }
 
 /// State shown by the floating indicator at the bottom centre of the screen.
@@ -68,8 +70,13 @@ final class IndicatorModel {
     var longFormThreshold: Double = 300
     /// Chosen on the pill for this recording: always paste, or always make a note. Nil: by length.
     var deliveryOverride: Delivery?
-    /// Clicked: flip this recording between paste and note.
+    /// Clicked: paste → note → meeting for this recording.
     @ObservationIgnored var onToggleDelivery: (() -> Void)?
+    /// Chosen in the menu.
+    @ObservationIgnored var onSetDelivery: ((Delivery) -> Void)?
+    /// Meeting: how many people are talking, if known (nil: worked out).
+    var speakerCount: Int?
+    @ObservationIgnored var onSetSpeakers: ((Int?) -> Void)?
     @ObservationIgnored var deliveryFrame: CGRect = .zero
 
     /// What stopping now would do.
@@ -288,12 +295,27 @@ final class IndicatorPanelController: NSObject {
             deliveryHeader.isEnabled = false
             menu.addItem(deliveryHeader)
             let current = model.delivery()
-            for (delivery, title) in [(Delivery.paste, String(localized: "Paste it")), (.note, String(localized: "Make a note"))] {
+            let choices: [(Delivery, String)] = [(.paste, String(localized: "Paste it")), (.note, String(localized: "Make a note")), (.meeting, String(localized: "Make a meeting note"))]
+            for (delivery, title) in choices {
                 let item = NSMenuItem(title: title, action: #selector(chooseDelivery(_:)), keyEquivalent: "")
                 item.target = self
-                item.representedObject = delivery == .note
+                item.representedObject = delivery.rawValue
                 item.state = delivery == current ? .on : .off
                 menu.addItem(item)
+            }
+            if current == .meeting {
+                // Knowing the number helps the speaker labels.
+                let speakers = NSMenuItem(title: String(localized: "Speakers"), action: nil, keyEquivalent: "")
+                let submenu = NSMenu()
+                for count in [nil, 2, 3, 4, 5, 6] as [Int?] {
+                    let item = NSMenuItem(title: count.map { "\($0)" } ?? String(localized: "Work it out"), action: #selector(chooseSpeakers(_:)), keyEquivalent: "")
+                    item.target = self
+                    item.representedObject = count ?? 0
+                    item.state = count == model.speakerCount ? .on : .off
+                    submenu.addItem(item)
+                }
+                speakers.submenu = submenu
+                menu.addItem(speakers)
             }
         }
         if model.mode == .listening, model.showsLanguage {
@@ -326,8 +348,13 @@ final class IndicatorPanelController: NSObject {
     }
 
     @objc private func chooseDelivery(_ item: NSMenuItem) {
-        guard let note = item.representedObject as? Bool else { return }
-        if model.delivery() != (note ? .note : .paste) { model.onToggleDelivery?() }
+        guard let raw = item.representedObject as? String, let delivery = Delivery(rawValue: raw) else { return }
+        model.onSetDelivery?(delivery)
+    }
+
+    @objc private func chooseSpeakers(_ item: NSMenuItem) {
+        guard let count = item.representedObject as? Int else { return }
+        model.onSetSpeakers?(count == 0 ? nil : count)
     }
 
     @objc private func chooseLanguage(_ item: NSMenuItem) {
@@ -523,7 +550,7 @@ private struct StyleChip: View {
     }
 }
 
-/// Paste or note: what stopping will do, and a click flips it for this recording. Brighter once chosen,
+/// Paste, note or meeting: what stopping will do, and a click moves it on for this recording. Brighter once chosen,
 /// so an override is visible at a glance.
 private struct DeliveryToggle: View {
     let delivery: Delivery
@@ -531,19 +558,43 @@ private struct DeliveryToggle: View {
 
     var body: some View {
         HStack(spacing: 3) {
-            Image(systemName: delivery == .note ? "doc.text" : "doc.on.clipboard")
-            Text(delivery == .note ? "Note" as LocalizedStringResource : "Paste")
+            Image(systemName: symbol)
+            Text(label)
         }
         .font(.caption.weight(.semibold))
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .fixedSize()
         .background(Capsule().fill(Color.white.opacity(overridden ? 0.28 : 0.12)))
-        .foregroundStyle(delivery == .note ? Color.accentColor : .white)
+        .foregroundStyle(delivery == .paste ? .white : Color.accentColor)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(delivery == .note ? "When you stop: make a note" : "When you stop: paste"))
-        .accessibilityHint(Text("Click to switch between paste and note for this recording."))
+        .accessibilityLabel(Text(accessibility))
+        .accessibilityHint(Text("Click to switch between paste, note and meeting for this recording."))
         .accessibilityAddTraits(.isButton)
+    }
+
+    private var symbol: String {
+        switch delivery {
+        case .paste: "doc.on.clipboard"
+        case .note: "doc.text"
+        case .meeting: "person.2"
+        }
+    }
+
+    private var label: LocalizedStringResource {
+        switch delivery {
+        case .paste: "Paste"
+        case .note: "Note"
+        case .meeting: "Meeting"
+        }
+    }
+
+    private var accessibility: LocalizedStringResource {
+        switch delivery {
+        case .paste: "When you stop: paste"
+        case .note: "When you stop: make a note"
+        case .meeting: "When you stop: make a meeting note with speakers labelled"
+        }
     }
 }
 

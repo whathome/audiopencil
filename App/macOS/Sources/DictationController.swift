@@ -46,6 +46,9 @@ struct LongFormCapture {
     var language: SpokenLanguage
     var recorded: Date
     var duration: TimeInterval
+    /// Meeting mode: label who spoke, `speakers` people if known.
+    var meeting = false
+    var speakers: Int?
 }
 
 /// A delivered quick dictation, for the optional "save quick dictations" notes.
@@ -157,18 +160,35 @@ final class DictationController {
         indicator.onSelectLanguage = { [weak self] language in self?.select(language) }
         indicator.onPick = { [weak self] style in self?.pick(style) }
         indicator.onToggleDelivery = { [weak self] in self?.toggleDelivery() }
+        indicator.onSetDelivery = { [weak self] delivery in self?.setDelivery(delivery) }
+        indicator.onSetSpeakers = { [weak self] count in self?.setSpeakers(count) }
     }
 
-    /// Paste or note, chosen on the pill for this recording; nil decides by length.
+    /// Paste, note or meeting, chosen on the pill for this recording; nil decides by length.
     private(set) var deliveryOverride: Delivery?
+    /// Meeting: how many people are talking, if the user said.
+    private(set) var speakerCount: Int?
 
-    /// Flips what stopping will do: a short dictation can become a note, a long one can paste.
+    /// The pill's toggle: paste → note → meeting → paste. A short dictation can become a note, a long
+    /// one can paste, and either can become a meeting.
     func toggleDelivery() {
+        switch indicator.delivery() {
+        case .paste: setDelivery(.note)
+        case .note: setDelivery(.meeting)
+        case .meeting: setDelivery(.paste)
+        }
+    }
+
+    func setDelivery(_ delivery: Delivery) {
         guard phase == .recording || phase == .starting else { return }
-        let current = indicator.delivery()
-        deliveryOverride = current == .note ? .paste : .note
-        indicator.deliveryOverride = deliveryOverride
-        Log.dictation.notice("Delivery for this recording: \(self.deliveryOverride == .note ? "note" : "paste", privacy: .public)")
+        deliveryOverride = delivery
+        indicator.deliveryOverride = delivery
+        Log.dictation.notice("Delivery for this recording: \(delivery.rawValue, privacy: .public)")
+    }
+
+    func setSpeakers(_ count: Int?) {
+        speakerCount = count
+        indicator.speakerCount = count
     }
 
     /// First Fn tap: turn the mic on so a second tap starts recording instantly.
@@ -203,6 +223,8 @@ final class DictationController {
         self.remembersStyle = remembersStyle
         deliveryOverride = nil
         indicator.deliveryOverride = nil
+        speakerCount = nil
+        indicator.speakerCount = nil
         indicator.currentStyle = style
         indicator.currentLanguage = language
         phase = .starting
@@ -327,7 +349,7 @@ final class DictationController {
         let targetApp = self.targetApp
         let recorded = recordingStartedAt
 
-        if deliveryOverride.map({ $0 == .note }) ?? (audioSeconds >= longFormThreshold) {
+        if deliveryOverride.map({ $0 != .paste }) ?? (audioSeconds >= longFormThreshold) {
             finishLongForm(streamer: streamer, audioSeconds: audioSeconds, recorded: recorded, generation: generation)
             return
         }
@@ -449,6 +471,8 @@ final class DictationController {
         let style = self.style
         let language = self.language
         let targetApp = self.targetApp
+        let meeting = deliveryOverride == .meeting
+        let speakers = speakerCount
         finishTask = Task {
             do {
                 let engine = self.engine()
@@ -463,10 +487,10 @@ final class DictationController {
                     indicator.flash(.nothingHeard)
                 } else if dryRun {
                     Log.dictation.notice("Dry-run long-form [\(style.name, privacy: .public)]: \(transcript.count) characters")
-                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds))
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds, meeting: meeting, speakers: speakers))
                     indicator.flash(.notice(String(localized: "Long recording: making a note")), seconds: 2.5)
                 } else {
-                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds))
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds, meeting: meeting, speakers: speakers))
                     indicator.flash(.notice(String(localized: "Long recording: making a note")), seconds: 2.5)
                 }
                 if TranscriptCleaner.hasSpeech(transcript) { onLanguageUsed?(language, targetApp) }

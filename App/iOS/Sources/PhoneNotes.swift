@@ -1,6 +1,7 @@
 import APAudio
 import APCore
 import APStorage
+import APTranscription
 import Foundation
 import Observation
 import UIKit
@@ -49,11 +50,16 @@ final class PhoneNotes {
         var duration: TimeInterval
         var styleID: String
         var audioFile: String?
+        /// Meeting mode (optional: recordings queued before it existed decode as plain notes).
+        var meeting: Bool?
+        var speakers: Int?
     }
 
     /// Recordings waiting to be written up, oldest first.
     private(set) var queue: [QueuedRecording] = []
     @ObservationIgnored private var processTask: Task<Void, Never>?
+    /// Meeting mode's speaker labels (small models, loaded only while labelling).
+    @ObservationIgnored private let speakerLabeler = SpeakerLabeler()
     @ObservationIgnored private var observers: [any NSObjectProtocol] = []
 
     /// The writing model runs on the GPU, which iOS only allows while the app is on screen. So notes are
@@ -89,7 +95,8 @@ final class PhoneNotes {
             }.value
             queue.append(QueuedRecording(
                 id: id, transcript: capture.transcript, language: capture.language.code, recorded: capture.recorded,
-                duration: capture.duration, styleID: style.id, audioFile: savedAudio ? audioName : nil
+                duration: capture.duration, styleID: style.id, audioFile: savedAudio ? audioName : nil,
+                meeting: capture.meeting, speakers: capture.speakers
             ))
             saveQueue()
             processing = nil
@@ -131,7 +138,15 @@ final class PhoneNotes {
         let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
         let language = SpokenLanguage(code: item.language)
         let waiting = queue.count - 1
-        let result = await app.processLongForm(transcript: item.transcript, style: style, language: language) { [weak self] status in
+        var labelled: SpeakerTranscript?
+        if item.meeting == true, let audio = item.audioFile.map({ folder.appending(path: $0) }) {
+            processing = String(localized: "Labelling the speakers…")
+            labelled = await labelSpeakers(audio, language: language, speakers: item.speakers)
+            if Task.isCancelled { return false }
+        }
+        let label = SpeakerTranscript.label
+        let transcript = labelled?.text(label: label) ?? item.transcript
+        let result = await app.processLongForm(transcript: transcript, style: style, language: language, speakerLabel: labelled == nil ? nil : label) { [weak self] status in
             self?.processing = waiting > 0 ? String(localized: "\(status) (\(waiting) more waiting)") : status
         }
         // Writing stops when the app leaves the screen, and then returns the plain transcript: don't file that.
@@ -147,16 +162,41 @@ final class PhoneNotes {
             recorded: item.recorded,
             duration: item.duration,
             device: "iphone",
-            mode: .longForm,
+            mode: labelled == nil ? .longForm : .meeting,
             tags: result.knownTags + added,
             folder: folder(for: style),
             language: item.language,
-            body: result.body,
-            transcript: keepsTranscript(style) ? item.transcript : nil
+            // A meeting note that wasn't written up (raw, or no writing model) is the labelled transcript;
+            // written ones keep it below.
+            body: labelled.map { result.body == transcript ? $0.markdown(label: label) : result.body } ?? result.body,
+            transcript: labelled.map { result.body == transcript ? nil : $0.markdown(label: label) } ?? (keepsTranscript(style) ? item.transcript : nil),
+            speakers: labelled?.speakerCount
         )
         processing = String(localized: "Filing the note…")
         await file(note, audio: item.audioFile.map { folder.appending(path: $0) })
         return true
+    }
+
+    /// Who said what in a meeting recording: Whisper again over the whole audio with word timings, and the
+    /// speaker model. Nil (a plain note) if that can't be done.
+    private func labelSpeakers(_ audio: URL, language: SpokenLanguage, speakers: Int?) async -> SpeakerTranscript? {
+        do {
+            let samples = try await Task.detached(priority: .userInitiated) { try AudioFileReader.readMono(audio) }.value
+            // The recording's language may need the other Whisper model than the one loaded now.
+            let variant = SpeechModels.bestVariant(for: language, settings: app.settings)
+            let engine = variant == app.whisper.variant ? app.whisper : WhisperEngine(variant: variant)
+            guard engine.isDownloaded else { return nil }
+            try await app.coordinator.ensureLoaded(engine)
+            await engine.setLanguage(language.code)
+            let labelled = try await speakerLabeler.transcribe(samples, with: engine, speakers: speakers)
+            await speakerLabeler.unload()
+            if engine !== app.whisper { app.prepareModel() } // the coordinator swapped the app's model out
+            return labelled
+        } catch {
+            Log.dictation.error("Speaker labels failed: \(error.localizedDescription, privacy: .public)")
+            await speakerLabeler.unload()
+            return nil
+        }
     }
 
     private func saveQueue() {

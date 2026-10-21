@@ -15,6 +15,9 @@ struct PhoneCapture: Identifiable {
     var language: SpokenLanguage
     var recorded: Date
     var duration: TimeInterval
+    /// Meeting mode: label who spoke, `speakers` people if known.
+    var meeting = false
+    var speakers: Int?
 }
 
 /// One recording at a time: the microphone, the live transcript, pause and resume, and stopping into a
@@ -39,6 +42,11 @@ final class PhoneRecorder: RecordingControlling {
     private(set) var lastError: String?
     /// Why the recording is paused, when it wasn't the user (e.g. "AirPods disconnected").
     private(set) var pauseReason: String?
+    /// Meeting mode for this recording (set before or during it): speakers labelled in the note.
+    /// Back to one speaker after each recording, the default.
+    var meeting = false
+    /// How many people are talking, if known; nil works it out.
+    var speakerCount: Int?
     /// Recorded time, not counting pauses.
     private(set) var accumulated: TimeInterval = 0
     /// When the current stretch of recording began (nil while paused or idle).
@@ -221,11 +229,15 @@ final class PhoneRecorder: RecordingControlling {
         try? await Task.sleep(for: .milliseconds(250)) // let the cue finish before the session goes
         audio.stop()
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        let meeting = self.meeting
+        let speakers = speakerCount
         defer {
             phase = .idle
             self.streamer = nil
             level = 0
             pauseReason = nil
+            self.meeting = false
+            speakerCount = nil
             app.notes.processQueue()
         }
         do {
@@ -240,7 +252,10 @@ final class PhoneRecorder: RecordingControlling {
                 return nil
             }
             Log.dictation.notice("iPhone recording finished: \(duration, format: .fixed(precision: 0)) s")
-            return PhoneCapture(transcript: transcript, samples: samples, language: language, recorded: recordedAt, duration: min(duration, Double(samples.count) / AudioRecorder.sampleRate))
+            return PhoneCapture(
+                transcript: transcript, samples: samples, language: language, recorded: recordedAt,
+                duration: min(duration, Double(samples.count) / AudioRecorder.sampleRate), meeting: meeting, speakers: speakers
+            )
         } catch {
             lastError = String(localized: "Transcription failed: \(error.localizedDescription)")
             return nil

@@ -1874,18 +1874,18 @@
         }
       }
     },
-    "Click to switch between paste and note for this recording.": {
+    "Click to switch between paste, note and meeting for this recording.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haz clic para cambiar entre pegar y nota en esta grabación."
+            "value": "Haz clic para cambiar entre pegar, nota y reunión en esta grabación."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cliquez pour choisir entre coller et note pour cet enregistrement."
+            "value": "Cliquez pour choisir entre coller, note et réunion pour cet enregistrement."
           }
         }
       }
@@ -3476,6 +3476,22 @@
         }
       }
     },
+    "Labelling the speakers…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificando a los interlocutores…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identification des intervenants…"
+          }
+        }
+      }
+    },
     "Language": {
       "localizations": {
         "es": {
@@ -3940,6 +3956,22 @@
         }
       }
     },
+    "Make a meeting note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una nota de reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer une note de réunion"
+          }
+        }
+      }
+    },
     "Make a note": {
       "localizations": {
         "es": {
@@ -3968,6 +4000,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Créer une note au lieu de coller après"
+          }
+        }
+      }
+    },
+    "Meeting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réunion"
           }
         }
       }
@@ -5818,6 +5866,22 @@
         }
       }
     },
+    "Record a Meeting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabar una reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer une réunion"
+          }
+        }
+      }
+    },
     "Recording a test sentence…": {
       "localizations": {
         "es": {
@@ -6732,6 +6796,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Espace"
+          }
+        }
+      }
+    },
+    "Speakers": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlocutores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intervenants"
           }
         }
       }
@@ -8436,6 +8516,22 @@
         }
       }
     },
+    "When you stop: make a meeting note with speakers labelled": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al parar: crear una nota de reunión con los interlocutores identificados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’arrêt : créer une note de réunion avec les intervenants identifiés"
+          }
+        }
+      }
+    },
     "When you stop: make a note": {
       "localizations": {
         "es": {
@@ -8560,6 +8656,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whisper %@"
+          }
+        }
+      }
+    },
+    "Work it out": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detectar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détecter"
           }
         }
       }

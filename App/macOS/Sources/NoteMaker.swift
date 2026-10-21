@@ -2,6 +2,7 @@ import APAudio
 import APCore
 import APModels
 import APStorage
+import APTranscription
 import AppKit
 import SwiftUI
 import UserNotifications
@@ -20,6 +21,8 @@ final class NoteMaker {
     @ObservationIgnored private unowned let app: AppModel
     @ObservationIgnored private let folder: URL
     @ObservationIgnored private let notifications = NotificationDelegate()
+    /// Meeting mode's speaker labels (small models, loaded only while labelling).
+    @ObservationIgnored private let speakerLabeler = SpeakerLabeler()
 
     init(app: AppModel) {
         self.app = app
@@ -78,7 +81,21 @@ final class NoteMaker {
             let savedAudio = await Task.detached(priority: .userInitiated) { () -> Bool in
                 (try? AudioFileWriter.writeM4A(samples: samples, to: audioURL)) != nil
             }.value
-            let result = await app.processLongForm(transcript: capture.transcript, style: capture.style, language: capture.language) { [weak self] status in
+            // Meeting: who said what, before writing. If labelling fails, it's filed as a plain note.
+            var labelled: SpeakerTranscript?
+            if capture.meeting {
+                processing = String(localized: "Labelling the speakers…")
+                do {
+                    try await app.waitForSpeechModel()
+                    labelled = try await speakerLabeler.transcribe(capture.samples, with: app.whisper, speakers: capture.speakers)
+                } catch {
+                    Log.dictation.error("Speaker labels failed: \(error.localizedDescription, privacy: .public)")
+                }
+                await speakerLabeler.unload()
+            }
+            let label = SpeakerTranscript.label
+            let transcript = labelled?.text(label: label) ?? capture.transcript
+            let result = await app.processLongForm(transcript: transcript, style: capture.style, language: capture.language, speakerLabel: labelled == nil ? nil : label) { [weak self] status in
                 self?.processing = status
             }
             // Suggested tags are used as they are; new ones join the vault's tag list.
@@ -91,12 +108,15 @@ final class NoteMaker {
                 status: .needsReview,
                 recorded: capture.recorded,
                 duration: capture.duration,
-                mode: .longForm,
+                mode: labelled == nil ? .longForm : .meeting,
                 tags: result.knownTags + added,
                 folder: folder(for: capture.style),
                 language: capture.language.code,
-                body: result.body,
-                transcript: keepsTranscript(capture.style) ? capture.transcript : nil
+                // A meeting note that wasn't written up (raw, or no writing model) is the labelled transcript;
+                // written ones keep it below.
+                body: labelled.map { result.body == transcript ? $0.markdown(label: label) : result.body } ?? result.body,
+                transcript: labelled.map { result.body == transcript ? nil : $0.markdown(label: label) } ?? (keepsTranscript(capture.style) ? capture.transcript : nil),
+                speakers: labelled?.speakerCount
             )
             processing = String(localized: "Filing the note…")
             if let path = await upload(note, audio: savedAudio ? audioURL : nil, styleName: capture.style.displayName) {

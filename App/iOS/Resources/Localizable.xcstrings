@@ -100,6 +100,22 @@
         }
       }
     },
+    "%lld people": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld personas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld personnes"
+          }
+        }
+      }
+    },
     "%lld%%": {
       "localizations": {
         "es": {
@@ -940,6 +956,38 @@
         }
       }
     },
+    "Labelling the speakers…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificando a los interlocutores…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identification des intervenants…"
+          }
+        }
+      }
+    },
+    "Labels who said what in the note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indica quién dijo qué en la nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indique qui a dit quoi dans la note."
+          }
+        }
+      }
+    },
     "Language: %@": {
       "localizations": {
         "es": {
@@ -1048,6 +1096,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Créer la note"
+          }
+        }
+      }
+    },
+    "Meeting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réunion"
           }
         }
       }
@@ -1308,6 +1372,22 @@
         }
       }
     },
+    "Number of speakers": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de interlocutores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre d’intervenants"
+          }
+        }
+      }
+    },
     "Obsidian vault · can write": {
       "localizations": {
         "es": {
@@ -1368,6 +1448,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hors ligne : les changements attendent ici"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activé"
           }
         }
       }
@@ -1528,6 +1624,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Met l’enregistrement en pause ; reprenez-le pour continuer dans la même note."
+          }
+        }
+      }
+    },
+    "People: auto": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas: auto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnes : auto"
           }
         }
       }
@@ -2094,6 +2206,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sons"
+          }
+        }
+      }
+    },
+    "Speakers": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlocutores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intervenants"
           }
         }
       }
@@ -3030,6 +3158,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sans ouvrir l’app"
+          }
+        }
+      }
+    },
+    "Work it out": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detectar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détecter"
           }
         }
       }

@@ -653,6 +653,18 @@ final class AppModel: WritingHost {
     }
 
     /// Menu bar item: start when idle, stop when recording.
+    /// Menu bar "Record a Meeting": a recording that becomes a meeting note, speakers labelled.
+    func startMeeting() {
+        guard dictation.phase == .idle else { return }
+        startDictation()
+        dictation.setDelivery(.meeting)
+    }
+
+    /// The Whisper model in use, loaded (speaker labels need its word timings).
+    func waitForSpeechModel() async throws {
+        try await waitForModel()
+    }
+
     func toggleDictation() {
         switch dictation.phase {
         case .idle: startDictation()

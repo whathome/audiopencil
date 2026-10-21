@@ -48,6 +48,8 @@ private struct MenuBarContent: View {
             app.toggleDictation()
         }
         .disabled(app.dictation.phase == .starting || app.dictation.phase == .finishing)
+        Button("Record a Meeting") { app.startMeeting() }
+            .disabled(app.dictation.phase != .idle)
         Button("Copy Last Dictation") {
             if let text = app.dictation.lastText { app.dictation.paster.copy(text) }
         }

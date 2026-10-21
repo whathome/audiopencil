@@ -42,11 +42,12 @@ extension WritingHost {
         WritingLanguages.canWrite(language.code, withModel: settings.writingModel)
     }
 
-    /// Style prompt, with the closest writing samples for "Like me".
-    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context, language: SpokenLanguage) -> StylePrompt {
+    /// Style prompt, with the closest writing samples for "Like me". `speakerLabel`: a meeting transcript
+    /// labelled "Speaker 1: …" (no "Like me" imitation then: it's not one person writing).
+    func stylePrompt(for style: Style, transcript: String, context: PromptBuilder.Context, language: SpokenLanguage, speakerLabel: String? = nil) -> StylePrompt {
         let vocabulary = settings.vocabulary(for: language)
-        guard style.tone == .likeMe else {
-            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language)
+        guard style.tone == .likeMe, speakerLabel == nil else {
+            return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language, speakerLabel: speakerLabel)
         }
         let examples = WritingSampleSelector.pick(for: transcript, from: writingSamples, language: language)
         return PromptBuilder.prompt(for: style, transcript: transcript, context: context, vocabulary: vocabulary, language: language, examples: examples)
@@ -59,6 +60,7 @@ extension WritingHost {
         transcript: String,
         style: Style,
         language: SpokenLanguage,
+        speakerLabel: String? = nil,
         status: @escaping @MainActor (String) -> Void
     ) async -> ProcessedLongForm {
         let fallback = ProcessedLongForm(body: transcript, title: nil, knownTags: [], newTags: [])
@@ -84,25 +86,26 @@ extension WritingHost {
             var body = transcript
             if !style.isRaw {
                 let vocabulary = settings.vocabulary(for: language)
-                let sections = PromptBuilder.sections(of: transcript)
+                // A meeting splits between turns, so every part keeps its speaker labels.
+                let sections = speakerLabel == nil ? PromptBuilder.sections(of: transcript) : PromptBuilder.sections(ofTurns: transcript)
                 if sections.count == 1 {
                     status(String(localized: "Writing the note…"))
-                    body = try await generateText(stylePrompt(for: style, transcript: transcript, context: .longForm, language: language))
+                    body = try await generateText(stylePrompt(for: style, transcript: transcript, context: .longForm, language: language, speakerLabel: speakerLabel))
                 } else if style.intensity == .heavy {
                     // Summaries: notes per section, then one note in the style from those.
                     var notes: [String] = []
                     for (index, section) in sections.enumerated() {
                         status(String(localized: "Summarising part \(index + 1) of \(sections.count)…"))
-                        notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary, language: language)))
+                        notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary, language: language, speakerLabel: speakerLabel)))
                     }
                     status(String(localized: "Writing the note…"))
-                    body = try await generateText(stylePrompt(for: style, transcript: PromptBuilder.joinSectionNotes(notes), context: .sectionNotes(count: notes.count), language: language))
+                    body = try await generateText(stylePrompt(for: style, transcript: PromptBuilder.joinSectionNotes(notes), context: .sectionNotes(count: notes.count), language: language, speakerLabel: speakerLabel))
                 } else {
                     // Tidy or rewrite: section by section, kept in order.
                     var parts: [String] = []
                     for (index, section) in sections.enumerated() {
                         status(String(localized: "Writing part \(index + 1) of \(sections.count)…"))
-                        parts.append(try await generateText(stylePrompt(for: style, transcript: section, context: .longForm, language: language)))
+                        parts.append(try await generateText(stylePrompt(for: style, transcript: section, context: .longForm, language: language, speakerLabel: speakerLabel)))
                     }
                     body = parts.joined(separator: "\n\n")
                 }

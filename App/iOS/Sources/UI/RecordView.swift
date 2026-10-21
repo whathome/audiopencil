@@ -18,6 +18,7 @@ struct RecordView: View {
                     .padding(.top, 8)
                 transcript
                 VStack(spacing: 18) {
+                    meetingRow
                     clock
                     controls
                 }
@@ -95,6 +96,43 @@ struct RecordView: View {
         }
         .opacity(recorder.isActive ? 1 : 0.35)
         .accessibilityLabel(Text("Recorded time"))
+    }
+
+    /// Meeting mode, chosen before or during a recording: the note labels who said what. Off again after
+    /// each recording, since most are one person talking.
+    private var meetingRow: some View {
+        HStack(spacing: 8) {
+            Button {
+                recorder.meeting.toggle()
+            } label: {
+                Label("Meeting", systemImage: "person.2")
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .foregroundStyle(recorder.meeting ? Color.white : Color.primary)
+                    .background(Capsule().fill(recorder.meeting ? Color.pencil : Color(.secondarySystemFill)))
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(Text(recorder.meeting ? "On" : "Off"))
+            .accessibilityHint(Text("Labels who said what in the note."))
+            if recorder.meeting {
+                Menu {
+                    Picker("Speakers", selection: Binding(get: { recorder.speakerCount }, set: { recorder.speakerCount = $0 })) {
+                        Text("Work it out").tag(Int?.none)
+                        ForEach(2...6, id: \.self) { Text("\($0) people").tag(Int?.some($0)) }
+                    }
+                } label: {
+                    Text(recorder.speakerCount.map { "\($0) people" as LocalizedStringResource } ?? "People: auto")
+                        .font(.subheadline)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Color(.secondarySystemFill)))
+                }
+                .accessibilityLabel(Text("Number of speakers"))
+            }
+        }
+        .disabled(recorder.phase == .finishing)
+        .animation(.snappy, value: recorder.meeting)
     }
 
     private var controls: some View {

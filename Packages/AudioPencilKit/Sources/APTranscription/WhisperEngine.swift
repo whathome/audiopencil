@@ -177,6 +177,27 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
         }
     }
 
+    /// The whole recording in one go, with word timings, for meeting mode's speaker labels. Long audio
+    /// is split at pauses. No vocabulary prompt: with word timings, a prompt makes Whisper skip the
+    /// opening segment (seen on a real recording); the writing model gets the spellings instead.
+    public func transcribeTimedWords(_ samples: [Float]) async throws -> [TimedWord] {
+        try await lock.withLock {
+            guard let kit else { throw WhisperEngineError.notLoaded }
+            var options = options(prompt: nil, noSpeechThreshold: 0.6)
+            options.wordTimestamps = true
+            options.chunkingStrategy = .vad
+            let results = try await kit.transcribe(audioArray: samples, decodeOptions: options)
+            let words = results.flatMap(\.segments).flatMap { segment -> [TimedWord] in
+                // Without word timings (rare), the segment stands in for its words.
+                guard let words = segment.words, !words.isEmpty else {
+                    return [TimedWord(text: " " + segment.text, start: Double(segment.start), end: Double(segment.end))]
+                }
+                return words.map { TimedWord(text: $0.word, start: Double($0.start), end: Double($0.end)) }
+            }
+            return SpeakerTranscript.withoutSoundLabels(words)
+        }
+    }
+
     private func options(prompt: [Int]?, noSpeechThreshold: Float?) -> DecodingOptions {
         DecodingOptions(
             task: .transcribe,

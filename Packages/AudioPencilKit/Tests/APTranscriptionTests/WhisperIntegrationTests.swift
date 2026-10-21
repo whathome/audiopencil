@@ -55,6 +55,39 @@ struct WhisperIntegrationTests {
         await coordinator.unload(engine)
     }
 
+    /// Meeting mode end to end: two synthesised voices taking turns, transcribed with word timings,
+    /// labelled by SpeakerKit (downloads ~22 MB of speaker models), and merged into turns.
+    @Test func labelsTwoSpeakersTakingTurns() async throws {
+        let lines: [(voice: String, text: String)] = [
+            ("Samantha", "Good morning. Shall we go through the budget for the new office first?"),
+            ("Daniel", "Yes, let's do that. I think we can keep the rent under four thousand a month."),
+            ("Samantha", "That works for me. Can you send the lease to the landlord by Friday?"),
+            ("Daniel", "I will send it on Thursday, and I'll copy you on the email."),
+        ]
+        let gap = [Float](repeating: 0, count: 16_000 * 6 / 10)
+        var samples: [Float] = []
+        for line in lines { samples += try Self.synthesise(line.text, voice: line.voice) + gap }
+
+        let engine = WhisperEngine(variant: ProcessInfo.processInfo.environment["AUDIOPENCIL_MODEL"] ?? "openai_whisper-small.en")
+        if !engine.isDownloaded { try await engine.download { _ in } }
+        let coordinator = ModelCoordinator()
+        try await coordinator.ensureLoaded(engine)
+        let labeler = SpeakerLabeler()
+        let start = ContinuousClock.now
+        let transcript = try await labeler.transcribe(samples, with: engine, speakers: nil)
+        print("[integration] meeting: \(Double(samples.count) / 16_000) s labelled in \(ContinuousClock.now - start)")
+        print("[integration] \(transcript.text(label: "Speaker"))")
+
+        #expect(transcript.speakerCount == 2)
+        #expect(transcript.turns.map(\.speaker) == [1, 2, 1, 2])
+        #expect(transcript.turns.last?.text.lowercased().contains("thursday") == true)
+        // A known count gives the same answer.
+        let known = try await labeler.transcribe(samples, with: engine, speakers: 2)
+        #expect(known.turns.map(\.speaker) == [1, 2, 1, 2])
+        await labeler.unload()
+        await coordinator.unload(engine)
+    }
+
     /// Uses the system `say` voice to make 16 kHz mono speech.
     static func synthesise(_ text: String, voice: String? = nil) throws -> [Float] {
         let url = FileManager.default.temporaryDirectory.appending(path: "audiopencil-\(UUID().uuidString).wav")
