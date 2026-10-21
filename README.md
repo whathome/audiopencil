@@ -66,6 +66,7 @@ Settings (⌘,) also has:
 - **Models in the background**: other languages use a quick starter model (Whisper Small) within about 90 s, while the more accurate one (Large v3 Turbo) prepares in the background without holding up dictation; the switch happens between recordings. First-time preparation shows its step, a clock and an estimate.
 - **Interface language**: English, French or Spanish, following macOS (System Settings › General › Language & Region, which can also set Audio Pencil's language on its own). Preset style names and descriptions are shown translated while a preset keeps its default name; the instructions the writing model reads stay as written.
 - **Custom vocabulary**: one term per line, passed to Whisper as spelling hints. In a test, "next cloud / web dev / whisker kit" became "Nextcloud / WebDAV / WhisperKit". One list applies to every language; each language can add its own (the List picker), and a recording uses both.
+- **Try Phonon-2 for English** (trial, this Mac only, not synced): English goes through [Phonon-2](https://huggingface.co/FermionResearch/Phonon-2) instead of Whisper, using [FluidAudio](https://github.com/FluidInference/FluidAudio) on the Neural Engine. This only happens while no custom vocabulary is set: Phonon-2 can't take spelling hints, so Whisper stays on whenever there is one. The live text works as before, and at stop the whole recording is transcribed again in one pass, which takes under 2 s for 5 minutes. On the first use it downloads 375 MB and prepares for this Mac, about 3–5 min on an M1. In tests it made fewer errors than Whisper Small (English) and was 5–6× faster; it hasn't been tested yet on a real dictation. See [the benchmark](docs/benchmarks/phonon-2-vs-whisper-small.md).
 - **Menu bar only** (hides the Dock icon) and **Launch at login**.
 
 ### Meeting mode
@@ -159,13 +160,14 @@ Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
   APCore                      settings, Fn tap/hold detection, styles, prompt builder, per-app memory, stats
   APAudio                     16 kHz mono capture (off the main thread), mic catalogue, levels, cues
   APModels                    ModelCoordinator (one large model resident at a time), catalogue
-  APTranscription             WhisperKit wrapper, streaming transcriber
+  APTranscription             WhisperKit wrapper, streaming transcriber, DictationEngine (what dictation needs from a speech model)
+  APPhonon                    Phonon-2 through FluidAudio, English only (Mac only, a trial)
   APSummary                   MLX writing model (SmolLM3 by default), Hugging Face download, benchmark
   APStorage                   storage: Nextcloud (Login Flow v2) or any WebDAV server, local folder (iCloud Drive), Keychain
   APSync                      shared settings file (YAML in Markdown), three-way merge, offline upload queue
 ```
 
-Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, which unloads whatever else is resident first. Whisper and the writing model are both `ManagedModel`s, so they can't be loaded at the same time.
+Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, which unloads whatever else is resident first. Whisper, Phonon-2 and the writing model are all `ManagedModel`s, so no two can be loaded at the same time.
 
 ## Tests
 
