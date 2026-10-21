@@ -136,9 +136,10 @@ streaming passes, and the transcript from one pass over the whole recording at s
   | Whisper | 0% WER | 1.5% WER | 0.8–1.0 s |
 
   Room-like speech is quieter, with two echoes and a hiss.
-- **One live dictation went badly.** The script played from the MacBook's speakers into its own microphone.
-  - Phonon-2 turned the first sentence into "Uh Ben Vanderberg's gonna rip down runway competitor".
-  - Its pass at stop dropped the last sentence.
-  - Whisper, on the next take of the same test, got all three sentences.
-  - The cause isn't known yet. Candidates are the start cue or the room. It needs real dictation to settle:
-    debug dry runs now keep their audio in `~/Library/Application Support/AudioPencil/Debug/last-dictation.f32`.
+- **Live dictation is not tested yet.** The script was played from the MacBook's speakers into its own
+  microphone. Two Phonon-2 runs came out wrong, starting "Uh Ben Vanderberg's gonna rip down runway competitor",
+  but the microphone had also picked up someone talking in the room. Phonon-2 transcribed both voices, so these
+  runs say nothing about its accuracy. That includes the last sentence missing from one run.
+  - A real dictation, in a quiet room, is still to do.
+  - Debug dry runs now keep their audio in `~/Library/Application Support/AudioPencil/Debug/last-dictation.f32`,
+    so a surprising result can be replayed.
