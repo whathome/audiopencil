@@ -119,3 +119,26 @@ progress shown.
   them. It could replace Large v3 Turbo for those languages, whose first-time preparation takes 12.5 minutes
   ([multilingual Whisper](multilingual-whisper.md)). That deserves its own benchmark against the same clips.
 - Real (non-LibriSpeech) dictation from a phone microphone outdoors, where both models will do worse.
+
+## The trial in the app (Oct 21 2026)
+
+Settings › Dictation › **Try Phonon-2 for English** (Mac only, not synced) switches English to Phonon-2. That
+happens only while no custom vocabulary is set; otherwise Whisper stays on. Live text comes from the usual
+streaming passes, and the transcript from one pass over the whole recording at stop.
+
+- In the app, the first-time preparation took 182 s. Warm loads, including after a relaunch, took 1.5–1.6 s.
+- `PhononIntegrationTests` runs the app's own path on the backup-plan script, with Whisper Small (English) on
+  the same audio:
+
+  | | Clean speech | Room-like speech | Stop → text |
+  |---|---|---|---|
+  | Phonon-2 | 1.5% WER | 1.5% WER | 0.4 s |
+  | Whisper | 0% WER | 1.5% WER | 0.8–1.0 s |
+
+  Room-like speech is quieter, with two echoes and a hiss.
+- **One live dictation went badly.** The script played from the MacBook's speakers into its own microphone.
+  - Phonon-2 turned the first sentence into "Uh Ben Vanderberg's gonna rip down runway competitor".
+  - Its pass at stop dropped the last sentence.
+  - Whisper, on the next take of the same test, got all three sentences.
+  - The cause isn't known yet. Candidates are the start cue or the room. It needs real dictation to settle:
+    debug dry runs now keep their audio in `~/Library/Application Support/AudioPencil/Debug/last-dictation.f32`.

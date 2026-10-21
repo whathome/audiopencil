@@ -75,6 +75,8 @@ targets:
       - package: AudioPencilKit
         product: APTranscription
       - package: AudioPencilKit
+        product: APPhonon
+      - package: AudioPencilKit
         product: APSummary
       - package: AudioPencilKit
         product: APStorage

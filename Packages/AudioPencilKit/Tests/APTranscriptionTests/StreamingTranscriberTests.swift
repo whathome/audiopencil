@@ -53,6 +53,23 @@ struct StreamingTranscriberTests {
         #expect(calls.last! < 14 * 16_000)
     }
 
+    @Test func wholeRecordingAtStopReplacesLivePasses() async throws {
+        let source = TestSource()
+        let engine = FakeEngine(source: source)
+        var configuration = StreamingTranscriber.Configuration()
+        configuration.wholeRecordingAtStop = true
+        let streamer = StreamingTranscriber(engine: engine, source: source, configuration: configuration)
+
+        source.append(seconds: 10, loud: true)
+        #expect(await streamer.passIfNeeded())
+        source.append(seconds: 4, loud: true)
+
+        let text = try await streamer.finish()
+        #expect(text == "s0 s2 s4 s6 s8 s10 s12")
+        // The last pass covered all 14 s, and nothing the live pass confirmed was counted twice.
+        #expect(await engine.calls.last == 14 * 16_000)
+    }
+
     @Test func skipsPassWithoutEnoughNewAudio() async {
         let source = TestSource()
         let engine = FakeEngine(source: source)

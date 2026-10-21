@@ -1,5 +1,6 @@
 import APCore
 import APModels
+import APPhonon
 import APTranscription
 import Foundation
 import UserNotifications
@@ -10,12 +11,13 @@ import UserNotifications
 extension AppModel {
     /// Which model is being prepared, for the person reading the status.
     func preparationTitle(_ preparation: ModelPreparation) -> String {
+        if preparation.variant == PhononEngine.variant { return String(localized: "Preparing Phonon-2 for this Mac") }
         let name = TranscriptionModelOption.option(for: preparation.variant)?.name ?? preparation.variant
         return String(localized: "Preparing Whisper \(name) for this Mac")
     }
 
     /// Hooks an engine's preparation progress up to the app. Call before loading it.
-    func observePreparation(of engine: WhisperEngine) async {
+    func observePreparation(of engine: any DictationEngine) async {
         await engine.setPreparationHandler { [weak self] preparation in
             Task { @MainActor in self?.preparationChanged(preparation) }
         }
@@ -23,7 +25,7 @@ extension AppModel {
 
     /// Dictation is waiting on this preparation (it's the model in use), rather than it running in the background.
     func isBlocking(_ preparation: ModelPreparation) -> Bool {
-        preparation.variant == whisper.variant
+        preparation.variant == speech.variant
     }
 
     private func preparationChanged(_ new: ModelPreparation?) {

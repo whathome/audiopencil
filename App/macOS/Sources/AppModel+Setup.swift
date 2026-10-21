@@ -162,7 +162,7 @@ extension AppModel {
             default: return writingModelDownloaded ? .ready : (writingTask != nil ? .downloading(0) : .waiting)
             }
         case .whisper(let variant):
-            if variant == whisper.variant {
+            if variant == speech.variant {
                 switch modelState {
                 case .downloading(let fraction): return .downloading(fraction)
                 case .loading: return .preparing(preparation?.variant == variant ? preparation : nil)

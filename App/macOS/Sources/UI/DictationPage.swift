@@ -167,7 +167,7 @@ private struct TranscriptionCard: View {
                 GridRow {
                     let variant = app.transcriptionVariant(for: app.activeLanguage)
                     Label("Model", systemImage: "cpu").foregroundStyle(.secondary)
-                    Text("Whisper \(TranscriptionModelOption.option(for: variant)?.name ?? variant)")
+                    Text(app.speechModelName(variant))
                 }
                 GridRow {
                     Label("Writing", systemImage: "pencil.and.scribble").foregroundStyle(.secondary)
@@ -277,8 +277,7 @@ struct TryItCard: View {
         let style = app.styleMemory.defaultStyle(forApp: bundleID, among: app.styles).displayName
         let language = app.languageMemory.language(forApp: bundleID)
         let variant = app.transcriptionVariant(for: language)
-        let model = TranscriptionModelOption.option(for: variant)?.name ?? variant
-        return [style, language.name(), "Whisper \(model)"].joined(separator: " · ")
+        return [style, language.name(), app.speechModelName(variant)].joined(separator: " · ")
     }
 }
 

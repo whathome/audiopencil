@@ -179,10 +179,17 @@ There's also an opt-in end-to-end WhisperKit test. It synthesises speech with `s
 cd Packages/AudioPencilKit && AUDIOPENCIL_INTEGRATION=1 swift test --filter WhisperIntegration
 ```
 
+The same for the Phonon-2 trial (Settings › Dictation › Try Phonon-2 for English). It runs the app's path, one pass over the whole recording at stop, against Whisper Small (English), on clean and room-like speech:
+
+```bash
+cd Packages/AudioPencilKit && AUDIOPENCIL_INTEGRATION=1 swift test --filter PhononIntegration
+```
+
 Debug builds can be driven without key presses, for end-to-end timing. These dictations never paste; the transcript goes to the log. Use `say` to talk to the mic:
 
 ```bash
 scripts/debug-dictation.sh tap-start   # or: start (cold), warm (a lone first tap), stop, cancel
+scripts/debug-dictation.sh phonon:on   # Phonon-2 trial on; phonon:force also ignores the vocabulary; phonon:off
 scripts/debug-dictation.sh key:fnDown 0.6 key:fnUp   # simulated keys: fnDown, fnUp, other, escape, return, 0–9
 ```
 

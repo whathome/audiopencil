@@ -1,5 +1,6 @@
 import APAudio
 import APCore
+import APModels
 import APTranscription
 import Foundation
 
@@ -61,7 +62,7 @@ struct QuickCapture {
     var duration: TimeInterval
 }
 
-/// Quick-dictation loop: record → stream to Whisper → stop → (rewrite in a style) → paste.
+/// Quick-dictation loop: record → stream to the speech model → stop → (rewrite in a style) → paste.
 @Observable
 final class DictationController {
     enum Phase {
@@ -128,7 +129,7 @@ final class DictationController {
 
     func previewSounds() { cues.preview() }
     private let indicator: IndicatorModel
-    private let engine: () -> WhisperEngine
+    private let engine: () -> any DictationEngine
     private let waitForModel: () async throws -> Void
     private let rewrite: StyleRewriter
     /// Frontmost app when recording started: where the text is going.
@@ -148,7 +149,7 @@ final class DictationController {
 
     init(
         indicator: IndicatorModel,
-        engine: @escaping () -> WhisperEngine,
+        engine: @escaping () -> any DictationEngine,
         waitForModel: @escaping () async throws -> Void,
         rewrite: @escaping StyleRewriter
     ) {
@@ -270,9 +271,12 @@ final class DictationController {
     private func makeStreamer() -> StreamingTranscriber {
         let engine = self.engine()
         let indicator = self.indicator
+        var configuration = StreamingTranscriber.Configuration()
+        configuration.wholeRecordingAtStop = engine.transcribesWholeRecordingAtStop
         return StreamingTranscriber(
             engine: engine,
             source: recorder.samples,
+            configuration: configuration,
             isEngineReady: { await engine.isLoaded },
             onUpdate: { confirmed, pending in
                 Task { @MainActor in indicator.liveText = [confirmed, pending].filter { !$0.isEmpty }.joined(separator: " ") }
@@ -344,6 +348,9 @@ final class DictationController {
         indicator.show(.processing)
         let audioSeconds = Double(recorder.samples.count) / AudioRecorder.sampleRate
         let peak = recorder.samples.samples(from: 0).reduce(Float(0)) { max($0, abs($1)) }
+        #if DEBUG
+        if dryRun { Self.saveDebugRecording(recorder.samples.samples(from: 0)) }
+        #endif
         Log.audio.notice("Stopped: \(audioSeconds, format: .fixed(precision: 1)) s, peak level \(peak, format: .fixed(precision: 3))")
         let generation = self.generation
         let targetApp = self.targetApp
@@ -464,6 +471,14 @@ final class DictationController {
             }
         }
     }
+
+    #if DEBUG
+    /// Dry runs keep their audio, raw 16 kHz float samples, to replay through a model outside the app.
+    private static func saveDebugRecording(_ samples: [Float]) {
+        let url = ModelLocations.root.deletingLastPathComponent().appending(path: "Debug/last-dictation.f32")
+        try? samples.withUnsafeBytes { Data($0) }.write(to: url)
+    }
+    #endif
 
     /// Long recording: no paste. Finish the transcript, hand the recording off, and say so.
     private func finishLongForm(streamer: StreamingTranscriber, audioSeconds: Double, recorded: Date, generation: Int) {

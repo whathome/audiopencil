@@ -20,6 +20,9 @@ public actor StreamingTranscriber {
         /// Peak 100 ms RMS below this counts as silence (about -40 dBFS).
         public var silenceThreshold: Float = 0.01
         public var pollInterval: Duration = .milliseconds(200)
+        /// At stop, transcribe the whole recording in one pass and use that, rather than adding the tail
+        /// to what the live passes confirmed. The live passes then only feed the live text.
+        public var wholeRecordingAtStop = false
 
         public init() {}
     }
@@ -58,10 +61,12 @@ public actor StreamingTranscriber {
         loop = Task { await self.runLoop() }
     }
 
-    /// Stops background passes, transcribes whatever is left, and returns the full transcript.
+    /// Stops background passes, transcribes whatever is left (or everything, with `wholeRecordingAtStop`),
+    /// and returns the full transcript.
     public func finish() async throws -> String {
         await stopLoop()
-        let tail = source.samples(from: confirmedEndSample)
+        if configuration.wholeRecordingAtStop { confirmed = [] }
+        let tail = source.samples(from: configuration.wholeRecordingAtStop ? 0 : confirmedEndSample)
         if tail.count >= Int(0.3 * configuration.sampleRate), containsSound(tail) {
             let segments = try await engine.transcribe(tail)
             passCount += 1

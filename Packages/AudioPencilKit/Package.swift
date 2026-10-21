@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "APAudio", targets: ["APAudio"]),
         .library(name: "APModels", targets: ["APModels"]),
         .library(name: "APTranscription", targets: ["APTranscription"]),
+        .library(name: "APPhonon", targets: ["APPhonon"]),
         .library(name: "APSummary", targets: ["APSummary"]),
         .library(name: "APStorage", targets: ["APStorage"]),
         .library(name: "APSync", targets: ["APSync"]),
@@ -34,6 +35,9 @@ let package = Package(
         .package(url: "https://github.com/huggingface/swift-huggingface", .upToNextMinor(from: "0.9.0")),
         .package(url: "https://github.com/huggingface/swift-transformers", .upToNextMinor(from: "1.3.5")),
         .package(url: "https://github.com/jpsim/Yams.git", .upToNextMinor(from: "6.2.2")),
+        // Phonon-2 trial (Mac). The revision benchmarked in docs/benchmarks/phonon-2-vs-whisper-small.md: the
+        // encoder ladder it measured came after v0.17.7. No traits: speech recognition only, no TTS or diarizer.
+        .package(url: "https://github.com/FluidInference/FluidAudio.git", revision: "c79c4106b954f81205113c3343e5a7e59a1089b5", traits: []),
     ],
     targets: [
         // Pure logic: settings, gesture detection, diagnostics. No platform frameworks beyond Foundation.
@@ -54,6 +58,19 @@ let package = Package(
                 .product(name: "WhisperKit", package: "WhisperKit"),
                 // Speaker labels for meeting mode (pyannote), from the same Argmax package as WhisperKit.
                 .product(name: "SpeakerKit", package: "WhisperKit"),
+            ],
+            resources: [.process("Resources")],
+            swiftSettings: concurrency
+        ),
+
+        // Phonon-2 (FluidAudio) as a second English speech engine. Linked by the Mac app only.
+        .target(
+            name: "APPhonon",
+            dependencies: [
+                "APCore",
+                "APModels",
+                "APTranscription",
+                .product(name: "FluidAudio", package: "FluidAudio"),
             ],
             resources: [.process("Resources")],
             swiftSettings: concurrency
@@ -91,6 +108,7 @@ let package = Package(
             dependencies: ["APTranscription", "APModels"],
             swiftSettings: concurrency
         ),
+        .testTarget(name: "APPhononTests", dependencies: ["APPhonon", "APTranscription", "APModels", "APCore", .product(name: "FluidAudio", package: "FluidAudio")], swiftSettings: concurrency),
         .testTarget(name: "APStorageTests", dependencies: ["APStorage"], swiftSettings: concurrency),
         .testTarget(name: "APSyncTests", dependencies: ["APSync", "APStorage", "APCore", .product(name: "Yams", package: "Yams")], swiftSettings: concurrency),
         .testTarget(

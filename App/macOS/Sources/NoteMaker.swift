@@ -87,7 +87,7 @@ final class NoteMaker {
                 processing = String(localized: "Labelling the speakers…")
                 do {
                     try await app.waitForSpeechModel()
-                    labelled = try await speakerLabeler.transcribe(capture.samples, with: app.whisper, speakers: capture.speakers)
+                    labelled = try await speakerLabeler.transcribe(capture.samples, with: app.speech, speakers: capture.speakers)
                 } catch {
                     Log.dictation.error("Speaker labels failed: \(error.localizedDescription, privacy: .public)")
                 }

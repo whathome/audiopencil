@@ -15,6 +15,8 @@ public enum PreparationEstimate {
         "openai_whisper-base": 30,
         "openai_whisper-tiny.en": 15,
         "openai_whisper-tiny": 15,
+        // Three encoder window sizes, each compiled (docs/benchmarks/phonon-2-vs-whisper-small.md).
+        "fluidinference_phonon-2": 320,
     ]
 
     public static func seconds(variant: String, folder: URL) -> Double {
@@ -27,7 +29,7 @@ public enum PreparationEstimate {
         return max(15, 90 * pow(encoderMB / 170, 2.8))
     }
 
-    static func record(_ seconds: Double, variant: String) {
+    public static func record(_ seconds: Double, variant: String) {
         var measured = UserDefaults.standard.dictionary(forKey: measuredKey) as? [String: Double] ?? [:]
         measured[variant] = seconds
         UserDefaults.standard.set(measured, forKey: measuredKey)

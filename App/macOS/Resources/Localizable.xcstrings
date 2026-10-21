@@ -2996,6 +2996,22 @@
         }
       }
     },
+    "Fewer mistakes and faster than Whisper Small in tests. English only. A 370 MB download, then about 5 minutes preparing for this Mac the first time.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menos errores y más rápido que Whisper Small en las pruebas. Solo inglés. Una descarga de 370 MB y unos 5 minutos de preparación para este Mac la primera vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moins d’erreurs et plus rapide que Whisper Small lors des tests. Anglais uniquement. Un téléchargement de 370 Mo, puis environ 5 minutes de préparation pour ce Mac la première fois."
+          }
+        }
+      }
+    },
     "Files": {
       "localizations": {
         "es": {
@@ -5488,6 +5504,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Préparation de %@ pour ce Mac (la première fois, cela peut prendre quelques minutes)…"
+          }
+        }
+      }
+    },
+    "Preparing Phonon-2 for this Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando Phonon-2 para este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation de Phonon-2 pour ce Mac"
           }
         }
       }
@@ -8036,6 +8068,22 @@
         }
       }
     },
+    "Try Phonon-2 for English": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probar Phonon-2 para el inglés"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essayer Phonon-2 pour l’anglais"
+          }
+        }
+      }
+    },
     "Try it here": {
       "localizations": {
         "es": {
@@ -8656,6 +8704,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whisper %@"
+          }
+        }
+      }
+    },
+    "Whisper stays on while you have a custom vocabulary: Phonon-2 can't take one.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper sigue activo mientras tengas un vocabulario personalizado: Phonon-2 no admite uno."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper reste actif tant que vous avez un vocabulaire personnalisé : Phonon-2 n’en accepte pas."
           }
         }
       }

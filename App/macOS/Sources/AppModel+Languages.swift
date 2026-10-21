@@ -1,5 +1,6 @@
 import APCore
 import APModels
+import APPhonon
 import APTranscription
 import Foundation
 
@@ -30,10 +31,10 @@ extension AppModel {
     func useLanguage(_ language: SpokenLanguage) {
         activeLanguage = language
         let variant = transcriptionVariant(for: language)
-        if whisper.variant != variant {
+        if speech.variant != variant {
             switchModel(to: variant)
         } else {
-            let engine = whisper
+            let engine = speech
             let vocabulary = settings.vocabulary(for: language)
             Task {
                 await engine.setLanguage(language.code)
@@ -50,12 +51,58 @@ extension AppModel {
         SpeechModels.multilingualTarget(settings, machine: machine)
     }
 
+    /// Whisper as `SpeechModels` picks it, except English while trying Phonon-2 out and no vocabulary is set:
+    /// Phonon-2 has no prompt to steer spelling, so Whisper keeps a vocabulary working.
     static func bestVariant(for language: SpokenLanguage, settings: DictationSettings) -> String {
-        SpeechModels.bestVariant(for: language, settings: settings)
+        var vocabularyAllows = settings.vocabulary(for: language).isEmpty
+        #if DEBUG
+        vocabularyAllows = vocabularyAllows || debugPhononIgnoresVocabulary
+        #endif
+        if language.isEnglish, UserDefaults.standard.bool(forKey: phononTrialKey), vocabularyAllows {
+            return PhononEngine.variant
+        }
+        return SpeechModels.bestVariant(for: language, settings: settings)
     }
 
+    static func engine(for variant: String) -> any DictationEngine {
+        variant == PhononEngine.variant ? PhononEngine() : WhisperEngine(variant: variant)
+    }
+
+    // MARK: Phonon-2 trial
+
+    static let phononTrialKey = "phononTrial"
+
+    #if DEBUG
+    /// Debug builds (phonon:force): Phonon-2 even with a vocabulary set, without touching the synced list.
+    static var debugPhononIgnoresVocabulary = false
+    #endif
+
+    /// Settings › Dictation: English through Phonon-2 instead of Whisper. On this Mac only, not synced.
+    var phononTrial: Bool {
+        get {
+            access(keyPath: \.phononTrial)
+            return UserDefaults.standard.bool(forKey: Self.phononTrialKey)
+        }
+        set {
+            withMutation(keyPath: \.phononTrial) { UserDefaults.standard.set(newValue, forKey: Self.phononTrialKey) }
+            Log.models.notice("Phonon-2 trial \(newValue ? "on" : "off", privacy: .public)")
+            if speech.variant != transcriptionVariant(for: activeLanguage) {
+                switchModel(to: transcriptionVariant(for: activeLanguage))
+            }
+        }
+    }
+
+    /// "Whisper Small (English)" or "Phonon-2", for status lines.
+    func speechModelName(_ variant: String) -> String {
+        variant == PhononEngine.variant ? "Phonon-2" : "Whisper " + (TranscriptionModelOption.option(for: variant)?.name ?? variant)
+    }
+
+    /// English is going through Phonon-2 right now.
+    var usesPhonon: Bool { transcriptionVariant(for: .english) == PhononEngine.variant }
+
     func transcriptionVariant(for language: SpokenLanguage) -> String {
-        Self.bestVariant(for: language, settings: settings)
+        _ = phononTrial // observed, so what views show follows the trial switch
+        return Self.bestVariant(for: language, settings: settings)
     }
 
     /// A recording in this language is on the starter model while the better one prepares.
@@ -94,7 +141,7 @@ extension AppModel {
             for variant in pending {
                 while memoryPressure != .normal { try? await Task.sleep(for: .seconds(30)) }
                 // Loading it for dictation prepares it anyway; don't compile it twice.
-                if variant == whisper.variant, modelTask != nil { _ = try? await modelTask?.value }
+                if variant == speech.variant, modelTask != nil { _ = try? await modelTask?.value }
                 let engine = WhisperEngine(variant: variant)
                 guard !engine.isReady else { continue }
                 multilingualDownloadVariant = variant
@@ -129,7 +176,7 @@ extension AppModel {
         Task {
             while dictation.phase != .idle { try? await Task.sleep(for: .seconds(1)) }
             let best = transcriptionVariant(for: activeLanguage)
-            if whisper.variant != best {
+            if speech.variant != best {
                 Log.models.notice("Switching to \(best, privacy: .public): ready for this Mac")
                 switchModel(to: best)
             }

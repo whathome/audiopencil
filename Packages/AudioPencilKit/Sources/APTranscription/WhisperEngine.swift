@@ -28,13 +28,24 @@ public struct ModelPreparation: Equatable, Sendable {
     public var startedAt: Date
     /// Expected total, from earlier runs on this Mac or the model's size.
     public var estimatedSeconds: Double
+
+    public init(variant: String, step: Int, steps: Int, part: String, startedAt: Date, estimatedSeconds: Double) {
+        self.variant = variant
+        self.step = step
+        self.steps = steps
+        self.part = part
+        self.startedAt = startedAt
+        self.estimatedSeconds = estimatedSeconds
+    }
 }
 
 /// WhisperKit wrapper. Residency is owned by `ModelCoordinator`; call `load`/`unload` only through it.
-public actor WhisperEngine: ManagedModel, SpeechTranscribing {
+public actor WhisperEngine: DictationEngine {
     public nonisolated let kind = ModelKind.transcription
     public nonisolated let variant: String
     public nonisolated var displayName: String { "Whisper \(variant)" }
+    /// Each live pass confirms text as it goes, so stop only transcribes what is left.
+    public nonisolated var transcribesWholeRecordingAtStop: Bool { false }
 
     private let root: URL
     private var kit: WhisperKit?

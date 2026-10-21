@@ -8,7 +8,7 @@ import APTranscription
 import AppKit
 import ServiceManagement
 
-/// App-wide state and wiring: settings, permissions, the Whisper model, hotkeys and the dictation loop.
+/// App-wide state and wiring: settings, permissions, the speech model, hotkeys and the dictation loop.
 @Observable
 final class AppModel: WritingHost {
     static let settingsKey = "dictationSettings"
@@ -71,7 +71,8 @@ final class AppModel: WritingHost {
     private(set) var hotkeyTrace: [String] = []
     @ObservationIgnored private var traceOrigin: TimeInterval?
     private(set) var memoryPressure: MemoryPressureMonitor.Level = .normal
-    private(set) var whisper: WhisperEngine
+    /// The speech model for the active language: Whisper, or Phonon-2 for English while trying it out.
+    private(set) var speech: any DictationEngine
     /// MLX writing model for styles. Never resident at the same time as Whisper.
     var writing: SummaryEngine
     var writingModelState: TranscriptionModelState = .idle
@@ -154,14 +155,14 @@ final class AppModel: WritingHost {
         let memory = Self.loadLanguageMemory()
         self.languageMemory = memory
         self.activeLanguage = memory.language(forApp: nil)
-        self.whisper = WhisperEngine(variant: Self.bestVariant(for: memory.language(forApp: nil), settings: settings))
+        self.speech = Self.engine(for: Self.bestVariant(for: memory.language(forApp: nil), settings: settings))
         self.writing = SummaryEngine(modelID: settings.writingModel)
         self.styles = Self.loadStyles()
         self.styleMemory = Self.loadStyleMemory()
         self.detector = FnTapDetector(configuration: .init(maxGapBetweenTaps: settings.doubleTapWindow))
         self.dictation = DictationController(
             indicator: indicator,
-            engine: { [unowned self] in whisper },
+            engine: { [unowned self] in speech },
             waitForModel: { [unowned self] in try await waitForModel() },
             rewrite: { [unowned self] transcript, style, progress in
                 try await rewrite(transcript, style: style, progress: progress)
@@ -259,6 +260,9 @@ final class AppModel: WritingHost {
                     }
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
+                case "phonon:on", "phonon:off", "phonon:force":
+                    Self.debugPhononIgnoresVocabulary = command == "phonon:force"
+                    phononTrial = command != "phonon:off"
                 case "snapshot": snapshotMainWindow()
                 case let command where command.hasPrefix("window:width:"):
                     if let width = Double(command.dropFirst("window:width:".count)),
@@ -276,7 +280,7 @@ final class AppModel: WritingHost {
                     let language = SpokenLanguage(code: String(command.dropFirst("language:".count)))
                     if dictation.phase == .idle { chooseDefaultLanguage(language) } else { dictation.select(language) }
                 case "report:language":
-                    Log.dictation.notice("Language: active \(self.activeLanguage.code, privacy: .public), whisper \(self.whisper.variant, privacy: .public), offered \(self.offeredLanguages.map(\.code).joined(separator: ","), privacy: .public), memory \(String(describing: self.languageMemory), privacy: .public)")
+                    Log.dictation.notice("Language: active \(self.activeLanguage.code, privacy: .public), speech \(self.speech.variant, privacy: .public), offered \(self.offeredLanguages.map(\.code).joined(separator: ","), privacy: .public), memory \(String(describing: self.languageMemory), privacy: .public)")
                 case let command where command.hasPrefix("scroll:"):
                     // Scrolls the main window's page, so captures can reach content below the fold.
                     if let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }),
@@ -468,10 +472,10 @@ final class AppModel: WritingHost {
 
     // MARK: Model
 
-    /// Loads the current Whisper model; `old` (a model being switched away from) is unloaded first.
+    /// Loads the current speech model; `old` (a model being switched away from) is unloaded first.
     /// `modelTask` is replaced right away, so anything waiting for a model waits for this one.
-    func prepareModel(unloading old: WhisperEngine? = nil) {
-        let engine = whisper
+    func prepareModel(unloading old: (any DictationEngine)? = nil) {
+        let engine = speech
         let vocabulary = settings.vocabulary(for: activeLanguage)
         let language = activeLanguage
         // Already fetching this model in the background: wait for that rather than fetch it twice.
@@ -493,9 +497,9 @@ final class AppModel: WritingHost {
                 }
                 modelState = .loading(firstTime: engine.needsFirstTimePreparation)
                 try await coordinator.ensureLoaded(engine)
-                if engine === whisper { modelState = .ready }
+                if engine === speech { modelState = .ready }
             } catch {
-                if engine === whisper { modelState = .failed(error.localizedDescription) }
+                if engine === speech { modelState = .failed(error.localizedDescription) }
                 throw error
             }
         }
@@ -511,8 +515,8 @@ final class AppModel: WritingHost {
     }
 
     func switchModel(to variant: String) {
-        let old = whisper
-        whisper = WhisperEngine(variant: variant)
+        let old = speech
+        speech = Self.engine(for: variant)
         modelState = .idle
         prepareModel(unloading: old)
     }
@@ -685,7 +689,7 @@ final class AppModel: WritingHost {
         let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         let style = raw ? Style.raw : styleMemory.defaultStyle(forApp: app, among: styles)
         let language = languageMemory.language(forApp: app)
-        if language != activeLanguage || whisper.variant != transcriptionVariant(for: language) {
+        if language != activeLanguage || speech.variant != transcriptionVariant(for: language) {
             useLanguage(language) // the mic starts meanwhile; transcription catches up once the model is in
         }
         indicator.languageChoices = offeredLanguages
@@ -716,10 +720,10 @@ final class AppModel: WritingHost {
         detector.configuration.maxGapBetweenTaps = settings.doubleTapWindow
         applyHotkeySettings()
         indicator.showLiveText = settings.showLiveText
-        if whisper.variant != transcriptionVariant(for: activeLanguage) {
+        if speech.variant != transcriptionVariant(for: activeLanguage) {
             switchModel(to: transcriptionVariant(for: activeLanguage))
         } else if settings.vocabulary(for: activeLanguage) != old.vocabulary(for: activeLanguage) {
-            let engine = whisper
+            let engine = speech
             let vocabulary = settings.vocabulary(for: activeLanguage)
             Task { await engine.setVocabulary(vocabulary) }
         }

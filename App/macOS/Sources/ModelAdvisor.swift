@@ -154,7 +154,7 @@ final class ModelAdvisor {
         let script = BenchmarkFixtures.speechScript
         let samples = try await Self.synthesise(script)
 
-        func run(_ engine: WhisperEngine, name: String) async throws -> (String, Double) {
+        func run(_ engine: any DictationEngine, name: String) async throws -> (String, Double) {
             trials[suggestion.id] = .testing(engine.needsFirstTimePreparation ? String(localized: "Preparing \(name) for this Mac (first time, can take a few minutes)…") : String(localized: "Loading \(name)…"))
             try await app.coordinator.ensureLoaded(engine)
             trials[suggestion.id] = .testing("\(name): transcribing…")
@@ -164,11 +164,11 @@ final class ModelAdvisor {
         }
         let new = try await run(candidate, name: suggestion.name)
         // Compared with the model it would replace: the English one, or the one for other languages.
-        let replaced = suggestion.kind == .multilingualTranscription ? WhisperEngine(variant: app.settings.multilingualTranscriptionModel) : app.whisper
+        let replaced: any DictationEngine = suggestion.kind == .multilingualTranscription ? WhisperEngine(variant: app.settings.multilingualTranscriptionModel) : app.speech
         if !replaced.isDownloaded { try await replaced.download(progress: progress(suggestion.id)) }
         let current = try await run(replaced, name: "current model")
         await app.coordinator.unload(candidate)
-        if replaced !== app.whisper { await app.coordinator.unload(replaced) }
+        if replaced !== app.speech { await app.coordinator.unload(replaced) }
         return [TrialLine(
             label: "\(Int(Double(samples.count) / 16_000)) s of speech",
             candidate: new.0, candidateSeconds: new.1, current: current.0, currentSeconds: current.1,

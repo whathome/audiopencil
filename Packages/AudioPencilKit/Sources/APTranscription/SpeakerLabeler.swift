@@ -4,7 +4,7 @@ import Foundation
 import SpeakerKit
 
 /// Meeting mode: works out who spoke when (pyannote, through Argmax SpeakerKit), and lines that up with
-/// Whisper's word timings. The models are small (about 22 MB) and download on first use.
+/// the speech model's word timings. The models are small (about 22 MB) and download on first use.
 public actor SpeakerLabeler {
     public enum Stage: Sendable {
         case transcribing
@@ -21,12 +21,12 @@ public actor SpeakerLabeler {
     /// The whole recording with word timings, labelled by speaker. `speakers` nil works the number out.
     public func transcribe(
         _ samples: [Float],
-        with whisper: WhisperEngine,
+        with engine: any TimedWordTranscribing,
         speakers: Int?,
         stage: @escaping @Sendable (Stage) -> Void = { _ in }
     ) async throws -> SpeakerTranscript {
         stage(.transcribing)
-        let words = try await whisper.transcribeTimedWords(samples)
+        let words = try await engine.transcribeTimedWords(samples)
         stage(.labelling)
         let spans = try await speakerSpans(samples, speakers: speakers)
         let transcript = SpeakerTranscript.align(words: words, spans: spans)

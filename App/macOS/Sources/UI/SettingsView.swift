@@ -499,6 +499,15 @@ private struct ModelSettings: View {
                         Text("\(app.settings.transcriptionModel) – from discovery").tag(app.settings.transcriptionModel)
                     }
                 }
+                .disabled(app.dictation.isActive || app.usesPhonon)
+                Toggle(isOn: $app.phononTrial) {
+                    Text("Try Phonon-2 for English")
+                    if app.phononTrial, !app.usesPhonon {
+                        Text("Whisper stays on while you have a custom vocabulary: Phonon-2 can't take one.")
+                    } else {
+                        Text("Fewer mistakes and faster than Whisper Small in tests. English only. A 370 MB download, then about 5 minutes preparing for this Mac the first time.")
+                    }
+                }
                 .disabled(app.dictation.isActive)
                 Picker("Other languages", selection: $app.settings.multilingualTranscriptionModel) {
                     ForEach(TranscriptionModelOption.multilingualCatalogue) { option in
