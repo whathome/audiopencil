@@ -51,6 +51,8 @@ final class VaultController {
     @ObservationIgnored private var signInTask: Task<Void, Never>?
     /// iPhone: the picked folder, with security-scoped access held.
     @ObservationIgnored private var accessedFolder: URL?
+    /// Which Obsidian vault the local folder belongs to, looked up once per folder.
+    @ObservationIgnored private var vaultLookup: (path: String, vault: (name: String, pathInVault: String)?)?
     /// Called when the vault folder has been checked and is usable.
     @ObservationIgnored var onLocationReady: (() -> Void)?
     /// Called when the layout changes (a new location, or a plain folder adopted as an Obsidian vault).
@@ -304,6 +306,7 @@ final class VaultController {
 
     /// A different place: its layout is worked out afresh when it's checked.
     func locationChanged() {
+        vaultLookup = nil
         settings.layout = nil
         obsidianUpgradeAvailable = false
         verifyLocation()
@@ -362,11 +365,18 @@ final class VaultController {
             return
         }
         locationCheck = .checking
+        // A folder inside a vault Obsidian knows ("Work" in the "Documents" vault) has no .obsidian of its
+        // own, but its notes are in that vault: Obsidian layout, board included.
+        #if os(macOS)
+        let insideVault = containingVault != nil
+        #else
+        let insideVault = false
+        #endif
         Task {
             do {
                 // Off the main thread: a folder in iCloud Drive can make macOS ask for access, and the
                 // file calls wait for the answer.
-                let isVault = try await Task.detached { try await Self.check(provider, path) }.value
+                let isVault = try await Task.detached { try await Self.check(provider, path) }.value || insideVault
                 locationCheck = .ok(isObsidianVault: isVault)
                 switch (settings.layout, isVault) {
                 case (nil, _):
@@ -395,7 +405,33 @@ final class VaultController {
         return isVault
     }
 
-    /// The Obsidian vault's name: its folder's name.
+    #if os(macOS)
+    /// The Obsidian vault a folder on this Mac belongs to, from Obsidian's own list of vaults: the folder
+    /// itself, or a vault containing it (choosing "Work" inside iCloud's "Documents" vault). Nil for a
+    /// server, or a folder Obsidian doesn't know.
+    var containingVault: (name: String, pathInVault: String)? {
+        guard settings.kind == .localFolder, let path = settings.localPath else { return nil }
+        if let cached = vaultLookup, cached.path == path { return cached.vault }
+        let found = ObsidianVaults.vault(containing: URL(fileURLWithPath: path), among: ObsidianVaults.find())
+        let vault = found.map { (name: $0.vault.name, pathInVault: $0.pathInVault) }
+        vaultLookup = (path, vault)
+        return vault
+    }
+    #endif
+
+    /// obsidian:// link to a file in storage (`path` from the storage folder). Names the vault Obsidian
+    /// knows the folder by, with the path from that vault's root.
+    func obsidianURL(for path: String) -> URL? {
+        #if os(macOS)
+        if let vault = containingVault {
+            return ObsidianLinks.openURL(vault: vault.name, file: vault.pathInVault + "/" + path)
+        }
+        #endif
+        guard let vaultName else { return nil }
+        return ObsidianLinks.openURL(vault: vaultName, file: path)
+    }
+
+    /// The Obsidian vault's name when nothing better is known: its folder's name.
     var vaultName: String? {
         let path = switch settings.kind {
         case .nextcloud: settings.remoteVaultPath

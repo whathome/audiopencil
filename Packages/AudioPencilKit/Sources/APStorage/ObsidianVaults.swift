@@ -1,5 +1,6 @@
-#if os(macOS)
 import Foundation
+
+#if os(macOS)
 
 /// An Obsidian vault already on this Mac, offered in setup.
 public struct FoundVault: Identifiable, Hashable, Sendable {
@@ -41,6 +42,22 @@ public enum ObsidianVaults {
         return found.values.sorted { ($0.lastOpened ?? .distantPast) > ($1.lastOpened ?? .distantPast) }
     }
 
+    /// The registered vault a folder belongs to: the vault itself, or the deepest vault containing it. A
+    /// folder chosen inside a vault ("Work" in iCloud's "Documents" vault) is part of that vault, and
+    /// Obsidian's links name the vault and give paths from its root.
+    public static func vault(containing folder: URL, among vaults: [FoundVault]) -> (vault: FoundVault, pathInVault: String)? {
+        let folderParts = folder.standardizedFileURL.pathComponents
+        let match = vaults
+            .filter { vault in
+                let parts = vault.url.standardizedFileURL.pathComponents
+                return parts.count <= folderParts.count && Array(folderParts.prefix(parts.count)) == parts
+            }
+            .max { $0.url.pathComponents.count < $1.url.pathComponents.count }
+        guard let match else { return nil }
+        let rest = folderParts.dropFirst(match.url.standardizedFileURL.pathComponents.count)
+        return (match, rest.joined(separator: "/"))
+    }
+
     /// Inside iCloud Drive or a File Provider folder (Dropbox, OneDrive, Google Drive…).
     public static func isCloudManaged(_ url: URL, home: URL = FileManager.default.homeDirectoryForCurrentUser) -> Bool {
         let path = url.standardizedFileURL.path
@@ -53,3 +70,14 @@ public enum ObsidianVaults {
     }
 }
 #endif
+
+/// Obsidian's URL scheme.
+public enum ObsidianLinks {
+    /// `obsidian://open` for a file at `path` (from the vault root, with or without a leading slash).
+    public static func openURL(vault name: String, file path: String) -> URL? {
+        var components = URLComponents(string: "obsidian://open")
+        let file = path.split(separator: "/").joined(separator: "/")
+        components?.queryItems = [URLQueryItem(name: "vault", value: name), URLQueryItem(name: "file", value: file)]
+        return components?.url
+    }
+}

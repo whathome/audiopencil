@@ -172,7 +172,6 @@ final class NoteMaker {
         !style.isRaw && style.intensity != .light
     }
 
-    /// obsidian:// link to a note, assuming the Obsidian vault is named after its folder.
     /// Where "Open" goes for a note or file: Obsidian for a vault, the file itself for a plain folder on
     /// this Mac, nothing for a plain folder on a server.
     func openURL(for path: String) -> URL? {
@@ -195,12 +194,9 @@ final class NoteMaker {
         }
     }
 
+    /// obsidian:// link to a vault file, in the vault Obsidian knows the storage folder by.
     func obsidianURL(for path: String) -> URL? {
-        guard let vaultName = app.vault.vaultName else { return nil }
-        var components = URLComponents(string: "obsidian://open")
-        let file = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        components?.queryItems = [URLQueryItem(name: "vault", value: vaultName), URLQueryItem(name: "file", value: file)]
-        return components?.url
+        app.vault.obsidianURL(for: path)
     }
 
     private func saveRecent() {

@@ -275,5 +275,25 @@ struct ObsidianVaultsTests {
         #expect(!ObsidianVaults.isCloudManaged(work, home: home))
         #expect(ObsidianVaults.find(config: root.appending(path: "missing.json"), home: home).isEmpty)
     }
+
+    @Test func aFolderInsideAVaultBelongsToThatVault() throws {
+        let documents = FoundVault(url: URL(fileURLWithPath: "/Users/me/Library/Mobile Documents/iCloud~md~obsidian/Documents"), lastOpened: nil)
+        let nextcloud = FoundVault(url: URL(fileURLWithPath: "/Users/me/Nextcloud/Obsidian"), lastOpened: nil)
+        let nested = FoundVault(url: URL(fileURLWithPath: "/Users/me/Nextcloud/Obsidian/Team"), lastOpened: nil)
+        let vaults = [documents, nextcloud, nested]
+
+        let work = try #require(ObsidianVaults.vault(containing: documents.url.appending(path: "Work"), among: vaults))
+        #expect(work.vault.name == "Documents" && work.pathInVault == "Work")
+        let root = try #require(ObsidianVaults.vault(containing: nextcloud.url, among: vaults))
+        #expect(root.vault == nextcloud && root.pathInVault.isEmpty)
+        // The deepest vault wins.
+        let team = try #require(ObsidianVaults.vault(containing: nested.url.appending(path: "Notes/2026"), among: vaults))
+        #expect(team.vault == nested && team.pathInVault == "Notes/2026")
+        // A name that merely starts the same isn't inside.
+        #expect(ObsidianVaults.vault(containing: URL(fileURLWithPath: "/Users/me/Nextcloud/ObsidianOld"), among: vaults) == nil)
+
+        let link = ObsidianLinks.openURL(vault: "Documents", file: "Work" + "/Audio Pencil/Notes/2026-10-21 0900 Plan.md")
+        #expect(link?.absoluteString == "obsidian://open?vault=Documents&file=Work/Audio%20Pencil/Notes/2026-10-21%200900%20Plan.md")
+    }
 }
 #endif
