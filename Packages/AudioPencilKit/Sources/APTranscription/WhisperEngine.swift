@@ -111,6 +111,7 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
             downloadBase: root,
             modelFolder: folder.path,
             tokenizerFolder: root,
+            computeOptions: Self.computeOptions,
             verbose: false,
             logLevel: .error,
             prewarm: false,
@@ -141,8 +142,19 @@ public actor WhisperEngine: ManagedModel, SpeechTranscribing {
         onPreparation = handler
     }
 
+    /// WhisperKit's defaults, except that on iOS the audio features (mel spectrogram) run on the CPU: iOS
+    /// refuses GPU work in the background, and recording keeps transcribing with the phone locked. The model
+    /// is tiny, so the CPU costs nothing noticeable.
+    static var computeOptions: ModelComputeOptions {
+        #if os(iOS)
+        ModelComputeOptions(melCompute: .cpuOnly)
+        #else
+        ModelComputeOptions()
+        #endif
+    }
+
     private func prepare() async throws {
-        let compute = ModelComputeOptions()
+        let compute = Self.computeOptions
         let parts: [(file: String, name: String, units: MLComputeUnits)] = [
             ("MelSpectrogram", String(localized: "audio features", bundle: .module), compute.melCompute),
             ("TextDecoder", String(localized: "text decoder", bundle: .module), compute.textDecoderCompute),
