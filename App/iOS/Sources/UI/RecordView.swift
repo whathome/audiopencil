@@ -7,6 +7,12 @@ import SwiftUI
 struct RecordView: View {
     let app: PhoneModel
     @State private var capture: PhoneCapture?
+    @State private var confirmingDiscard = false
+    /// The clock follows the text size.
+    @ScaledMetric(relativeTo: .largeTitle) private var clockSize: CGFloat = 44
+
+    /// Recordings longer than this ask before they're thrown away: a mis-tap shouldn't cost a walk.
+    static let confirmDiscardAfter: TimeInterval = 30
 
     private var recorder: PhoneRecorder { app.recorder }
 
@@ -50,8 +56,18 @@ struct RecordView: View {
         } else if recorder.isActive, !app.notes.queue.isEmpty {
             // Writing stops while recording (one model at a time); say so rather than let it vanish.
             StatusRow(symbol: "hourglass", text: String(localized: "\(app.notes.queue.count) waiting to be written: carries on when you stop"))
-        } else if let processing = app.notes.processing {
-            StatusRow(symbol: nil, text: processing)
+        } else if app.notes.processing != nil {
+            WritingProgressRow(notes: app.notes)
+        } else if !app.notes.queue.isEmpty {
+            // Waiting with nothing running: say so here, where the app opens, and offer to start.
+            HStack(spacing: 8) {
+                Image(systemName: "tray.full").foregroundStyle(Color.pencil)
+                Text("\(app.notes.queue.count) waiting to be written").font(.callout).foregroundStyle(.secondary)
+                Spacer()
+                Button("Write Now") { app.notes.processQueue() }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+            }
         } else if let error = recorder.lastError, !recorder.isActive {
             StatusRow(symbol: "exclamationmark.triangle.fill", text: error, tint: .orange)
         } else {
@@ -84,7 +100,7 @@ struct RecordView: View {
 
     private var placeholder: LocalizedStringResource {
         switch recorder.phase {
-        case .idle: "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note."
+        case .idle: "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note or copied."
         case .starting: "Starting the microphone…"
         case .recording: "Listening…"
         case .paused: "Paused."
@@ -95,7 +111,7 @@ struct RecordView: View {
     private var clock: some View {
         TimelineView(.periodic(from: .now, by: 0.5)) { context in
             Text(PreparationStatus.clock(recorder.elapsed(at: context.date)))
-                .font(.system(size: 44, weight: .semibold, design: .rounded).monospacedDigit())
+                .font(.system(size: clockSize, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(recorder.phase == .paused ? .secondary : .primary)
                 .contentTransition(.numericText())
         }
@@ -161,10 +177,20 @@ struct RecordView: View {
         HStack(spacing: 36) {
             // Discard, on the left: only while there's something to throw away.
             CircleButton(symbol: "xmark", label: "Discard recording", size: 56, prominent: false) {
-                recorder.cancel()
+                if recorder.elapsed() > Self.confirmDiscardAfter { confirmingDiscard = true } else { recorder.cancel() }
             }
             .opacity(recorder.phase == .recording || recorder.phase == .paused ? 1 : 0)
             .disabled(!(recorder.phase == .recording || recorder.phase == .paused))
+            .confirmationDialog(
+                Text("Discard this \(PreparationStatus.clock(recorder.elapsed())) recording?"),
+                isPresented: $confirmingDiscard,
+                titleVisibility: .visible
+            ) {
+                Button("Discard Recording", role: .destructive) { recorder.cancel() }
+                Button("Keep Recording", role: .cancel) {}
+            } message: {
+                Text("It can't be brought back.")
+            }
 
             mainButton
 
@@ -241,6 +267,37 @@ struct StatusRow: View {
     }
 }
 
+/// What note writing is doing: the step, a bar once its progress is known, and how long this recording has
+/// been going, so a slow step reads as working rather than stuck.
+struct WritingProgressRow: View {
+    let notes: PhoneNotes
+
+    var body: some View {
+        if let step = notes.processing {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    if notes.processingFraction == nil { ProgressView().controlSize(.small) }
+                    Text(verbatim: step).font(.callout).foregroundStyle(.secondary)
+                    Spacer(minLength: 8)
+                    if let since = notes.processingSince {
+                        TimelineView(.periodic(from: since, by: 1)) { context in
+                            Text(PreparationStatus.clock(context.date.timeIntervalSince(since)))
+                                .font(.callout.monospacedDigit())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+                if let fraction = notes.processingFraction {
+                    ProgressView(value: fraction)
+                        .tint(Color.pencil)
+                        .accessibilityValue(Text("\(Int(fraction * 100)) percent"))
+                }
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+}
+
 /// The speech model's state, when it's anything but ready.
 struct ModelStatusRow: View {
     let app: PhoneModel
@@ -300,6 +357,7 @@ struct StyleSheet: View {
     let capture: PhoneCapture
     @Environment(\.dismiss) private var dismiss
     @State private var selection: String = ""
+    @State private var confirmingDiscard = false
 
     var body: some View {
         NavigationStack {
@@ -324,8 +382,11 @@ struct StyleSheet: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 6) {
                     if let style = app.enabledStyles.first(where: { $0.id == selection }), !style.isRaw, !app.writingModelDownloaded {
-                        Text("The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.")
+                        // Not a dead end: the download starts from here (and carries on after this sheet closes).
+                        Text("The writing model isn't on this iPhone yet, so this keeps the transcript as spoken. Get it to write in \(style.displayName).")
                             .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        WritingModelRow(app: app)
+                            .font(.footnote)
                     }
                     Button {
                         guard let style = chooseStyle() else { return }
@@ -353,7 +414,21 @@ struct StyleSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Discard", role: .destructive) { dismiss() }
+                    Button(role: .destructive) {
+                        if capture.duration > RecordView.confirmDiscardAfter { confirmingDiscard = true } else { dismiss() }
+                    } label: {
+                        Text("Discard").foregroundStyle(.red)
+                    }
+                    .confirmationDialog(
+                        Text("Discard this \(PreparationStatus.clock(capture.duration)) recording?"),
+                        isPresented: $confirmingDiscard,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Discard Recording", role: .destructive) { dismiss() }
+                        Button("Keep Recording", role: .cancel) {}
+                    } message: {
+                        Text("It can't be brought back.")
+                    }
                 }
             }
         }

@@ -62,6 +62,9 @@ public actor WhisperEngine: DictationEngine {
 
     public var isLoaded: Bool { kit != nil }
 
+    /// How far a whole-recording pass in progress has got, 0…1 (meeting labels go over every word again).
+    public var transcriptionProgress: Double { kit?.progress.fractionCompleted ?? 0 }
+
     /// Terms passed to Whisper as prompt context so they're spelled correctly.
     public func setVocabulary(_ words: [String]) {
         vocabulary = words.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }

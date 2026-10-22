@@ -22,25 +22,6 @@ struct PhoneSettingsView: View {
                     Text("Styles, vocabulary and tags come from the settings file there, shared with your Mac.")
                 }
                 Section {
-                    Toggle("Link notes in the daily note", isOn: $app.settings.dailyNoteLinks)
-                        .disabled(app.sync.dailyNotes != .on)
-                    TextField("Under the heading", text: $app.settings.dailyNoteHeading, prompt: Text("At the end of the note"))
-                        .disabled(app.sync.dailyNotes != .on || !app.settings.dailyNoteLinks)
-                    Picker("Add it as", selection: $app.settings.dailyNoteEmbed) {
-                        Text("A link").tag(false)
-                        Text("The whole note, embedded").tag(true)
-                    }
-                    .disabled(app.sync.dailyNotes != .on || !app.settings.dailyNoteLinks)
-                } header: {
-                    Text("Daily note")
-                } footer: {
-                    switch app.sync.dailyNotes {
-                    case .on: Text("Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the Daily note button above the clock.")
-                    case .off: Text("Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.")
-                    case .unknown: Text("Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.")
-                    }
-                }
-                Section {
                     NavigationLink { LanguagesSettingsView(app: app) } label: {
                         LabeledContent("Languages", value: app.offeredLanguages.map { $0.name() }.joined(separator: ", "))
                     }
@@ -52,6 +33,9 @@ struct PhoneSettingsView: View {
                     }
                     NavigationLink { TaskKeywordsView(app: app) } label: {
                         LabeledContent("Task keywords", value: "\(app.taskKeywords.count)")
+                    }
+                    NavigationLink { DailyNoteSettingsView(app: app) } label: {
+                        LabeledContent("Daily note", value: dailyNoteSummary)
                     }
                     NavigationLink { RecordingSettingsView(app: app) } label: {
                         Text("Recording")
@@ -67,6 +51,14 @@ struct PhoneSettingsView: View {
         }
     }
 
+    private var dailyNoteSummary: String {
+        switch app.sync.dailyNotes {
+        case .on: app.settings.dailyNoteLinks ? String(localized: "On") : String(localized: "Off")
+        case .off: String(localized: "Off in Obsidian")
+        case .unknown: String(localized: "Needs storage")
+        }
+    }
+
     private var storageSummary: String {
         guard app.vault.settings.isConfigured else { return String(localized: "Not set up") }
         return switch app.vault.settings.kind {
@@ -74,6 +66,44 @@ struct PhoneSettingsView: View {
         case .webdav: "WebDAV"
         case .localFolder: app.vault.localPathDescription ?? String(localized: "Folder")
         }
+    }
+}
+
+// MARK: Daily note
+
+/// Linking notes in Obsidian's daily note: only usable while the vault has the Daily notes plugin on.
+struct DailyNoteSettingsView: View {
+    @Bindable var app: PhoneModel
+
+    private var available: Bool { app.sync.dailyNotes == .on }
+    private var editable: Bool { available && app.settings.dailyNoteLinks }
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Link notes in the daily note", isOn: $app.settings.dailyNoteLinks)
+                    .disabled(!available)
+                LabeledContent("Under the heading") {
+                    TextField("Under the heading", text: $app.settings.dailyNoteHeading, prompt: Text("At the end of the note"))
+                        .multilineTextAlignment(.trailing)
+                        .foregroundStyle(editable ? .primary : .secondary)
+                }
+                .disabled(!editable)
+                Picker("Add it as", selection: $app.settings.dailyNoteEmbed) {
+                    Text("A link").tag(false)
+                    Text("The whole note, embedded").tag(true)
+                }
+                .disabled(!editable)
+            } footer: {
+                switch app.sync.dailyNotes {
+                case .on: Text("Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the Daily note button above the clock.")
+                case .off: Text("Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.")
+                case .unknown: Text("Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.")
+                }
+            }
+        }
+        .navigationTitle("Daily note")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
