@@ -125,9 +125,12 @@ final class IndicatorModel {
 
     private var quietSince: Date?
     private var flashGeneration = 0
+    /// Runs when the error on show is clicked (e.g. opening Privacy settings). Any click dismisses it.
+    @ObservationIgnored private(set) var errorAction: (() -> Void)?
 
     func show(_ mode: Mode) {
         flashGeneration += 1
+        errorAction = nil
         if mode == .listening {
             levels = .init(repeating: 0, count: Self.barCount)
             noAudio = false
@@ -149,8 +152,15 @@ final class IndicatorModel {
         }
     }
 
+    /// An error stays up until it's clicked or the next recording starts, so it can be read and acted on.
+    func showError(_ message: String, action: (() -> Void)? = nil) {
+        show(.error(message))
+        errorAction = action
+    }
+
     func hide() {
         flashGeneration += 1
+        errorAction = nil
         recordingStartedAt = nil
         mode = .hidden
     }
@@ -183,12 +193,17 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
         guard let model else { return super.mouseDown(with: event) }
         let local = convert(event.locationInWindow, from: nil)
         let point = isFlipped ? local : CGPoint(x: local.x, y: bounds.height - local.y)
-        if model.mode == .picking, let id = model.pickerFrames.first(where: { $0.value.contains(point) })?.key,
+        if case .error = model.mode {
+            let action = model.errorAction
+            model.hide()
+            action?()
+        } else if model.mode == .picking, let id = model.pickerFrames.first(where: { $0.value.contains(point) })?.key,
            let style = model.styleChoices.first(where: { $0.id == id }) {
             model.onPick?(style)
-        } else if model.mode == .listening, model.isPushToTalk, model.destinationFrame.insetBy(dx: -3, dy: -4).contains(point) {
+        } else if model.mode == .listening, model.isPushToTalk, !model.pushChoices.isEmpty,
+                  model.destinationFrame.insetBy(dx: -3, dy: -4).contains(point) {
             model.onCyclePushDestination?()
-        } else if model.mode == .listening, model.deliveryFrame.insetBy(dx: -3, dy: -4).contains(point) {
+        } else if model.mode == .listening, !model.isPushToTalk, model.deliveryFrame.insetBy(dx: -3, dy: -4).contains(point) {
             model.onToggleDelivery?()
         } else if model.mode == .listening,
                   model.chipFrame.insetBy(dx: -4, dy: -4).contains(point) || model.languageFrame.insetBy(dx: -4, dy: -4).contains(point) {
@@ -254,6 +269,10 @@ final class IndicatorPanelController: NSObject {
             mouseGate?.invalidate()
             mouseGate = nil
             panel.ignoresMouseEvents = true
+            if pointingHand {
+                pointingHand = false
+                NSCursor.arrow.set()
+            }
             return
         }
         if mouseGate == nil {
@@ -269,15 +288,41 @@ final class IndicatorPanelController: NSObject {
     }
 
     /// Accept mouse events only over the pill, so the transparent rest of the panel never blocks clicks.
+    /// Over something clickable the pointer becomes a hand: the panel is never key, so there's no hover.
     private func gateMouse() {
-        guard let content = panel.contentView, model.pillFrame != .zero else {
+        guard model.pillFrame != .zero else {
             panel.ignoresMouseEvents = true
             return
         }
-        let pill = model.pillFrame
-        let local = NSRect(x: pill.minX, y: content.bounds.height - pill.maxY, width: pill.width, height: pill.height)
-        let onScreen = panel.convertToScreen(local).insetBy(dx: -4, dy: -4)
-        panel.ignoresMouseEvents = !onScreen.contains(NSEvent.mouseLocation)
+        let mouse = NSEvent.mouseLocation
+        panel.ignoresMouseEvents = !screenRect(model.pillFrame).insetBy(dx: -4, dy: -4).contains(mouse)
+        let overControl = !panel.ignoresMouseEvents && clickableFrames.contains { screenRect($0).insetBy(dx: -3, dy: -4).contains(mouse) }
+        if overControl != pointingHand {
+            pointingHand = overControl
+            (overControl ? NSCursor.pointingHand : NSCursor.arrow).set()
+        }
+    }
+
+    private var pointingHand = false
+
+    /// What a click does something to in the current state (see IndicatorHostingView.mouseDown).
+    private var clickableFrames: [CGRect] {
+        switch model.mode {
+        case .listening:
+            // Frames linger after their control goes, so only the ones on show now.
+            ([model.isPushToTalk ? (model.pushChoices.isEmpty ? .zero : model.destinationFrame) : model.deliveryFrame, model.chipFrame]
+                + (model.showsLanguage ? [model.languageFrame] : []))
+                .filter { $0 != .zero }
+        case .picking: Array(model.pickerFrames.values)
+        case .error: [model.pillFrame] // a click dismisses it, or does what it says
+        default: []
+        }
+    }
+
+    /// A frame reported by the SwiftUI view (top-left origin), on screen.
+    private func screenRect(_ frame: CGRect) -> NSRect {
+        guard let content = panel.contentView else { return .zero }
+        return panel.convertToScreen(NSRect(x: frame.minX, y: content.bounds.height - frame.maxY, width: frame.width, height: frame.height))
     }
 
     #if DEBUG
@@ -302,7 +347,7 @@ final class IndicatorPanelController: NSObject {
         guard let content = panel.contentView, openMenu == nil else { return }
         let menu = NSMenu()
         menu.autoenablesItems = false
-        let header = NSMenuItem(title: String(localized: "Deliver this dictation as"), action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: String(localized: "Write it as"), action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         for style in model.styleChoices {
@@ -317,8 +362,8 @@ final class IndicatorPanelController: NSObject {
             item.state = style.id == model.currentStyle?.id ? .on : .off
             menu.addItem(item)
         }
-        if model.mode == .listening {
-            // Paste or note, for this recording only.
+        if model.mode == .listening, !model.isPushToTalk {
+            // Paste or note, for this recording only. (Push-to-talk always pastes.)
             menu.addItem(.separator())
             let deliveryHeader = NSMenuItem(title: String(localized: "When you stop"), action: nil, keyEquivalent: "")
             deliveryHeader.isEnabled = false
@@ -472,8 +517,9 @@ struct IndicatorView: View {
                 EmptyView()
             case .listening:
                 if model.noAudio {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 13, weight: .bold))
+                    // The same mark as "Nothing heard" after stopping; a cross would read as close.
+                    Image(systemName: "mic.slash.fill")
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.red)
                         .accessibilityLabel("No audio heard")
                 }
@@ -482,16 +528,20 @@ struct IndicatorView: View {
                     TimelineView(.periodic(from: started, by: 1)) { context in
                         RecordingClock(elapsed: context.date.timeIntervalSince(started), threshold: model.longFormThreshold, override: model.deliveryOverride)
                     }
-                    TimelineView(.periodic(from: started, by: 1)) { context in
-                        // Clicked via IndicatorHostingView (flips paste and note for this recording).
-                        DeliveryToggle(delivery: model.delivery(at: context.date), overridden: model.deliveryOverride != nil,
-                                       dailyNote: model.dailyNote)
-                            .background(FrameReporter { model.deliveryFrame = $0 })
-                    }
-                    if model.isPushToTalk, !model.pushChoices.isEmpty {
-                        // Clicked via IndicatorHostingView: paste only → daily note → file → paste only.
-                        DestinationBadge(destination: model.pushDestination)
-                            .background(FrameReporter { model.destinationFrame = $0 })
+                    if model.isPushToTalk {
+                        // Push-to-talk always pastes: one badge says where else the text goes, if there's
+                        // anywhere to choose. Clicked via IndicatorHostingView: paste → daily note → file.
+                        if !model.pushChoices.isEmpty {
+                            DestinationBadge(destination: model.pushDestination)
+                                .background(FrameReporter { model.destinationFrame = $0 })
+                        }
+                    } else {
+                        TimelineView(.periodic(from: started, by: 1)) { context in
+                            // Clicked via IndicatorHostingView (paste → note → meeting for this recording).
+                            DeliveryToggle(delivery: model.delivery(at: context.date), overridden: model.deliveryOverride != nil,
+                                           dailyNote: model.dailyNote)
+                                .background(FrameReporter { model.deliveryFrame = $0 })
+                        }
                     }
                 }
                 if model.showsLanguage, let language = model.currentLanguage {
@@ -535,17 +585,42 @@ struct IndicatorView: View {
                 Text("Nothing heard").font(.callout)
             case .notice(let message):
                 Image(systemName: "doc.badge.clock")
-                Text(verbatim: message).font(.callout).lineLimit(1)
+                MessageText(message: message)
             case .error(let message):
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
-                Text(verbatim: message).font(.callout).lineLimit(1)
+                MessageText(message: message)
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: 34)
-        .background(Capsule().fill(.black.opacity(0.82)))
-        .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
+        .padding(.vertical, isMessage ? 7 : 0)
+        .frame(minHeight: 34)
+        // A capsule at one line; two-line messages keep the same ends.
+        .background(RoundedRectangle(cornerRadius: 17, style: .continuous).fill(.black.opacity(0.82)))
+        .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).strokeBorder(.white.opacity(0.12)))
         .background(FrameReporter { model.pillFrame = $0 })
+    }
+}
+
+extension IndicatorView {
+    private var isMessage: Bool {
+        switch model.mode {
+        case .notice, .error: true
+        default: false
+        }
+    }
+}
+
+/// An error or notice: up to two lines, so a fallback explanation isn't cut off mid-sentence.
+private struct MessageText: View {
+    let message: String
+
+    var body: some View {
+        Text(verbatim: message)
+            .font(.callout)
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 440, alignment: .leading)
     }
 }
 
@@ -559,6 +634,7 @@ private struct LanguageBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
             .background(Capsule().fill(Color.white.opacity(0.18)))
+            .overlay(Capsule().stroke(controlEdge, lineWidth: 1))
             .accessibilityLabel("Language: \(language.name())")
             .accessibilityHint("Click to choose another language.")
             .accessibilityAddTraits(.isButton)
@@ -613,15 +689,14 @@ private struct DeliveryToggle: View {
         HStack(spacing: 3) {
             Image(systemName: symbol)
             Text(label)
-            if delivery != .paste, dailyNote {
-                Image(systemName: "calendar").accessibilityLabel(Text("Linked in today's daily note"))
-            }
+            CycleGlyph()
         }
         .font(.caption.weight(.semibold))
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .fixedSize()
         .background(Capsule().fill(Color.white.opacity(overridden ? 0.28 : 0.12)))
+        .overlay(Capsule().stroke(controlEdge, lineWidth: 1))
         .foregroundStyle(delivery == .paste ? .white : Color.accentColor)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(accessibility))
@@ -637,41 +712,48 @@ private struct DeliveryToggle: View {
         }
     }
 
+    /// "Note + Daily" when the note will also be linked in the daily note.
     private var label: LocalizedStringResource {
-        switch delivery {
-        case .paste: "Paste"
-        case .note: "Note"
-        case .meeting: "Meeting"
+        switch (delivery, dailyNote) {
+        case (.paste, _): "Paste"
+        case (.note, false): "Note"
+        case (.note, true): "Note + Daily"
+        case (.meeting, false): "Meeting"
+        case (.meeting, true): "Meeting + Daily"
         }
     }
 
     private var accessibility: LocalizedStringResource {
-        switch delivery {
-        case .paste: "When you stop: paste"
-        case .note: "When you stop: make a note"
-        case .meeting: "When you stop: make a meeting note with speakers labelled"
+        switch (delivery, dailyNote) {
+        case (.paste, _): "When you stop: paste"
+        case (.note, false): "When you stop: make a note"
+        case (.note, true): "When you stop: make a note and link it in today's daily note"
+        case (.meeting, false): "When you stop: make a meeting note with speakers labelled"
+        case (.meeting, true): "When you stop: make a meeting note with speakers labelled, linked in today's daily note"
         }
     }
 }
 
-/// Push-to-talk's other destination: "Paste" alone, or "+ Daily note" / "+ Inbox". Only shown when
-/// there's somewhere to choose.
+/// Where push-to-talk's text goes: "Paste", or "Paste + Daily note" / "Paste + Inbox". Takes the place of
+/// the paste/note toggle, and is only shown when there's somewhere else to choose.
 private struct DestinationBadge: View {
     let destination: PushDestination?
 
     var body: some View {
         HStack(spacing: 3) {
-            Image(systemName: destination == nil ? "doc.on.clipboard" : "plus.square.on.square")
-            Text(verbatim: destination.map { "+ " + $0.label } ?? String(localized: "Paste only"))
+            Image(systemName: destination == nil ? "doc.on.clipboard" : "text.badge.plus")
+            Text(verbatim: destination.map { String(localized: "Paste + \($0.label)") } ?? String(localized: "Paste"))
+            CycleGlyph()
         }
         .font(.caption.weight(.semibold))
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .fixedSize()
         .background(Capsule().fill(Color.white.opacity(destination == nil ? 0.12 : 0.28)))
+        .overlay(Capsule().stroke(controlEdge, lineWidth: 1))
         .foregroundStyle(destination == nil ? .white : Color.accentColor)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(destination.map { String(localized: "Also adding to \($0.label)") } ?? String(localized: "Paste only")))
+        .accessibilityLabel(Text(destination.map { String(localized: "Paste, and add to \($0.label)") } ?? String(localized: "Paste only")))
         .accessibilityHint(Text("Click to also add this to the daily note or your file."))
         .accessibilityAddTraits(.isButton)
     }
@@ -711,6 +793,21 @@ private struct RecordingClock: View {
     }
 }
 
+/// Ends a pill control that a click moves on to its next choice, so it doesn't read as a status label
+/// (the style chip's chevron does the same for its menu).
+private struct CycleGlyph: View {
+    var body: some View {
+        Image(systemName: "arrow.2.squarepath")
+            .font(.system(size: 8, weight: .bold))
+            .opacity(0.75)
+            .padding(.leading, 1)
+            .accessibilityHidden(true)
+    }
+}
+
+/// A clickable capsule's edge, as on a button: the pill's own 1 pt outline, a little brighter.
+private let controlEdge = Color.white.opacity(0.2)
+
 /// Reports a view's frame in the hosting view's coordinates.
 private struct FrameReporter: View {
     let report: (CGRect) -> Void
@@ -740,27 +837,27 @@ private struct PickerRow: View {
     }
 
     private func choice(_ style: Style, isSelected: Bool) -> some View {
-                HStack(spacing: 4) {
-                    Text("\(style.shortcut ?? 0)")
-                        .font(.caption2.monospacedDigit().weight(.bold))
-                        .frame(width: 15, height: 15)
-                        .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.18)))
-                    Text(verbatim: style.shortDisplayName).font(.callout)
+        HStack(spacing: 4) {
+            Text("\(style.shortcut ?? 0)")
+                .font(.caption2.monospacedDigit().weight(.bold))
+                .frame(width: 15, height: 15)
+                .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.18)))
+            Text(verbatim: style.shortDisplayName).font(.callout)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.85) : .clear))
+        .foregroundStyle(isSelected ? .black.opacity(0.85) : .white)
+        .overlay(alignment: .bottom) {
+            if isSelected {
+                TimelineView(.animation) { context in
+                    let elapsed = context.date.timeIntervalSince(picker.shownAt)
+                    let remaining = max(0, 1 - elapsed / max(picker.autoConfirm, 0.1))
+                    Capsule().fill(.white.opacity(0.9)).frame(height: 2).scaleEffect(x: remaining, anchor: .leading)
                 }
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(isSelected ? Color.accentColor.opacity(0.85) : .clear))
-                .foregroundStyle(isSelected ? .black.opacity(0.85) : .white)
-                .overlay(alignment: .bottom) {
-                    if isSelected {
-                        TimelineView(.animation) { context in
-                            let elapsed = context.date.timeIntervalSince(picker.shownAt)
-                            let remaining = max(0, 1 - elapsed / max(picker.autoConfirm, 0.1))
-                            Capsule().fill(.white.opacity(0.9)).frame(height: 2).scaleEffect(x: remaining, anchor: .leading)
-                        }
-                        .padding(.horizontal, 8)
-                    }
-                }
+                .padding(.horizontal, 8)
+            }
+        }
     }
 }
 

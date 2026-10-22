@@ -2,6 +2,7 @@ import APAudio
 import APCore
 import APModels
 import APTranscription
+import AppKit
 import Foundation
 
 /// What happened on the last dictation, for the status window and latency tracking.
@@ -209,7 +210,7 @@ final class DictationController {
     }
 
     func setDelivery(_ delivery: Delivery) {
-        guard phase == .recording || phase == .starting else { return }
+        guard phase == .recording || phase == .starting, !indicator.isPushToTalk else { return }
         deliveryOverride = delivery
         indicator.deliveryOverride = delivery
         Log.dictation.notice("Delivery for this recording: \(delivery.rawValue, privacy: .public)")
@@ -239,7 +240,9 @@ final class DictationController {
         guard phase == .idle else { return }
         guard microphoneGranted else {
             cues.play(.cancel)
-            indicator.flash(.error(String(localized: "Microphone access needed")))
+            indicator.showError(String(localized: "Audio Pencil needs microphone access. Click to open Privacy & Security.")) {
+                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
+            }
             return
         }
 
@@ -250,8 +253,9 @@ final class DictationController {
         self.language = language
         self.targetApp = targetApp
         self.remembersStyle = remembersStyle
-        deliveryOverride = nil
-        indicator.deliveryOverride = nil
+        // Push-to-talk always pastes, however long it's held; its pill offers where else the text goes.
+        deliveryOverride = remembersStyle ? nil : .paste
+        indicator.deliveryOverride = deliveryOverride
         speakerCount = nil
         indicator.speakerCount = nil
         indicator.dailyNoteOverride = nil
@@ -475,7 +479,7 @@ final class DictationController {
                         onQuickNote?(QuickCapture(text: text, transcript: transcript, style: style, language: language, recorded: recorded, duration: audioSeconds))
                     }
                     if let fallbackNote {
-                        indicator.flash(.error(fallbackNote), seconds: 3)
+                        indicator.showError(fallbackNote)
                     } else if result != .pasted {
                         indicator.flash(.clipboard, seconds: 3)
                     }
@@ -604,7 +608,7 @@ final class DictationController {
         phase = .idle
         lastError = message
         cues.play(.cancel)
-        indicator.flash(.error(message), seconds: 3)
+        indicator.showError(message)
         Log.dictation.error("\(message, privacy: .public)")
     }
 }

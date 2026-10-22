@@ -450,7 +450,7 @@ private struct PushToTalkSection: View {
         } header: {
             Text("Push-to-talk")
         } footer: {
-            FormFooter("Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste only\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.")
+            FormFooter("Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.")
         }
     }
 }

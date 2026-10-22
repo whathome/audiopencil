@@ -1212,22 +1212,6 @@
         }
       }
     },
-    "Also adding to %@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "También se añade a %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajout aussi à %@"
-          }
-        }
-      }
-    },
     "Also starts and stops": {
       "localizations": {
         "es": {
@@ -1560,6 +1544,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guide Audio Pencil"
+          }
+        }
+      }
+    },
+    "Audio Pencil needs microphone access. Click to open Privacy & Security.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil necesita acceso al micrófono. Haz clic para abrir Privacidad y seguridad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil a besoin d'accéder au micro. Cliquez pour ouvrir Confidentialité et sécurité."
           }
         }
       }
@@ -2378,22 +2378,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Supprimer…"
-          }
-        }
-      }
-    },
-    "Deliver this dictation as": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entregar este dictado como"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rendre cette dictée en"
           }
         }
       }
@@ -4004,22 +3988,6 @@
         }
       }
     },
-    "Linked in today's daily note": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enlazada en la nota diaria de hoy"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liée dans la note quotidienne du jour"
-          }
-        }
-      }
-    },
     "List": {
       "localizations": {
         "es": {
@@ -4308,6 +4276,22 @@
         }
       }
     },
+    "Meeting + Daily": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reunión + diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réunion + quotidienne"
+          }
+        }
+      }
+    },
     "Memory": {
       "localizations": {
         "es": {
@@ -4368,22 +4352,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Micro"
-          }
-        }
-      }
-    },
-    "Microphone access needed": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hace falta acceso al micrófono"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accès au micro nécessaire"
           }
         }
       }
@@ -4832,6 +4800,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Note"
+          }
+        }
+      }
+    },
+    "Note + Daily": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota + diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note + quotidienne"
           }
         }
       }
@@ -5540,6 +5524,22 @@
         }
       }
     },
+    "Paste + %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar + %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller + %@"
+          }
+        }
+      }
+    },
     "Paste in emails, posts or notes you've written. Pick the kind so the right ones get matched.": {
       "localizations": {
         "es": {
@@ -5584,6 +5584,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coller seulement"
+          }
+        }
+      }
+    },
+    "Paste, and add to %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar y añadir a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller, et ajouter à %@"
           }
         }
       }
@@ -6090,18 +6106,18 @@
         }
       }
     },
-    "Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste only\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.": {
+    "Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pulsar para hablar pega el texto, y nada más salvo que elijas otra cosa: mientras mantienes la tecla, haz clic en la etiqueta «Solo pegar» de la píldora para añadir también el texto a la nota diaria de hoy o a este archivo (en tu almacenamiento, se crea si falta), como «- 14:32 el texto». Una palabra clave de tarea da una línea de tarea sin hora."
+            "value": "Pulsar para hablar pega el texto, y nada más salvo que elijas otra cosa: mientras mantienes la tecla, haz clic en la etiqueta «Pegar» de la píldora para añadir también el texto a la nota diaria de hoy o a este archivo (en tu almacenamiento, se crea si falta), como «- 14:32 el texto». Una palabra clave de tarea da una línea de tarea sin hora."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Appuyer pour parler colle le texte, et rien d'autre sauf si vous le choisissez : en maintenant la touche, cliquez sur le badge « Coller seulement » de la pastille pour ajouter aussi le texte à la note quotidienne du jour ou à ce fichier (dans votre stockage, créé s'il manque), sous la forme « - 14:32 le texte ». Un mot-clé de tâche donne une ligne de tâche sans heure."
+            "value": "Appuyer pour parler colle le texte, et rien d'autre sauf si vous le choisissez : en maintenant la touche, cliquez sur le badge « Coller » de la pastille pour ajouter aussi le texte à la note quotidienne du jour ou à ce fichier (dans votre stockage, créé s'il manque), sous la forme « - 14:32 le texte ». Un mot-clé de tâche donne une ligne de tâche sans heure."
           }
         }
       }
@@ -8996,6 +9012,22 @@
         }
       }
     },
+    "When you stop: make a meeting note with speakers labelled, linked in today's daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al parar: crear una nota de reunión con los hablantes identificados, enlazada en la nota diaria de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l'arrêt : créer une note de réunion avec les intervenants identifiés, liée dans la note quotidienne du jour"
+          }
+        }
+      }
+    },
     "When you stop: make a note": {
       "localizations": {
         "es": {
@@ -9008,6 +9040,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "À l’arrêt : créer une note"
+          }
+        }
+      }
+    },
+    "When you stop: make a note and link it in today's daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al parar: crear una nota y enlazarla en la nota diaria de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l'arrêt : créer une note et la lier dans la note quotidienne du jour"
           }
         }
       }
@@ -9210,6 +9258,22 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Write it as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redactar como"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédiger en"
           }
         }
       }

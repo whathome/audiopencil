@@ -277,8 +277,10 @@ The product's main interface, floating 20 pt above the bottom of the screen, cen
 - **Level meter:** 14 bars, 3 pt wide.
 - **Clock:** a monospaced elapsed time, which appears after 30 s.
 - **Style chip:** a Pencil Amber capsule with the style's number badge, its name and a chevron. Raw uses white at 18% instead.
+- **Controls:** what a click changes has an edge. The chip opens the style menu (its chevron says so). The **Paste / Note / Meeting** toggle and push-to-talk's **Paste / Paste + Daily note / Paste + Inbox** badge cycle on click: a white-at-12% capsule (28% once changed for this recording) with a 1 pt white-at-20% edge and a small cycle glyph, text amber when the outcome isn't a plain paste. A linked daily note is spelled out ("Note + Daily"), not an icon. Push-to-talk shows only its badge, never the toggle. The language badge ("EN") shares the edge. The pointer turns into a hand over any of them, since the panel never gets hover.
+- **No audio:** a red `mic.slash` at the start of the meter, the same mark as "Nothing heard".
 - **Approaching the long-form threshold:** the clock turns amber ("Note in 0:25"), then shows "Note · 5:03" with a document glyph once the recording will become a note.
-- **Other states:** a progress bar while rewriting, "On clipboard", "Nothing heard" and errors, each a single line in the same capsule.
+- **Other states:** a progress bar while rewriting, "On clipboard" and "Nothing heard", each a single line in the same capsule. Errors and notices wrap to two lines (up to 440 pt) in the same shape with the same ends. An error stays until it's clicked or the next recording starts; a click dismisses it or does what it says ("Click to open Privacy & Security").
 
 ## Do's and Don'ts
 
