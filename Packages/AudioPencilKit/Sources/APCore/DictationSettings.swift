@@ -148,6 +148,17 @@ public struct DictationSettings: Codable, Equatable, Sendable {
     /// Put back what was on the clipboard once a pasted dictation is seen to arrive; if it can't be
     /// confirmed, the dictation stays on the clipboard as a backup.
     public var keepClipboard: Bool = true
+    /// Link each new note in that day's Obsidian daily note (overridable per recording).
+    public var dailyNoteLinks: Bool = false
+    /// Where in the daily note: under this heading (added if missing), or at the end if blank.
+    public var dailyNoteHeading: String = "## Audio Pencil"
+    /// Embed the note (![[…]]) instead of linking it.
+    public var dailyNoteEmbed: Bool = false
+    /// Push-to-talk can also add its text to a file, chosen on the pill while holding the key: this one
+    /// (vault-relative, e.g. "Inbox.md"; blank: none) or the daily note. By default it only pastes.
+    public var pushToTalkFile: String = ""
+    /// Where push-to-talk lines go in that file: under this heading, or at the end if blank.
+    public var pushToTalkHeading: String = ""
     /// Start/stop/cancel sound theme (a CueTheme raw value) and its volume (0…1).
     public var cueTheme: String = "tricorder"
     public var cueVolume: Double = 0.35
@@ -212,6 +223,11 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         longFormThreshold = try c.decodeIfPresent(Double.self, forKey: .longFormThreshold) ?? defaults.longFormThreshold
         saveQuickDictations = try c.decodeIfPresent(Bool.self, forKey: .saveQuickDictations) ?? defaults.saveQuickDictations
         keepClipboard = try c.decodeIfPresent(Bool.self, forKey: .keepClipboard) ?? defaults.keepClipboard
+        dailyNoteLinks = try c.decodeIfPresent(Bool.self, forKey: .dailyNoteLinks) ?? defaults.dailyNoteLinks
+        dailyNoteHeading = try c.decodeIfPresent(String.self, forKey: .dailyNoteHeading) ?? defaults.dailyNoteHeading
+        dailyNoteEmbed = try c.decodeIfPresent(Bool.self, forKey: .dailyNoteEmbed) ?? defaults.dailyNoteEmbed
+        pushToTalkFile = try c.decodeIfPresent(String.self, forKey: .pushToTalkFile) ?? defaults.pushToTalkFile
+        pushToTalkHeading = try c.decodeIfPresent(String.self, forKey: .pushToTalkHeading) ?? defaults.pushToTalkHeading
         cueTheme = try c.decodeIfPresent(String.self, forKey: .cueTheme) ?? defaults.cueTheme
         cueVolume = try c.decodeIfPresent(Double.self, forKey: .cueVolume) ?? defaults.cueVolume
     }

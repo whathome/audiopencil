@@ -78,6 +78,11 @@ The iPhone is the long-form, walk-and-talk recorder, usually with the phone's ow
 - Choose a style when recording ends (defaults to last-used).
 - Long-form processing runs in the background; the note is filed straight away as needs-review, with a notification when done (see Obsidian integration).
 
+**Daily note** (Oct 2026)
+
+- Notes can be linked (or embedded) in the day's Obsidian daily note under a configurable heading; on by default in Settings, overridable per recording. A missing daily note is created from the plugin's folder, format and template. Only offered while the Daily notes core plugin is on.
+- Push to talk only pastes; during the hold the text can also be appended as a timed line to the daily note or a chosen file (under a heading or at the end). Task-keyword lines go in untimed as tasks.
+
 **Meeting mode**
 
 - Chosen deliberately before (or during) a recording; enables on-device speaker detection (Speaker 1, Speaker 2…). Default mode assumes a single speaker, and every recording starts in it.

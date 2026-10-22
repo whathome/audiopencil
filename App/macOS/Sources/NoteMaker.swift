@@ -121,6 +121,7 @@ final class NoteMaker {
             processing = String(localized: "Filing the note…")
             if let path = await upload(note, audio: savedAudio ? audioURL : nil, styleName: capture.style.displayName) {
                 notifyFiled(note, path: path)
+                if capture.dailyNote { linkInDailyNote(note, path: path) }
             }
             processing = nil
         }
@@ -144,6 +145,13 @@ final class NoteMaker {
             Log.dictation.error("Couldn't queue the note: \(error.localizedDescription, privacy: .public)")
             return nil
         }
+    }
+
+    /// "- 14:32 [[Audio Pencil/Notes/… Title|Title]]" (or an embed) in the daily note of the day it was recorded.
+    private func linkInDailyNote(_ note: Note, path: String) {
+        let settings = app.settings
+        let entry = DailyNoteEntry.line(for: note, path: path, embed: settings.dailyNoteEmbed)
+        app.sync.append(entry, to: .dailyNote(note.recorded), heading: settings.dailyNoteHeading)
     }
 
     // MARK: Notification

@@ -53,6 +53,8 @@ final class PhoneNotes {
         /// Meeting mode (optional: recordings queued before it existed decode as plain notes).
         var meeting: Bool?
         var speakers: Int?
+        /// Link the note in that day's daily note (optional: older queue entries don't).
+        var dailyNote: Bool?
     }
 
     /// Recordings waiting to be written up, oldest first.
@@ -96,7 +98,7 @@ final class PhoneNotes {
             queue.append(QueuedRecording(
                 id: id, transcript: capture.transcript, language: capture.language.code, recorded: capture.recorded,
                 duration: capture.duration, styleID: style.id, audioFile: savedAudio ? audioName : nil,
-                meeting: capture.meeting, speakers: capture.speakers
+                meeting: capture.meeting, speakers: capture.speakers, dailyNote: capture.dailyNote
             ))
             saveQueue()
             processing = nil
@@ -152,7 +154,7 @@ final class PhoneNotes {
                 body: TaskLine.make(task, said: item.recorded, language: item.language)
             )
             processing = String(localized: "Filing the note…")
-            await file(note, audio: item.audioFile.map { folder.appending(path: $0) })
+            await file(note, audio: item.audioFile.map { folder.appending(path: $0) }, dailyNote: item.dailyNote == true)
             return true
         }
         let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
@@ -193,7 +195,7 @@ final class PhoneNotes {
             speakers: labelled?.speakerCount
         )
         processing = String(localized: "Filing the note…")
-        await file(note, audio: item.audioFile.map { folder.appending(path: $0) })
+        await file(note, audio: item.audioFile.map { folder.appending(path: $0) }, dailyNote: item.dailyNote == true)
         return true
     }
 
@@ -232,7 +234,7 @@ final class PhoneNotes {
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }
 
-    private func file(_ note: Note, audio: URL?) async {
+    private func file(_ note: Note, audio: URL?, dailyNote: Bool = false) async {
         let styleName = app.styles.first { $0.id == note.styleID }?.displayName ?? note.styleID
         do {
             let filed = try await NoteFiling.queue(note, audio: audio, outbox: app.sync.outbox, layout: app.vault.layout ?? .plain)
@@ -240,6 +242,10 @@ final class PhoneNotes {
             recent = Array(recent.prefix(50))
             saveRecent()
             Log.dictation.notice("Note queued: \(filed.path, privacy: .public)")
+            if dailyNote, app.sync.dailyNotes == .on {
+                let entry = DailyNoteEntry.line(for: note, path: filed.path, embed: app.settings.dailyNoteEmbed)
+                app.sync.append(entry, to: .dailyNote(note.recorded), heading: app.settings.dailyNoteHeading)
+            }
             app.sync.syncSoon(after: .zero)
         } catch {
             Log.dictation.error("Couldn't queue the note: \(error.localizedDescription, privacy: .public)")

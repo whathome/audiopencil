@@ -148,6 +148,22 @@
         }
       }
     },
+    "A link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un enlace"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un lien"
+          }
+        }
+      }
+    },
     "A short summary paragraph, then the key points as bullets grouped by theme. Keeps facts, names, numbers and decisions; drops rambling.": {
       "localizations": {
         "es": {
@@ -212,6 +228,22 @@
         }
       }
     },
+    "Add it as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadirla como"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ajouter comme"
+          }
+        }
+      }
+    },
     "Allow Microphone": {
       "localizations": {
         "es": {
@@ -272,6 +304,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Autorisez Audio Pencil dans Safari, puis revenez ici."
+          }
+        }
+      }
+    },
+    "At the end of the note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al final de la nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À la fin de la note"
           }
         }
       }
@@ -458,6 +506,22 @@
         }
       }
     },
+    "Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta primero tu almacenamiento; Audio Pencil comprueba si las Notas diarias de Obsidian están activadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez d'abord votre stockage ; Audio Pencil vérifie si les Notes quotidiennes d'Obsidian sont activées."
+          }
+        }
+      }
+    },
     "Connected as": {
       "localizations": {
         "es": {
@@ -562,6 +626,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Impossible de mettre à jour %@ : %@"
+          }
+        }
+      }
+    },
+    "Daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note quotidienne"
+          }
+        }
+      }
+    },
+    "Daily notes is off in Obsidian": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las Notas diarias están desactivadas en Obsidian"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les Notes quotidiennes sont désactivées dans Obsidian"
           }
         }
       }
@@ -712,6 +808,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chaque modèle se télécharge une fois et est préparé pour la puce de cet iPhone à sa première utilisation."
+          }
+        }
+      }
+    },
+    "Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the Daily note button above the clock.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada nota se enlaza en la nota diaria del día en que se grabó, que se crea si aún no existe. Cámbialo para una grabación con el botón Nota diaria encima del reloj."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque note est liée dans la note quotidienne du jour de l'enregistrement, créée si elle n'existe pas encore. Changez-le pour un enregistrement avec le bouton Note quotidienne au-dessus du chrono."
           }
         }
       }
@@ -1048,6 +1160,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comme moi"
+          }
+        }
+      }
+    },
+    "Link notes in the daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazar las notas en la nota diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lier les notes dans la note quotidienne"
+          }
+        }
+      }
+    },
+    "Links the note in today's daily note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlaza la nota en la nota diaria de hoy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lie la note dans la note quotidienne du jour."
           }
         }
       }
@@ -2746,6 +2890,22 @@
         }
       }
     },
+    "The whole note, embedded": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La nota completa, incrustada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La note entière, intégrée"
+          }
+        }
+      }
+    },
     "The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.": {
       "localizations": {
         "es": {
@@ -2842,6 +3002,22 @@
         }
       }
     },
+    "Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa primero las Notas diarias en Obsidian (Ajustes › Complementos principales). Las notas diarias necesitan que tu almacenamiento sea una bóveda de Obsidian."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activez d'abord les Notes quotidiennes dans Obsidian (Paramètres › Modules principaux). Les notes quotidiennes demandent que votre stockage soit un coffre Obsidian."
+          }
+        }
+      }
+    },
     "Two taps": {
       "localizations": {
         "es": {
@@ -2854,6 +3030,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deux tapes"
+          }
+        }
+      }
+    },
+    "Under the heading": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajo el encabezado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sous le titre de section"
           }
         }
       }

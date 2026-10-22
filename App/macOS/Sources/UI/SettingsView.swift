@@ -312,6 +312,10 @@ private struct GeneralSettings: View {
                 FormFooter("Notes go to each style's folder (set on the Styles page), or \(String(NoteMaker.defaultFolder.dropFirst())). Audio goes to \(String(NoteMaker.recordingsFolder.dropFirst())).")
             }
 
+            DailyNoteSection(app: app)
+
+            PushToTalkSection(app: app)
+
             Section("App") {
                 Toggle(isOn: $app.settings.menuBarMode) {
                     Text("Menu bar only")
@@ -403,6 +407,54 @@ private struct DictationLanguagesSection: View {
 }
 
 /// One list for every language, plus a list per language; a recording uses both.
+/// Linking new notes in Obsidian's daily note. Greyed out until the vault has Daily notes on.
+private struct DailyNoteSection: View {
+    @Bindable var app: AppModel
+
+    private var available: Bool { app.sync.dailyNotes == .on }
+
+    var body: some View {
+        Section {
+            Toggle(isOn: $app.settings.dailyNoteLinks) {
+                Text("Link new notes in the daily note")
+                Text("Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording in the recording indicator's menu.")
+            }
+            .disabled(!available)
+            TextField("Under the heading", text: $app.settings.dailyNoteHeading, prompt: Text("At the end of the note"))
+                .disabled(!available || !app.settings.dailyNoteLinks)
+            Picker("Add it as", selection: $app.settings.dailyNoteEmbed) {
+                Text("A link").tag(false)
+                Text("The whole note, embedded").tag(true)
+            }
+            .disabled(!available || !app.settings.dailyNoteLinks)
+        } header: {
+            Text("Daily note")
+        } footer: {
+            switch app.sync.dailyNotes {
+            case .on: FormFooter("A link reads \"- 14:32 [[Title]]\". Leave the heading blank to add at the end of the daily note.")
+            case .off: FormFooter("Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.")
+            case .unknown: FormFooter("Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.")
+            }
+        }
+    }
+}
+
+/// Push-to-talk only pastes; while holding the key, the pill can also send it to the daily note or a file.
+private struct PushToTalkSection: View {
+    @Bindable var app: AppModel
+
+    var body: some View {
+        Section {
+            TextField("File", text: $app.settings.pushToTalkFile, prompt: Text(verbatim: "Inbox.md"))
+            TextField("Under the heading", text: $app.settings.pushToTalkHeading, prompt: Text("At the end of the file"))
+        } header: {
+            Text("Push-to-talk")
+        } footer: {
+            FormFooter("Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste only\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.")
+        }
+    }
+}
+
 /// Phrases that turn a dictation into an Obsidian task.
 private struct TaskKeywordsSection: View {
     @Bindable var app: AppModel

@@ -130,6 +130,23 @@ struct RecordView: View {
                 }
                 .accessibilityLabel(Text("Number of speakers"))
             }
+            // Only offered when the vault has Obsidian's Daily notes on (Settings explains otherwise).
+            if app.sync.dailyNotes == .on {
+                let on = recorder.linksDailyNote
+                Button {
+                    recorder.dailyNoteOverride = !on
+                } label: {
+                    Label("Daily note", systemImage: "calendar")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .foregroundStyle(on ? Color.white : Color.primary)
+                        .background(Capsule().fill(on ? Color.pencil : Color(.secondarySystemFill)))
+                }
+                .buttonStyle(.plain)
+                .accessibilityValue(Text(on ? "On" : "Off"))
+                .accessibilityHint(Text("Links the note in today's daily note."))
+            }
         }
         .disabled(recorder.phase == .finishing)
         .animation(.snappy, value: recorder.meeting)

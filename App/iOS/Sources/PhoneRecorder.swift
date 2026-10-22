@@ -18,6 +18,8 @@ struct PhoneCapture: Identifiable {
     /// Meeting mode: label who spoke, `speakers` people if known.
     var meeting = false
     var speakers: Int?
+    /// Link the note in that day's daily note.
+    var dailyNote = false
 }
 
 /// One recording at a time: the microphone, the live transcript, pause and resume, and stopping into a
@@ -47,6 +49,13 @@ final class PhoneRecorder: RecordingControlling {
     var meeting = false
     /// How many people are talking, if known; nil works it out.
     var speakerCount: Int?
+    /// Daily-note link for this recording, if changed from the setting; back to the setting after each one.
+    var dailyNoteOverride: Bool?
+
+    /// Whether this recording's note will be linked in the daily note.
+    var linksDailyNote: Bool {
+        app.sync.dailyNotes == .on && (dailyNoteOverride ?? app.settings.dailyNoteLinks)
+    }
     /// Recorded time, not counting pauses.
     private(set) var accumulated: TimeInterval = 0
     /// When the current stretch of recording began (nil while paused or idle).
@@ -231,7 +240,9 @@ final class PhoneRecorder: RecordingControlling {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         let meeting = self.meeting
         let speakers = speakerCount
+        let dailyNote = linksDailyNote
         defer {
+            dailyNoteOverride = nil
             phase = .idle
             self.streamer = nil
             level = 0
@@ -254,7 +265,8 @@ final class PhoneRecorder: RecordingControlling {
             Log.dictation.notice("iPhone recording finished: \(duration, format: .fixed(precision: 0)) s")
             return PhoneCapture(
                 transcript: transcript, samples: samples, language: language, recorded: recordedAt,
-                duration: min(duration, Double(samples.count) / AudioRecorder.sampleRate), meeting: meeting, speakers: speakers
+                duration: min(duration, Double(samples.count) / AudioRecorder.sampleRate), meeting: meeting, speakers: speakers,
+                dailyNote: dailyNote
             )
         } catch {
             lastError = String(localized: "Transcription failed: \(error.localizedDescription)")

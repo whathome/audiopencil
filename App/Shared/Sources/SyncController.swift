@@ -39,6 +39,10 @@ final class SyncController {
     private(set) var lastRetention: RetentionKeeper.Report?
     /// First-run files were just created in this vault: show the board walkthrough once.
     var showWalkthrough = false
+    /// Whether Obsidian's Daily notes is on in this vault (checked every sync), and how it's set up.
+    private(set) var dailyNotes: DailyNotesAvailability = .unknown
+    @ObservationIgnored private(set) var dailyNotesSetup: DailyNotesSetup?
+    @ObservationIgnored let appends: AppendQueue
     #if os(macOS)
     let deviceName = Host.current().localizedName ?? "Mac"
     #else
@@ -73,6 +77,8 @@ final class SyncController {
         let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Sync", directoryHint: .isDirectory)
         configSync = ConfigSync(stateURL: folder.appending(path: "config-state.json"))
         outbox = Outbox(directory: folder.appending(path: "Outbox", directoryHint: .isDirectory))
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        appends = AppendQueue(url: folder.appending(path: "appends.json"))
         retention = RetentionKeeper(stateURL: folder.appending(path: "retention-state.json"))
     }
 
@@ -139,10 +145,19 @@ final class SyncController {
         running = nil
     }
 
+    /// Adds a line to a vault file at the next sync (now, if online).
+    func append(_ entry: String, to target: PendingAppend.Target, heading: String?) {
+        Task {
+            await appends.add(PendingAppend(target: target, entry: entry, heading: heading))
+            syncSoon(after: .zero)
+        }
+    }
+
     private func performSync() async {
         queuedUploads = await outbox.pending.count
         guard vault.settings.isConfigured, let location = vault.vaultLocation, let localConfig, let apply else {
             status = .notConfigured
+            dailyNotes = .unknown
             return
         }
         guard isOnline || vault.settings.kind == .localFolder else {
@@ -170,6 +185,10 @@ final class SyncController {
                 }
             }
             let drained = await outbox.drain(to: location.provider, vaultPath: location.path)
+            // Daily notes: only an Obsidian vault has them, and only with the core plugin on.
+            dailyNotesSetup = vault.layout == .obsidian ? await DailyNotesSetup.load(from: location.provider, vaultPath: location.path) : nil
+            dailyNotes = dailyNotesSetup == nil ? .off : .on
+            await appends.flush(to: location.provider, vaultPath: location.path, daily: dailyNotesSetup)
             if Date().timeIntervalSince(lastRetentionRun) > 300, let folders = retentionFolders?() {
                 lastRetentionRun = Date()
                 if vault.layout == .obsidian { await checkBoard(provider: location.provider, vaultPath: location.path) }

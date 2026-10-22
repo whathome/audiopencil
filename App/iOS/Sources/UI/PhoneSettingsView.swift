@@ -22,6 +22,25 @@ struct PhoneSettingsView: View {
                     Text("Styles, vocabulary and tags come from the settings file there, shared with your Mac.")
                 }
                 Section {
+                    Toggle("Link notes in the daily note", isOn: $app.settings.dailyNoteLinks)
+                        .disabled(app.sync.dailyNotes != .on)
+                    TextField("Under the heading", text: $app.settings.dailyNoteHeading, prompt: Text("At the end of the note"))
+                        .disabled(app.sync.dailyNotes != .on || !app.settings.dailyNoteLinks)
+                    Picker("Add it as", selection: $app.settings.dailyNoteEmbed) {
+                        Text("A link").tag(false)
+                        Text("The whole note, embedded").tag(true)
+                    }
+                    .disabled(app.sync.dailyNotes != .on || !app.settings.dailyNoteLinks)
+                } header: {
+                    Text("Daily note")
+                } footer: {
+                    switch app.sync.dailyNotes {
+                    case .on: Text("Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the Daily note button above the clock.")
+                    case .off: Text("Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.")
+                    case .unknown: Text("Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.")
+                    }
+                }
+                Section {
                     NavigationLink { LanguagesSettingsView(app: app) } label: {
                         LabeledContent("Languages", value: app.offeredLanguages.map { $0.name() }.joined(separator: ", "))
                     }

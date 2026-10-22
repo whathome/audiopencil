@@ -50,6 +50,8 @@ struct LongFormCapture {
     /// Meeting mode: label who spoke, `speakers` people if known.
     var meeting = false
     var speakers: Int?
+    /// Link the note in that day's daily note.
+    var dailyNote = false
 }
 
 /// A delivered quick dictation, for the optional "save quick dictations" notes.
@@ -165,6 +167,30 @@ final class DictationController {
         indicator.onToggleDelivery = { [weak self] in self?.toggleDelivery() }
         indicator.onSetDelivery = { [weak self] delivery in self?.setDelivery(delivery) }
         indicator.onSetSpeakers = { [weak self] count in self?.setSpeakers(count) }
+        indicator.onToggleDailyNote = { [weak self] in self?.toggleDailyNote() }
+        indicator.onCyclePushDestination = { [weak self] in self?.cyclePushDestination() }
+    }
+
+    /// Push-to-talk text also going to the daily note or a file: (text, where, when it was said).
+    var onPushToTalkText: ((String, PushDestination, Date) -> Void)?
+
+    /// The pill's menu: link this recording's note in the daily note, or not.
+    func toggleDailyNote() {
+        guard phase == .recording || phase == .starting, indicator.dailyNoteAvailable else { return }
+        indicator.dailyNoteOverride = !indicator.dailyNote
+    }
+
+    /// Push-to-talk, on the pill: paste only → each destination on offer → paste only.
+    func cyclePushDestination() {
+        guard phase == .recording || phase == .starting, indicator.isPushToTalk else { return }
+        let choices = indicator.pushChoices
+        guard !choices.isEmpty else { return }
+        if let current = indicator.pushDestination, let index = choices.firstIndex(of: current) {
+            indicator.pushDestination = index + 1 < choices.count ? choices[index + 1] : nil
+        } else {
+            indicator.pushDestination = choices.first
+        }
+        Log.dictation.notice("Push-to-talk also to: \(self.indicator.pushDestination?.label ?? "nothing", privacy: .public)")
     }
 
     /// Paste, note or meeting, chosen on the pill for this recording; nil decides by length.
@@ -228,6 +254,9 @@ final class DictationController {
         indicator.deliveryOverride = nil
         speakerCount = nil
         indicator.speakerCount = nil
+        indicator.dailyNoteOverride = nil
+        indicator.pushDestination = nil
+        indicator.isPushToTalk = !remembersStyle // push-to-talk is the raw, unremembered recording
         indicator.currentStyle = style
         indicator.currentLanguage = language
         phase = .starting
@@ -441,7 +470,8 @@ final class DictationController {
                     let result = await paster.deliver(text) { delivered = .now }
                     outcome = result.rawValue
                     onDelivered?(UsageStats.wordCount(transcript), audioSeconds)
-                    if savesQuickDictations {
+                    // Push-to-talk never makes a note of its own (it can go to the daily note or a file instead).
+                    if savesQuickDictations, !indicator.isPushToTalk {
                         onQuickNote?(QuickCapture(text: text, transcript: transcript, style: style, language: language, recorded: recorded, duration: audioSeconds))
                     }
                     if let fallbackNote {
@@ -449,6 +479,10 @@ final class DictationController {
                     } else if result != .pasted {
                         indicator.flash(.clipboard, seconds: 3)
                     }
+                }
+                // Push-to-talk also adds its text to the daily note or a file when chosen on the pill.
+                if !text.isEmpty, indicator.isPushToTalk, let destination = indicator.pushDestination {
+                    onPushToTalkText?(text, destination, recorded)
                 }
                 if !text.isEmpty, remembersStyle { onStyleUsed?(style, targetApp) }
                 if !text.isEmpty { onLanguageUsed?(language, targetApp) }
@@ -496,6 +530,7 @@ final class DictationController {
         let targetApp = self.targetApp
         let meeting = deliveryOverride == .meeting
         let speakers = speakerCount
+        let dailyNote = indicator.dailyNote
         finishTask = Task {
             do {
                 let engine = self.engine()
@@ -510,10 +545,10 @@ final class DictationController {
                     indicator.flash(.nothingHeard)
                 } else if dryRun {
                     Log.dictation.notice("Dry-run long-form [\(style.name, privacy: .public)]: \(transcript.count) characters")
-                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds, meeting: meeting, speakers: speakers))
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds, meeting: meeting, speakers: speakers, dailyNote: dailyNote))
                     indicator.flash(.notice(String(localized: "Long recording: making a note")), seconds: 2.5)
                 } else {
-                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds, meeting: meeting, speakers: speakers))
+                    onLongForm?(LongFormCapture(transcript: transcript, samples: samples, style: style, language: language, recorded: recorded, duration: audioSeconds, meeting: meeting, speakers: speakers, dailyNote: dailyNote))
                     indicator.flash(.notice(String(localized: "Long recording: making a note")), seconds: 2.5)
                 }
                 if TranscriptCleaner.hasSpeech(transcript) { onLanguageUsed?(language, targetApp) }

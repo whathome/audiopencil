@@ -11,6 +11,20 @@ enum Delivery: String, Equatable {
     case meeting
 }
 
+/// Push-to-talk: where else its text goes, chosen on the pill while holding the key (it always pastes).
+enum PushDestination: Equatable {
+    case dailyNote
+    /// A vault-relative file, e.g. "Inbox.md".
+    case file(String)
+
+    var label: String {
+        switch self {
+        case .dailyNote: String(localized: "Daily note")
+        case .file(let path): String((path as NSString).lastPathComponent.replacingOccurrences(of: ".md", with: ""))
+        }
+    }
+}
+
 /// State shown by the floating indicator at the bottom centre of the screen.
 @Observable
 final class IndicatorModel {
@@ -77,6 +91,19 @@ final class IndicatorModel {
     /// Meeting: how many people are talking, if known (nil: worked out).
     var speakerCount: Int?
     @ObservationIgnored var onSetSpeakers: ((Int?) -> Void)?
+    /// A note from this recording is linked in that day's daily note: the setting, unless changed here.
+    var dailyNoteDefault = false
+    /// Obsidian's Daily notes is on in the vault.
+    var dailyNoteAvailable = false
+    var dailyNoteOverride: Bool?
+    var dailyNote: Bool { dailyNoteAvailable && (dailyNoteOverride ?? dailyNoteDefault) }
+    @ObservationIgnored var onToggleDailyNote: (() -> Void)?
+    /// Push-to-talk (hold the key): where else the text goes, if anywhere, and what's on offer.
+    var isPushToTalk = false
+    var pushDestination: PushDestination?
+    var pushChoices: [PushDestination] = []
+    @ObservationIgnored var onCyclePushDestination: (() -> Void)?
+    @ObservationIgnored var destinationFrame: CGRect = .zero
     @ObservationIgnored var deliveryFrame: CGRect = .zero
 
     /// What stopping now would do.
@@ -159,6 +186,8 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
         if model.mode == .picking, let id = model.pickerFrames.first(where: { $0.value.contains(point) })?.key,
            let style = model.styleChoices.first(where: { $0.id == id }) {
             model.onPick?(style)
+        } else if model.mode == .listening, model.isPushToTalk, model.destinationFrame.insetBy(dx: -3, dy: -4).contains(point) {
+            model.onCyclePushDestination?()
         } else if model.mode == .listening, model.deliveryFrame.insetBy(dx: -3, dy: -4).contains(point) {
             model.onToggleDelivery?()
         } else if model.mode == .listening,
@@ -303,6 +332,18 @@ final class IndicatorPanelController: NSObject {
                 item.state = delivery == current ? .on : .off
                 menu.addItem(item)
             }
+            if current != .paste {
+                let daily = NSMenuItem(
+                    title: model.dailyNoteAvailable
+                        ? String(localized: "Link in today's daily note")
+                        : String(localized: "Link in today's daily note (turn on Daily notes in Obsidian)"),
+                    action: #selector(toggleDailyNote(_:)), keyEquivalent: ""
+                )
+                daily.target = self
+                daily.isEnabled = model.dailyNoteAvailable
+                daily.state = model.dailyNote ? .on : .off
+                menu.addItem(daily)
+            }
             if current == .meeting {
                 // Knowing the number helps the speaker labels.
                 let speakers = NSMenuItem(title: String(localized: "Speakers"), action: nil, keyEquivalent: "")
@@ -350,6 +391,10 @@ final class IndicatorPanelController: NSObject {
     @objc private func chooseDelivery(_ item: NSMenuItem) {
         guard let raw = item.representedObject as? String, let delivery = Delivery(rawValue: raw) else { return }
         model.onSetDelivery?(delivery)
+    }
+
+    @objc private func toggleDailyNote(_ item: NSMenuItem) {
+        model.onToggleDailyNote?()
     }
 
     @objc private func chooseSpeakers(_ item: NSMenuItem) {
@@ -439,8 +484,14 @@ struct IndicatorView: View {
                     }
                     TimelineView(.periodic(from: started, by: 1)) { context in
                         // Clicked via IndicatorHostingView (flips paste and note for this recording).
-                        DeliveryToggle(delivery: model.delivery(at: context.date), overridden: model.deliveryOverride != nil)
+                        DeliveryToggle(delivery: model.delivery(at: context.date), overridden: model.deliveryOverride != nil,
+                                       dailyNote: model.dailyNote)
                             .background(FrameReporter { model.deliveryFrame = $0 })
+                    }
+                    if model.isPushToTalk, !model.pushChoices.isEmpty {
+                        // Clicked via IndicatorHostingView: paste only → daily note → file → paste only.
+                        DestinationBadge(destination: model.pushDestination)
+                            .background(FrameReporter { model.destinationFrame = $0 })
                     }
                 }
                 if model.showsLanguage, let language = model.currentLanguage {
@@ -555,11 +606,16 @@ private struct StyleChip: View {
 private struct DeliveryToggle: View {
     let delivery: Delivery
     let overridden: Bool
+    /// A note from this recording will be linked in the daily note.
+    var dailyNote = false
 
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: symbol)
             Text(label)
+            if delivery != .paste, dailyNote {
+                Image(systemName: "calendar").accessibilityLabel(Text("Linked in today's daily note"))
+            }
         }
         .font(.caption.weight(.semibold))
         .padding(.horizontal, 7)
@@ -595,6 +651,29 @@ private struct DeliveryToggle: View {
         case .note: "When you stop: make a note"
         case .meeting: "When you stop: make a meeting note with speakers labelled"
         }
+    }
+}
+
+/// Push-to-talk's other destination: "Paste" alone, or "+ Daily note" / "+ Inbox". Only shown when
+/// there's somewhere to choose.
+private struct DestinationBadge: View {
+    let destination: PushDestination?
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: destination == nil ? "doc.on.clipboard" : "plus.square.on.square")
+            Text(verbatim: destination.map { "+ " + $0.label } ?? String(localized: "Paste only"))
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .fixedSize()
+        .background(Capsule().fill(Color.white.opacity(destination == nil ? 0.12 : 0.28)))
+        .foregroundStyle(destination == nil ? .white : Color.accentColor)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(destination.map { String(localized: "Also adding to \($0.label)") } ?? String(localized: "Paste only")))
+        .accessibilityHint(Text("Click to also add this to the daily note or your file."))
+        .accessibilityAddTraits(.isButton)
     }
 }
 

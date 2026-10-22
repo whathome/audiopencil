@@ -864,6 +864,38 @@
         }
       }
     },
+    "A link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un enlace"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un lien"
+          }
+        }
+      }
+    },
+    "A link reads \"- 14:32 [[Title]]\". Leave the heading blank to add at the end of the daily note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un enlace se ve así: «- 14:32 [[Título]]». Deja el encabezado en blanco para añadirlo al final de la nota diaria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un lien s'écrit « - 14:32 [[Titre]] ». Laissez le titre de section vide pour ajouter à la fin de la note quotidienne."
+          }
+        }
+      }
+    },
     "A short summary paragraph, then the key points as bullets grouped by theme. Keeps facts, names, numbers and decisions; drops rambling.": {
       "localizations": {
         "es": {
@@ -1046,6 +1078,22 @@
         }
       }
     },
+    "Add it as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadirla como"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ajouter comme"
+          }
+        }
+      }
+    },
     "Add ⌘, ⌃ or ⌥ (or use a function key)": {
       "localizations": {
         "es": {
@@ -1160,6 +1208,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Déjà téléchargé. La préparation prend environ %lld min la première fois sur ce Mac (%@), et plus jamais ensuite."
+          }
+        }
+      }
+    },
+    "Also adding to %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También se añade a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajout aussi à %@"
           }
         }
       }
@@ -1368,6 +1432,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tel que dit"
+          }
+        }
+      }
+    },
+    "At the end of the file": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al final del archivo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À la fin du fichier"
+          }
+        }
+      }
+    },
+    "At the end of the note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al final de la nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À la fin de la note"
           }
         }
       }
@@ -1842,6 +1938,22 @@
         }
       }
     },
+    "Click to also add this to the daily note or your file.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz clic para añadirlo también a la nota diaria o a tu archivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez pour l'ajouter aussi à la note quotidienne ou à votre fichier."
+          }
+        }
+      }
+    },
     "Click to choose another language.": {
       "localizations": {
         "es": {
@@ -1950,6 +2062,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connecter"
+          }
+        }
+      }
+    },
+    "Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta primero tu almacenamiento; Audio Pencil comprueba si las Notas diarias de Obsidian están activadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez d'abord votre stockage ; Audio Pencil vérifie si les Notes quotidiennes d'Obsidian sont activées."
           }
         }
       }
@@ -2154,6 +2282,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vocabulaire personnalisé"
+          }
+        }
+      }
+    },
+    "Daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note quotidienne"
+          }
+        }
+      }
+    },
+    "Daily notes is off in Obsidian": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las Notas diarias están desactivadas en Obsidian"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les Notes quotidiennes sont désactivées dans Obsidian"
           }
         }
       }
@@ -2756,6 +2916,22 @@
         }
       }
     },
+    "Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording in the recording indicator's menu.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada nota se enlaza en la nota diaria del día en que se grabó, que se crea si aún no existe. Cámbialo para una grabación en el menú del indicador de grabación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque note est liée dans la note quotidienne du jour de l'enregistrement, créée si elle n'existe pas encore. Changez-le pour un enregistrement dans le menu de l'indicateur d'enregistrement."
+          }
+        }
+      }
+    },
     "Each recording is in one language. Choose every language you'll dictate in; you can switch between them from the recording indicator.": {
       "localizations": {
         "es": {
@@ -3008,6 +3184,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Moins d’erreurs et plus rapide que Whisper Small lors des tests. Anglais uniquement. Un téléchargement de 370 Mo, puis environ 5 minutes de préparation pour ce Mac la première fois."
+          }
+        }
+      }
+    },
+    "File": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichier"
           }
         }
       }
@@ -3760,6 +3952,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comme moi utilise d’abord les exemples dans la langue que vous dictez."
+          }
+        }
+      }
+    },
+    "Link in today's daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazar en la nota diaria de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lier dans la note quotidienne du jour"
+          }
+        }
+      }
+    },
+    "Link in today's daily note (turn on Daily notes in Obsidian)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazar en la nota diaria de hoy (activa las Notas diarias en Obsidian)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lier dans la note quotidienne du jour (activez les Notes quotidiennes dans Obsidian)"
+          }
+        }
+      }
+    },
+    "Link new notes in the daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazar las notas nuevas en la nota diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lier les nouvelles notes dans la note quotidienne"
+          }
+        }
+      }
+    },
+    "Linked in today's daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazada en la nota diaria de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liée dans la note quotidienne du jour"
           }
         }
       }
@@ -5316,6 +5572,22 @@
         }
       }
     },
+    "Paste only": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo pegar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller seulement"
+          }
+        }
+      }
+    },
     "Pasted · %@ s after stop": {
       "localizations": {
         "es": {
@@ -5798,6 +6070,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Appuyer pour parler"
+          }
+        }
+      }
+    },
+    "Push-to-talk": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsar para hablar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyer pour parler"
+          }
+        }
+      }
+    },
+    "Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste only\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsar para hablar pega el texto, y nada más salvo que elijas otra cosa: mientras mantienes la tecla, haz clic en la etiqueta «Solo pegar» de la píldora para añadir también el texto a la nota diaria de hoy o a este archivo (en tu almacenamiento, se crea si falta), como «- 14:32 el texto». Una palabra clave de tarea da una línea de tarea sin hora."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyer pour parler colle le texte, et rien d'autre sauf si vous le choisissez : en maintenant la touche, cliquez sur le badge « Coller seulement » de la pastille pour ajouter aussi le texte à la note quotidienne du jour ou à ce fichier (dans votre stockage, créé s'il manque), sous la forme « - 14:32 le texte ». Un mot-clé de tâche donne une ligne de tâche sans heure."
           }
         }
       }
@@ -7780,6 +8084,22 @@
         }
       }
     },
+    "The whole note, embedded": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La nota completa, incrustada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La note entière, intégrée"
+          }
+        }
+      }
+    },
     "The writing model": {
       "localizations": {
         "es": {
@@ -8164,6 +8484,22 @@
         }
       }
     },
+    "Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa primero las Notas diarias en Obsidian (Ajustes › Complementos principales). Las notas diarias necesitan que tu almacenamiento sea una bóveda de Obsidian."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activez d'abord les Notes quotidiennes dans Obsidian (Paramètres › Modules principaux). Les notes quotidiennes demandent que votre stockage soit un coffre Obsidian."
+          }
+        }
+      }
+    },
     "Turns dictation into polished text, emails or notes, and gives long recordings a title and summary. Without it, text is pasted as you said it.": {
       "localizations": {
         "es": {
@@ -8176,6 +8512,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Transforme la dictée en texte soigné, en e-mails ou en notes, et donne un titre et un résumé aux longs enregistrements. Sans lui, le texte est collé tel que vous l’avez dit."
+          }
+        }
+      }
+    },
+    "Under the heading": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajo el encabezado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sous le titre de section"
           }
         }
       }

@@ -192,6 +192,7 @@ final class AppModel: WritingHost {
         notes = NoteMaker(app: self)
         advisor = ModelAdvisor(app: self)
         dictation.onLongForm = { [unowned self] capture in notes.makeLongFormNote(capture) }
+        dictation.onPushToTalkText = { [unowned self] text, destination, said in addPushToTalkLine(text, to: destination, said: said) }
         dictation.onQuickNote = { [unowned self] capture in notes.saveQuick(capture) }
         applyNoteSettings()
         dictation.onPrepareRewrite = { [unowned self] _ in prefetchWritingModel() }
@@ -341,6 +342,8 @@ final class AppModel: WritingHost {
                 case "setup": showSetup(hidingMainWindow: false)
                 case "setup:close": setupWindow?.close()
                 case "delivery:toggle": dictation.toggleDelivery()
+                case "push:cycle": dictation.cyclePushDestination()
+                case "daily:toggle": dictation.toggleDailyNote()
                 case let command where command.hasPrefix("paste:"):
                     // The real paste path into the frontmost app, for measuring confirmation per app.
                     let text = String(command.dropFirst("paste:".count))
@@ -665,6 +668,18 @@ final class AppModel: WritingHost {
     }
 
     /// Menu bar item: start when idle, stop when recording.
+    /// Push-to-talk text in the daily note or a file: "- 14:32 the text", or a task line as it is (a task
+    /// keeps no time stamp, so it reads as a task).
+    func addPushToTalkLine(_ text: String, to destination: PushDestination, said: Date) {
+        let oneLine = text.replacingOccurrences(of: "\n", with: " ")
+        let line = oneLine.hasPrefix(TaskLine.checkbox) ? oneLine : "- " + DailyNoteEntry.clock(said) + " " + oneLine
+        let target: PendingAppend.Target = switch destination {
+        case .dailyNote: .dailyNote(said)
+        case .file(let path): .file(path)
+        }
+        sync.append(line, to: target, heading: settings.pushToTalkHeading)
+    }
+
     /// Menu bar "Record a Meeting": a recording that becomes a meeting note, speakers labelled.
     func startMeeting() {
         guard dictation.phase == .idle else { return }
@@ -702,6 +717,17 @@ final class AppModel: WritingHost {
         }
         indicator.languageChoices = offeredLanguages
         indicator.note = starterNote(for: language)
+        // Daily note: the setting's default for a note, if the vault has Daily notes on.
+        indicator.dailyNoteAvailable = sync.dailyNotes == .on
+        indicator.dailyNoteDefault = settings.dailyNoteLinks
+        // Push-to-talk only pastes unless a destination is picked on the pill; offer what exists.
+        var destinations: [PushDestination] = []
+        if raw {
+            if sync.dailyNotes == .on { destinations.append(.dailyNote) }
+            let file = settings.pushToTalkFile.trimmingCharacters(in: .whitespaces)
+            if !file.isEmpty, vault.settings.isConfigured { destinations.append(.file(file)) }
+        }
+        indicator.pushChoices = destinations
         dictation.start(
             microphoneGranted: permissions.microphone == .granted,
             deviceID: currentMicrophone?.deviceID,
