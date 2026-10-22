@@ -36,6 +36,14 @@ struct NoteTests {
         #expect(markdown.contains("> [!quote]- Transcript\n> So I've been thinking.\n>\n> About backups.\n"))
     }
 
+    @Test func bodyTextLeavesOutFrontmatterAudioAndTranscript() {
+        let body = "Summary paragraph.\n\n- Point one"
+        #expect(NoteRenderer.bodyText(fromMarkdown: NoteRenderer.markdown(for: note(), timeZone: toronto)) == body)
+        #expect(NoteRenderer.bodyText(fromMarkdown: NoteRenderer.markdown(for: note(), timeZone: toronto, layout: .plain)) == body)
+        // Edited in Obsidian: a quote the user wrote stays, and so does everything without frontmatter.
+        #expect(NoteRenderer.bodyText(fromMarkdown: "Just text.\n\n> A quote they added\n\nMore.") == "Just text.\n\n> A quote they added\n\nMore.")
+    }
+
     @Test func plainLayoutUsesStandardMarkdown() {
         let markdown = NoteRenderer.markdown(for: note(), timeZone: toronto, layout: .plain)
         #expect(markdown.contains("audio: Audio Pencil/Recordings/2026-10-19 1430 Backup plan for the home server.m4a\n---"))

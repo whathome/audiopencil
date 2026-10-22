@@ -23,6 +23,8 @@ struct RecentNote: Codable, Identifiable, Equatable {
     var status: Note.Status
     /// Set from the Notes page: kept forever (archive) or on its way out (delete).
     var retention: Note.Retention?
+    /// The written text, for copying when the vault can't be reached (older entries don't have it).
+    var body: String?
 }
 
 /// Where notes and recordings go in the vault, and handing them to the upload queue.

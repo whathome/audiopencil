@@ -116,6 +116,22 @@
         }
       }
     },
+    "%lld waiting to be written: carries on when you stop": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld esperando redacción: sigue cuando paras"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld en attente de rédaction : reprend à l'arrêt"
+          }
+        }
+      }
+    },
     "%lld%%": {
       "localizations": {
         "es": {
@@ -570,6 +586,22 @@
         }
       }
     },
+    "Copied": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copié"
+          }
+        }
+      }
+    },
     "Copied to the clipboard": {
       "localizations": {
         "es": {
@@ -582,6 +614,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copié dans le presse-papiers"
+          }
+        }
+      }
+    },
+    "Copied, not filed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiadas, sin archivar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiées, non classées"
+          }
+        }
+      }
+    },
+    "Copy the note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar la nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier la note"
+          }
+        }
+      }
+    },
+    "Copy the transcript": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar la transcripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier la transcription"
           }
         }
       }
@@ -690,6 +770,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Les Notes quotidiennes sont désactivées dans Obsidian"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer"
           }
         }
       }
@@ -956,6 +1052,22 @@
         }
       }
     },
+    "File": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classer"
+          }
+        }
+      }
+    },
     "Filed": {
       "localizations": {
         "es": {
@@ -984,6 +1096,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fichiers"
+          }
+        }
+      }
+    },
+    "Files it in your notes folder with its audio, as Make Note would have.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La archiva en tu carpeta de notas con su audio, como lo habría hecho Crear la nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La classe dans votre dossier de notes avec son audio, comme Créer la note l'aurait fait."
           }
         }
       }
@@ -1468,6 +1596,22 @@
         }
       }
     },
+    "Not started yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no ha empezado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas encore commencé."
+          }
+        }
+      }
+    },
     "Notes": {
       "localizations": {
         "es": {
@@ -1832,6 +1976,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mettre l’enregistrement en pause"
+          }
+        }
+      }
+    },
+    "Paused while you record. Writing carries on when you stop.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa mientras grabas. La redacción sigue cuando paras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pause pendant l'enregistrement. La rédaction reprend à l'arrêt."
           }
         }
       }
@@ -3018,6 +3178,22 @@
         }
       }
     },
+    "These went to the clipboard only. File one to put it in your notes folder with its audio, or swipe to delete it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas solo fueron al portapapeles. Archiva una para ponerla en tu carpeta de notas con su audio, o desliza para eliminarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celles-ci sont allées dans le presse-papiers seulement. Classez-en une pour la mettre dans votre dossier de notes avec son audio, ou balayez pour la supprimer."
+          }
+        }
+      }
+    },
     "This folder is an Obsidian vault": {
       "localizations": {
         "es": {
@@ -3530,6 +3706,22 @@
         }
       }
     },
+    "Write them now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redactarlas ahora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les rédiger maintenant"
+          }
+        }
+      }
+    },
     "Writes it in this style and copies it, without filing a note.": {
       "localizations": {
         "es": {
@@ -3616,18 +3808,34 @@
         }
       }
     },
-    "Written up while Audio Pencil is open; leaving pauses it.": {
+    "Written up one at a time while Audio Pencil is open; leaving or recording pauses it.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se redactan mientras Audio Pencil está abierta; salir la pausa."
+            "value": "Se redactan de una en una mientras Audio Pencil está abierto; salir o grabar lo pausa."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rédigées pendant qu’Audio Pencil est ouvert ; le quitter met en pause."
+            "value": "Rédigées une à la fois pendant qu'Audio Pencil est ouvert ; quitter l'app ou enregistrer met en pause."
+          }
+        }
+      }
+    },
+    "Written while Audio Pencil is open.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se redacta mientras Audio Pencil está abierto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédigé pendant qu'Audio Pencil est ouvert."
           }
         }
       }

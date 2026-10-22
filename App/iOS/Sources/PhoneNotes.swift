@@ -15,7 +15,17 @@ final class PhoneNotes {
     /// What processing is doing right now, if anything.
     private(set) var processing: String?
     /// Shown for a moment after a recording was written and copied instead of filed.
-    private(set) var copied = false
+    private(set) var justCopied = false
+    /// Recordings written and copied but not filed, newest first: kept with their audio until filed or deleted.
+    private(set) var copiedNotes: [CopiedNote] = []
+
+    struct CopiedNote: Codable, Identifiable {
+        var note: Note
+        var styleName: String
+        var audioFile: String?
+        var dailyNote: Bool
+        var id: UUID { note.id }
+    }
 
     @ObservationIgnored private unowned let app: PhoneModel
     @ObservationIgnored private let folder: URL
@@ -27,6 +37,7 @@ final class PhoneNotes {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         recent = (try? JSONDecoder().decode([RecentNote].self, from: Data(contentsOf: folder.appending(path: "recent.json")))) ?? []
         queue = (try? JSONDecoder().decode([QueuedRecording].self, from: Data(contentsOf: folder.appending(path: "queue.json")))) ?? []
+        copiedNotes = (try? JSONDecoder().decode([CopiedNote].self, from: Data(contentsOf: folder.appending(path: "copied.json")))) ?? []
         fileLeftoverReviews()
         watchAppState()
     }
@@ -74,7 +85,7 @@ final class PhoneNotes {
     private func watchAppState() {
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.pauseProcessing() }
+            MainActor.assumeIsolated { self?.pauseProcessing(because: "the app left the screen") }
         })
         observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.processQueue() }
@@ -138,13 +149,25 @@ final class PhoneNotes {
             }
             processing = nil
             processTask = nil
+            // Stopped part-way while it could carry on (a recording started and ended during a slow step):
+            // pick up again rather than wait for the app to be reopened.
+            processQueue()
         }
     }
 
-    func pauseProcessing() {
+    /// Writing is stopped (it starts again from the current step's recording later); `reason` is for the log.
+    func pauseProcessing(because reason: String) {
         guard let processTask else { return }
         processTask.cancel()
-        Log.dictation.notice("Note writing paused: the app left the screen")
+        Log.dictation.notice("Note writing paused: \(reason, privacy: .public)")
+    }
+
+    /// Why queued recordings aren't being written right now, if they aren't.
+    var waitingReason: String? {
+        guard !queue.isEmpty, processTask == nil || app.recorder.isActive else { return nil }
+        if app.recorder.isActive { return String(localized: "Paused while you record. Writing carries on when you stop.") }
+        if UIApplication.shared.applicationState != .active { return String(localized: "Written while Audio Pencil is open.") }
+        return String(localized: "Not started yet.")
     }
 
     /// True once the note is filed; false if writing was stopped part-way.
@@ -218,13 +241,44 @@ final class PhoneNotes {
             return
         }
         UIPasteboard.general.string = note.body
-        if let audio { try? FileManager.default.removeItem(at: audio) }
+        // Kept, with its audio, so it can still be filed from the Notes tab.
+        let styleName = app.styles.first { $0.id == note.styleID }?.displayName ?? note.styleID
+        copiedNotes.insert(CopiedNote(note: note, styleName: styleName, audioFile: item.audioFile, dailyNote: item.dailyNote == true), at: 0)
+        saveCopied()
         Log.dictation.notice("Copied a written recording (\(note.body.count) characters)")
-        copied = true
+        justCopied = true
         Task {
             try? await Task.sleep(for: .seconds(4))
-            copied = false
+            justCopied = false
         }
+    }
+
+    /// Files a copied recording in the vault, as Make Note would have.
+    func file(_ copied: CopiedNote) {
+        copiedNotes.removeAll { $0.id == copied.id }
+        saveCopied()
+        Task { await file(copied.note, audio: copied.audioFile.map { folder.appending(path: $0) }, dailyNote: copied.dailyNote) }
+    }
+
+    func delete(_ copied: CopiedNote) {
+        copiedNotes.removeAll { $0.id == copied.id }
+        saveCopied()
+        if let audio = copied.audioFile { try? FileManager.default.removeItem(at: folder.appending(path: audio)) }
+    }
+
+    private func saveCopied() {
+        if let data = try? JSONEncoder().encode(copiedNotes) { try? data.write(to: folder.appending(path: "copied.json"), options: .atomic) }
+    }
+
+    /// A filed note's text for the clipboard: from the vault, so edits made in Obsidian come along, or as
+    /// written here when the vault can't be reached.
+    func text(of note: RecentNote) async -> String? {
+        if let location = app.vault.vaultLocation,
+           let data = try? await location.provider.read(StoragePath.join(location.path, note.path)).data,
+           let markdown = String(data: data, encoding: .utf8) {
+            return NoteRenderer.bodyText(fromMarkdown: markdown)
+        }
+        return note.body
     }
 
     /// Who said what in a meeting recording: Whisper again over the whole audio with word timings, and the
@@ -266,7 +320,7 @@ final class PhoneNotes {
         let styleName = app.styles.first { $0.id == note.styleID }?.displayName ?? note.styleID
         do {
             let filed = try await NoteFiling.queue(note, audio: audio, outbox: app.sync.outbox, layout: app.vault.layout ?? .plain)
-            recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: filed.path, status: note.status), at: 0)
+            recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: filed.path, status: note.status, body: note.body), at: 0)
             recent = Array(recent.prefix(50))
             saveRecent()
             Log.dictation.notice("Note queued: \(filed.path, privacy: .public)")
