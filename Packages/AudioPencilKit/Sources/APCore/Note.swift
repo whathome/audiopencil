@@ -183,6 +183,30 @@ public enum NoteRenderer {
             .joined(separator: "/")
     }
 
+    /// The written text of a note's Markdown, as it reads in Obsidian: no frontmatter, no audio link at the
+    /// top and no transcript at the end. For copying a filed note.
+    public static func bodyText(fromMarkdown markdown: String) -> String {
+        var lines = markdown.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+        if lines.first == "---", let end = lines.dropFirst().firstIndex(of: "---") {
+            lines.removeSubrange(0...end)
+        }
+        while let first = lines.first, first.trimmingCharacters(in: .whitespaces).isEmpty { lines.removeFirst() }
+        // The audio: an embed, or a plain link to a recording.
+        if let first = lines.first?.trimmingCharacters(in: .whitespaces),
+           (first.hasPrefix("![[") && first.hasSuffix("]]")) || (first.hasPrefix("[") && first.contains("](") && first.hasSuffix(".m4a)")) {
+            lines.removeFirst()
+        }
+        // The transcript: a collapsed callout running to the end, or a Transcript section.
+        let headings = Set(["## Transcript", "## " + String(localized: "Transcript", bundle: .module)])
+        if let start = lines.lastIndex(where: { $0.hasPrefix("> [!quote]") }),
+           lines[start...].allSatisfy({ $0.hasPrefix(">") || $0.trimmingCharacters(in: .whitespaces).isEmpty }) {
+            lines.removeSubrange(start...)
+        } else if let start = lines.lastIndex(where: { headings.contains($0.trimmingCharacters(in: .whitespaces)) }) {
+            lines.removeSubrange(start...)
+        }
+        return lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Obsidian links use vault-relative paths without a leading slash.
     private static func linkTarget(_ path: String) -> String {
         path.hasPrefix("/") ? String(path.dropFirst()) : path

@@ -45,8 +45,11 @@ struct RecordView: View {
     private var statusLine: some View {
         if let reason = recorder.pauseReason, recorder.phase == .paused {
             StatusRow(symbol: "pause.circle.fill", text: reason, tint: .orange)
-        } else if app.notes.copied {
+        } else if app.notes.justCopied {
             StatusRow(symbol: "doc.on.clipboard", text: String(localized: "Copied to the clipboard"), tint: Color.pencil)
+        } else if recorder.isActive, !app.notes.queue.isEmpty {
+            // Writing stops while recording (one model at a time); say so rather than let it vanish.
+            StatusRow(symbol: "hourglass", text: String(localized: "\(app.notes.queue.count) waiting to be written: carries on when you stop"))
         } else if let processing = app.notes.processing {
             StatusRow(symbol: nil, text: processing)
         } else if let error = recorder.lastError, !recorder.isActive {

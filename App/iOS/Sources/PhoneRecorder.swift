@@ -116,7 +116,7 @@ final class PhoneRecorder: RecordingControlling {
         pauseReason = nil
         phase = .starting
         // One model in memory at a time: a note being written waits until this recording is done.
-        app.notes.pauseProcessing()
+        app.notes.pauseProcessing(because: "a recording started")
         guard await AVAudioApplication.requestRecordPermission() else {
             lastError = String(localized: "Audio Pencil needs the microphone. Allow it in Settings › Privacy & Security › Microphone.")
             phase = .idle
