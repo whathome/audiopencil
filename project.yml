@@ -181,6 +181,7 @@ schemes:
       config: Debug
       targets:
         - package: AudioPencilKit/APCoreTests
+        - package: AudioPencilKit/APAudioTests
         - package: AudioPencilKit/APTranscriptionTests
         - package: AudioPencilKit/APSummaryTests
         - package: AudioPencilKit/APStorageTests

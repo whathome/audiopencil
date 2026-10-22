@@ -28,6 +28,8 @@ Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new
 
 ### First run
 
+On Mac, microphone preferences are tried in priority order; if none are connected, Audio Pencil uses the system default input. For multichannel audio interfaces, it preserves input levels and uses the strongest channel in each audio buffer rather than mixing unused inputs into the microphone signal. A failure to select the requested device is reported instead of silently recording another microphone.
+
 On a Mac that has never run Audio Pencil, a setup window opens instead of the main window. It has six steps:
 
 1. **Welcome**.

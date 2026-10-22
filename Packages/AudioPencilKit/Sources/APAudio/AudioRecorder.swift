@@ -30,11 +30,13 @@ public final class SampleStore: SampleSource {
 public enum AudioRecorderError: LocalizedError {
     case noInputDevice
     case unsupportedFormat(String)
+    case deviceSelectionFailed(Int32)
 
     public var errorDescription: String? {
         switch self {
         case .noInputDevice: String(localized: "No microphone is available.", bundle: .module)
         case .unsupportedFormat(let format): String(localized: "The microphone format isn't supported (\(format)).", bundle: .module)
+        case .deviceSelectionFailed(let status): String(localized: "Couldn't select the microphone (Core Audio error \(status)).", bundle: .module)
         }
     }
 }
@@ -177,13 +179,15 @@ public final class AudioRecorder: @unchecked Sendable {
 
     private func select(_ deviceID: UInt32?, on engine: AVAudioEngine) throws {
         #if os(macOS)
-        guard var deviceID, let unit = engine.inputNode.audioUnit else { return }
+        guard var deviceID else { return }
+        guard let unit = engine.inputNode.audioUnit else { throw AudioRecorderError.noInputDevice }
         let status = AudioUnitSetProperty(
             unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0,
             &deviceID, UInt32(MemoryLayout<UInt32>.size)
         )
         if status != noErr {
-            Log.audio.error("Couldn't select input device \(deviceID): OSStatus \(status); using default")
+            Log.audio.error("Couldn't select input device \(deviceID): OSStatus \(status)")
+            throw AudioRecorderError.deviceSelectionFailed(status)
         }
         #endif
     }
@@ -279,19 +283,36 @@ public final class AudioRecorder: @unchecked Sendable {
 }
 
 /// Streaming sample-rate and channel conversion to 16 kHz mono. Used only on the audio tap thread.
-private final class Resampler: @unchecked Sendable {
+final class Resampler: @unchecked Sendable {
     private let converter: AVAudioConverter
     private let outputFormat: AVAudioFormat
     private let ratio: Double
 
     init(from inputFormat: AVAudioFormat) throws {
+        let outputFormat: AVAudioFormat?
+        #if os(macOS)
+        // Interface inputs are independent microphones, not surround speakers. Preserve them instead
+        // of applying a speaker-layout downmix, which can attenuate or discard discrete channels.
+        if inputFormat.channelCount > 1,
+           let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_DiscreteInOrder | inputFormat.channelCount) {
+            outputFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: AudioRecorder.sampleRate, interleaved: false, channelLayout: layout)
+        } else {
+            outputFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: AudioRecorder.sampleRate, channels: 1, interleaved: false)
+        }
+        #else
+        outputFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: AudioRecorder.sampleRate, channels: 1, interleaved: false)
+        #endif
         guard
-            let outputFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: AudioRecorder.sampleRate, channels: 1, interleaved: false),
+            let outputFormat,
             let converter = AVAudioConverter(from: inputFormat, to: outputFormat)
         else {
             throw AudioRecorderError.unsupportedFormat(inputFormat.description)
         }
-        converter.downmix = true
+        if outputFormat.channelCount > 1 {
+            converter.channelMap = (0..<inputFormat.channelCount).map { NSNumber(value: $0) }
+        } else {
+            converter.downmix = true
+        }
         self.converter = converter
         self.outputFormat = outputFormat
         self.ratio = AudioRecorder.sampleRate / inputFormat.sampleRate
@@ -314,11 +335,22 @@ private final class Resampler: @unchecked Sendable {
             inputStatus.pointee = .haveData
             return input
         }
-        guard status != .error, let channel = output.floatChannelData?[0] else {
+        guard status != .error, let channels = output.floatChannelData else {
             Log.audio.error("Conversion failed: \(error?.localizedDescription ?? "unknown", privacy: .public)")
             return []
         }
-        return Array(UnsafeBufferPointer(start: channel, count: Int(output.frameLength)))
+        let count = Int(output.frameLength)
+        var selected = 0
+        var greatestEnergy: Float = 0
+        for channel in 0..<Int(outputFormat.channelCount) {
+            var energy: Float = 0
+            for frame in 0..<count { energy += channels[channel][frame] * channels[channel][frame] }
+            if energy > greatestEnergy {
+                selected = channel
+                greatestEnergy = energy
+            }
+        }
+        return Array(UnsafeBufferPointer(start: channels[selected], count: count))
     }
 }
 

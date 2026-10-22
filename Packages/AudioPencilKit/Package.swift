@@ -103,6 +103,7 @@ let package = Package(
         ),
 
         .testTarget(name: "APCoreTests", dependencies: ["APCore"], swiftSettings: concurrency),
+        .testTarget(name: "APAudioTests", dependencies: ["APAudio"], swiftSettings: concurrency),
         .testTarget(
             name: "APTranscriptionTests",
             dependencies: ["APTranscription", "APModels"],
