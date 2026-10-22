@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac and iPhone. See [docs/PRD.md](docs/PRD.md).
 
-**Status:** milestone 8 (guided setup, storage without Obsidian, models ready in the background). Phase 1 (Mac) is feature-complete in English, French and Spanish; phase 2 (iPhone) is next. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or this Mac, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
+**Status:** phases 1 (Mac) and 2 (iPhone) are done, in English, French and Spanish; phase 3, the iPhone keyboard, is next. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or this Mac, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
 
 ## Build and run
 
