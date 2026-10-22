@@ -255,6 +255,8 @@ private struct GeneralSettings: View {
                 }
             }
 
+            TaskKeywordsSection(app: app)
+
             Section("Sounds") {
                 HStack {
                     Picker("Start and stop sounds", selection: $app.settings.cueTheme) {
@@ -401,6 +403,29 @@ private struct DictationLanguagesSection: View {
 }
 
 /// One list for every language, plus a list per language; a recording uses both.
+/// Phrases that turn a dictation into an Obsidian task.
+private struct TaskKeywordsSection: View {
+    @Bindable var app: AppModel
+    @State private var text = ""
+
+    var body: some View {
+        Section {
+            TextEditor(text: $text)
+                .font(.body)
+                .frame(minHeight: 60)
+                .onChange(of: text) { _, text in
+                    let phrases = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                    if phrases != app.taskKeywords { app.taskKeywords = phrases }
+                }
+        } header: {
+            Text("Task keywords")
+        } footer: {
+            FormFooter("One phrase per line. A dictation that starts with one is pasted as an Obsidian task: \"New task: call the landlord by Friday\" becomes \"- [ ] Call the landlord by Friday 📅 date\", with due and start dates in the Tasks plugin's format. Shared with your other devices.")
+        }
+        .onAppear { text = app.taskKeywords.joined(separator: "\n") }
+    }
+}
+
 private struct VocabularySection: View {
     @Bindable var app: AppModel
     /// "" edits the list for all languages; otherwise a Whisper code.

@@ -31,6 +31,9 @@ struct PhoneSettingsView: View {
                     NavigationLink { StylesSettingsView(app: app) } label: {
                         LabeledContent("Styles", value: "\(app.enabledStyles.count)")
                     }
+                    NavigationLink { TaskKeywordsView(app: app) } label: {
+                        LabeledContent("Task keywords", value: "\(app.taskKeywords.count)")
+                    }
                     NavigationLink { RecordingSettingsView(app: app) } label: {
                         Text("Recording")
                     }
@@ -411,16 +414,22 @@ struct StylesSettingsView: View {
         Form {
             Section {
                 ForEach($app.styles) { $style in
-                    Toggle(isOn: $style.isEnabled) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: style.displayName)
-                            Text(verbatim: style.displayDescription).font(.footnote).foregroundStyle(.secondary).lineLimit(3)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle(isOn: $style.isEnabled) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: style.displayName)
+                                Text(verbatim: style.displayDescription).font(.footnote).foregroundStyle(.secondary).lineLimit(3)
+                            }
+                        }
+                        .disabled(style.isRaw)
+                        if !style.isRaw {
+                            Toggle("Find action items", isOn: $style.extractActionItems)
+                                .font(.subheadline)
                         }
                     }
-                    .disabled(style.isRaw)
                 }
             } footer: {
-                Text("Offered after each recording. Edit styles on your Mac; changes arrive here through the settings file.")
+                Text("Offered after each recording. Find action items ends notes with Obsidian tasks (- [ ]), with due and start dates heard in the recording. Edit styles on your Mac; changes arrive here through the settings file.")
             }
         }
         .navigationTitle("Styles")
@@ -498,5 +507,32 @@ struct RecordingSettingsView: View {
     private func playPreview() {
         preview.configure(theme: app.settings.cueTheme, volume: app.settings.cueVolume)
         preview.started()
+    }
+}
+
+// MARK: Task keywords
+
+/// Phrases that turn a recording into an Obsidian task.
+struct TaskKeywordsView: View {
+    @Bindable var app: PhoneModel
+    @State private var text = ""
+
+    var body: some View {
+        Form {
+            Section {
+                TextEditor(text: $text)
+                    .frame(minHeight: 120)
+                    .textInputAutocapitalization(.never)
+                    .onChange(of: text) { _, text in
+                        let phrases = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                        if phrases != app.taskKeywords { app.taskKeywords = phrases }
+                    }
+            } footer: {
+                Text("One phrase per line. A recording that starts with one is filed as an Obsidian task: \"New task: book the dentist by Friday\" becomes \"- [ ] Book the dentist by Friday 📅 date\", with due and start dates in the Tasks plugin's format. Shared with your Mac.")
+            }
+        }
+        .navigationTitle("Task keywords")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear { text = app.taskKeywords.joined(separator: "\n") }
     }
 }

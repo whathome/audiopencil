@@ -28,6 +28,13 @@ final class PhoneModel: WritingHost {
     var tags: [String] = [] {
         didSet { if !applyingSync, tags != oldValue { sync?.syncSoon() } }
     }
+    /// Recordings starting with one of these become a one-line Obsidian task. Shared through the settings file.
+    var taskKeywords: [String] = UserDefaults.standard.stringArray(forKey: "taskKeywords") ?? TaskKeywords.defaults {
+        didSet {
+            UserDefaults.standard.set(taskKeywords, forKey: "taskKeywords")
+            if !applyingSync, taskKeywords != oldValue { sync?.syncSoon() }
+        }
+    }
     var writingSamples: [WritingSample] {
         didSet {
             save(writingSamples, as: Self.samplesKey)
@@ -302,6 +309,7 @@ final class PhoneModel: WritingHost {
         config.styles = styles.map(ConfigStyle.init)
         config.vocabulary = settings.customVocabulary
         config.tags = tags
+        config.taskKeywords = taskKeywords
         config.writingSamples = writingSamples
         config.expireRegularAudio = expireRegularAudio
         config.devices[sync.deviceName] = DeviceSection(settings)
@@ -319,6 +327,7 @@ final class PhoneModel: WritingHost {
         config.devices[sync.deviceName]?.apply(to: &updated)
         if updated != settings { settings = updated }
         if config.tags != tags { tags = config.tags }
+        if config.taskKeywords != taskKeywords { taskKeywords = config.taskKeywords }
         if config.writingSamples != writingSamples { writingSamples = config.writingSamples }
         if config.expireRegularAudio != expireRegularAudio { expireRegularAudio = config.expireRegularAudio }
     }

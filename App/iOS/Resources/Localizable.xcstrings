@@ -860,6 +860,22 @@
         }
       }
     },
+    "Find action items": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detectar tareas pendientes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repérer les actions à mener"
+          }
+        }
+      }
+    },
     "Finishing the transcript…": {
       "localizations": {
         "es": {
@@ -1420,18 +1436,18 @@
         }
       }
     },
-    "Offered after each recording. Edit styles on your Mac; changes arrive here through the settings file.": {
+    "Offered after each recording. Find action items ends notes with Obsidian tasks (- [ ]), with due and start dates heard in the recording. Edit styles on your Mac; changes arrive here through the settings file.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se ofrecen después de cada grabación. Edita los estilos en tu Mac; los cambios llegan aquí a través del archivo de ajustes."
+            "value": "Se ofrecen tras cada grabación. «Detectar tareas pendientes» termina las notas con tareas de Obsidian (- [ ]), con las fechas de vencimiento y de inicio oídas. Edita los estilos en tu Mac; los cambios llegan aquí a través del archivo de ajustes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Proposés après chaque enregistrement. Modifiez les styles sur votre Mac ; les changements arrivent ici par le fichier de réglages."
+            "value": "Proposés après chaque enregistrement. « Repérer les actions à mener » termine les notes par des tâches Obsidian (- [ ]), avec les dates d’échéance et de début entendues. Modifiez les styles sur votre Mac ; les changements arrivent ici par le fichier de réglages."
           }
         }
       }
@@ -1496,6 +1512,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Une langue par enregistrement : touchez-en une pour y faire le prochain enregistrement, ou changez avec le bouton de langue pendant l’enregistrement. L’anglais utilise le modèle anglais ; les autres langues, le modèle multilingue."
+          }
+        }
+      }
+    },
+    "One phrase per line. A recording that starts with one is filed as an Obsidian task: \"New task: book the dentist by Friday\" becomes \"- [ ] Book the dentist by Friday 📅 date\", with due and start dates in the Tasks plugin's format. Shared with your Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una frase por línea. Una grabación que empieza por una de ellas se archiva como tarea de Obsidian: «New task: book the dentist by Friday» se convierte en «- [ ] Book the dentist by Friday 📅 fecha», con las fechas de vencimiento y de inicio en el formato del plugin Tasks. Compartido con tu Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une expression par ligne. Un enregistrement qui commence par l’une d’elles est classé comme tâche Obsidian : « New task: book the dentist by Friday » devient « - [ ] Book the dentist by Friday 📅 date », avec les dates d’échéance et de début au format du plugin Tasks. Partagé avec votre Mac."
           }
         }
       }
@@ -2646,6 +2678,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Touchez le bouton et parlez. La transcription se fait sur cet iPhone au fil de l’eau, puis devient une note."
+          }
+        }
+      }
+    },
+    "Task keywords": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palabras clave de tarea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mots-clés de tâche"
           }
         }
       }

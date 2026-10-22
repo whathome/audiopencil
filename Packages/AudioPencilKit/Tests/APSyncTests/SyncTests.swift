@@ -121,6 +121,18 @@ struct ConfigMergerTests {
         #expect(restored.fallbackShortcut == KeyShortcut(keyCode: 96, modifiers: 0)) // unreadable: kept
     }
 
+    @Test func taskKeywordsRoundTripAndDefault() throws {
+        var config = SharedConfig()
+        #expect(config.taskKeywords == TaskKeywords.defaults)
+        config.taskKeywords = ["new task", "nouvelle tâche"]
+        let text = ConfigDocument.render(config)
+        #expect(try ConfigDocument.parse(text).taskKeywords == ["new task", "nouvelle tâche"])
+        // A file from before keywords existed gets the defaults.
+        let old = text.replacingOccurrences(of: #"task_keywords:\n(  - .*\n)+"#, with: "", options: .regularExpression)
+        #expect(!old.contains("task_keywords"))
+        #expect(try ConfigDocument.parse(old).taskKeywords == TaskKeywords.defaults)
+    }
+
     @Test func keepClipboardSyncsAndDefaultsOn() throws {
         #expect(DictationSettings().keepClipboard)
         var settings = DictationSettings()

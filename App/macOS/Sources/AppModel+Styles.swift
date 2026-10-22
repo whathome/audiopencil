@@ -42,6 +42,7 @@ extension AppModel {
         config.styles = styles.map(ConfigStyle.init)
         config.vocabulary = settings.customVocabulary
         config.tags = tags
+        config.taskKeywords = taskKeywords
         config.writingSamples = writingSamples
         config.expireRegularAudio = expireRegularAudio
         config.devices[sync.deviceName] = DeviceSection(settings)
@@ -60,6 +61,7 @@ extension AppModel {
         config.devices[sync.deviceName]?.apply(to: &updated)
         if updated != settings { settings = updated }
         if config.tags != tags { tags = config.tags }
+        if config.taskKeywords != taskKeywords { taskKeywords = config.taskKeywords }
         if config.writingSamples != writingSamples { writingSamples = config.writingSamples }
         if config.expireRegularAudio != expireRegularAudio { expireRegularAudio = config.expireRegularAudio }
     }

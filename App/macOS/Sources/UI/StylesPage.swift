@@ -195,6 +195,10 @@ private struct StyleEditor: View {
                         get: { style.folder ?? "" },
                         set: { style.folder = $0.isEmpty ? nil : $0 }
                     ), prompt: Text(String(NoteMaker.defaultFolder.dropFirst())))
+                    Toggle(isOn: $style.extractActionItems) {
+                        Text("Find action items")
+                        Text("Notes end with what was committed to, as Obsidian tasks (- [ ]) with due and start dates heard in the recording, in the Tasks plugin's format.")
+                    }
                 } header: {
                     Text("Notes")
                 } footer: {

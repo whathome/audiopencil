@@ -61,6 +61,14 @@ final class AppModel: WritingHost {
     var tags: [String] = [] {
         didSet { if !applyingSync, tags != oldValue { sync?.syncSoon() } }
     }
+    /// Dictations starting with one of these become an Obsidian task. Shared through the settings file.
+    var taskKeywords: [String] = UserDefaults.standard.stringArray(forKey: "taskKeywords") ?? TaskKeywords.defaults {
+        didSet {
+            UserDefaults.standard.set(taskKeywords, forKey: "taskKeywords")
+            dictation?.taskKeywords = taskKeywords
+            if !applyingSync, taskKeywords != oldValue { sync?.syncSoon() }
+        }
+    }
     /// Set while applying a synced config, so the change doesn't schedule another sync.
     @ObservationIgnored var applyingSync = false
     /// Debug builds: a short long-form threshold for testing (not saved or synced).
@@ -745,6 +753,7 @@ final class AppModel: WritingHost {
     private func applyNoteSettings() {
         dictation?.longFormThreshold = debugLongFormThreshold ?? settings.longFormThreshold
         dictation?.savesQuickDictations = settings.saveQuickDictations
+        dictation?.taskKeywords = taskKeywords
         dictation?.paster.keepsClipboard = settings.keepClipboard
         dictation?.setSounds(theme: CueTheme(rawValue: settings.cueTheme) ?? .tricorder, volume: settings.cueVolume)
     }

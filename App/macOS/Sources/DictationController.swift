@@ -109,6 +109,8 @@ final class DictationController {
     /// A quick dictation was delivered (only when saving quick dictations is on).
     var onQuickNote: ((QuickCapture) -> Void)?
     var savesQuickDictations = false
+    /// "New task …": the dictation becomes an Obsidian task line instead of styled text.
+    var taskKeywords: [String] = []
     /// Called when the picker opens with a styled default, so the writing model can start loading early.
     var onPrepareRewrite: ((Style) -> Void)?
 
@@ -399,7 +401,13 @@ final class DictationController {
                 var text = transcript
                 var rewriteDuration: Duration?
                 var fallbackNote: String?
-                if !transcript.isEmpty, !style.isRaw {
+                // "New task: call the landlord by Friday" → "- [ ] Call the landlord by Friday 📅 …", as said.
+                let task = TaskKeywords.remainder(of: transcript, keywords: taskKeywords)
+                if let task {
+                    text = TaskLine.make(task, said: recorded, language: language.code)
+                    Log.dictation.notice("Task keyword: pasting a task line")
+                }
+                if task == nil, !transcript.isEmpty, !style.isRaw {
                     indicator.rewriteProgress = 0
                     indicator.show(.rewriting(style.displayName))
                     let indicator = self.indicator

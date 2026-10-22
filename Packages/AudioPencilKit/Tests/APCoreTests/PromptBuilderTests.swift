@@ -54,7 +54,7 @@ struct PromptBuilderTests {
         tidyWithActions.extractActionItems = true
         let tidy = PromptBuilder.prompt(for: tidyWithActions, transcript: transcript, context: .longForm)
         #expect(tidy.input == fenced)
-        #expect(tidy.instructions.contains("\"Action items\" list of what the speaker committed to, if anything."))
+        #expect(tidy.instructions.contains("\"Action items\" list of what the speaker committed to, if anything, keeping any deadline or start date said."))
     }
 
     @Test func transcriptIsFencedAndInjectionGuarded() {

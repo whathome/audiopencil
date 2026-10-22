@@ -61,6 +61,7 @@ extension WritingHost {
         style: Style,
         language: SpokenLanguage,
         speakerLabel: String? = nil,
+        said: Date = Date(),
         status: @escaping @MainActor (String) -> Void
     ) async -> ProcessedLongForm {
         let fallback = ProcessedLongForm(body: transcript, title: nil, knownTags: [], newTags: [])
@@ -110,6 +111,10 @@ extension WritingHost {
                     body = parts.joined(separator: "\n\n")
                 }
                 if body.isEmpty { body = transcript }
+                // Action items as Obsidian tasks, with the dates that were said ("by Friday" → 📅).
+                if style.extractActionItems, body != transcript {
+                    body = ActionItems.asTasks(body, said: said, language: language.code)
+                }
             }
 
             status(String(localized: "Suggesting a title and tags…"))

@@ -49,13 +49,13 @@ public enum PromptBuilder {
         let longForm = context != .quick
         let sectioned = longForm && style.extractActionItems && style.intensity == .heavy
         if sectioned, speakerLabel != nil {
-            rules.append("End with an \"Action items\" list, each naming who will do it.")
+            rules.append("End with an \"Action items\" list, each naming who will do it and keeping any deadline or start date said.")
         } else if sectioned {
-            rules.append("End with an \"Action items\" list of what I committed to.")
+            rules.append("End with an \"Action items\" list of what I committed to, keeping any deadline or start date said.")
         } else if longForm, style.extractActionItems, speakerLabel != nil {
-            rules.append("End with an \"Action items\" list of what each speaker committed to, if anything.")
+            rules.append("End with an \"Action items\" list of what each speaker committed to, if anything, keeping any deadline or start date said.")
         } else if longForm, style.extractActionItems {
-            rules.append("End with an \"Action items\" list of what the speaker committed to, if anything.")
+            rules.append("End with an \"Action items\" list of what the speaker committed to, if anything, keeping any deadline or start date said.")
         } else {
             rules.append("No action items list.")
         }

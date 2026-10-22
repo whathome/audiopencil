@@ -95,7 +95,7 @@ final class NoteMaker {
             }
             let label = SpeakerTranscript.label
             let transcript = labelled?.text(label: label) ?? capture.transcript
-            let result = await app.processLongForm(transcript: transcript, style: capture.style, language: capture.language, speakerLabel: labelled == nil ? nil : label) { [weak self] status in
+            let result = await app.processLongForm(transcript: transcript, style: capture.style, language: capture.language, speakerLabel: labelled == nil ? nil : label, said: capture.recorded) { [weak self] status in
                 self?.processing = status
             }
             // Suggested tags are used as they are; new ones join the vault's tag list.

@@ -153,6 +153,7 @@ extension ConfigSync {
                     case "vocabulary": repaired.vocabulary = partial.vocabulary
                     case "vocabulary_by_language": repaired.languageVocabulary = partial.languageVocabulary
                     case "tags": repaired.tags = partial.tags
+                    case "task_keywords": repaired.taskKeywords = partial.taskKeywords
                     case "styles": repaired.styles = partial.styles
                     case "writing_samples": repaired.writingSamples = partial.writingSamples
                     case "devices": repaired.devices = partial.devices

@@ -3044,6 +3044,22 @@
         }
       }
     },
+    "Find action items": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detectar tareas pendientes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repérer les actions à mener"
+          }
+        }
+      }
+    },
     "Finish setup": {
       "localizations": {
         "es": {
@@ -4676,6 +4692,22 @@
         }
       }
     },
+    "Notes end with what was committed to, as Obsidian tasks (- [ ]) with due and start dates heard in the recording, in the Tasks plugin's format.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notas terminan con los compromisos adquiridos, como tareas de Obsidian (- [ ]) con las fechas de vencimiento y de inicio oídas en la grabación, en el formato del plugin Tasks."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notes se terminent par les engagements pris, sous forme de tâches Obsidian (- [ ]) avec les dates d’échéance et de début entendues dans l’enregistrement, au format du plugin Tasks."
+          }
+        }
+      }
+    },
     "Notes folder": {
       "localizations": {
         "es": {
@@ -5040,6 +5072,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un nom, un lieu ou un terme par ligne, utilisés dans toutes les langues. Whisper s’en sert pour l’orthographe."
+          }
+        }
+      }
+    },
+    "One phrase per line. A dictation that starts with one is pasted as an Obsidian task: \"New task: call the landlord by Friday\" becomes \"- [ ] Call the landlord by Friday 📅 date\", with due and start dates in the Tasks plugin's format. Shared with your other devices.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una frase por línea. Un dictado que empieza por una de ellas se pega como tarea de Obsidian: «New task: call the landlord by Friday» se convierte en «- [ ] Call the landlord by Friday 📅 fecha», con las fechas de vencimiento y de inicio en el formato del plugin Tasks. Compartido con tus otros dispositivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une expression par ligne. Une dictée qui commence par l’une d’elles est collée comme tâche Obsidian : « New task: call the landlord by Friday » devient « - [ ] Call the landlord by Friday 📅 date », avec les dates d’échéance et de début au format du plugin Tasks. Partagé avec vos autres appareils."
           }
         }
       }
@@ -7588,6 +7636,22 @@
         }
       }
     },
+    "Task keywords": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palabras clave de tarea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mots-clés de tâche"
+          }
+        }
+      }
+    },
     "The board file has a mistake, so it's been left alone.": {
       "localizations": {
         "es": {
@@ -8688,22 +8752,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quelles langues parlez-vous ?"
-          }
-        }
-      }
-    },
-    "Whisper %@": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Whisper %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Whisper %@"
           }
         }
       }

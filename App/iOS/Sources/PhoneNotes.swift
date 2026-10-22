@@ -135,6 +135,26 @@ final class PhoneNotes {
 
     /// True once the note is filed; false if writing was stopped part-way.
     private func process(_ item: QueuedRecording) async -> Bool {
+        // "New task: book the dentist" → a one-line task note, as said (no writing model needed).
+        if item.meeting != true, let task = TaskKeywords.remainder(of: item.transcript, keywords: app.taskKeywords) {
+            let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
+            let note = Note(
+                id: item.id,
+                title: NoteRenderer.fallbackTitle(from: task),
+                styleID: style.id,
+                status: .needsReview,
+                recorded: item.recorded,
+                duration: item.duration,
+                device: "iphone",
+                mode: .quick,
+                folder: folder(for: style),
+                language: item.language,
+                body: TaskLine.make(task, said: item.recorded, language: item.language)
+            )
+            processing = String(localized: "Filing the note…")
+            await file(note, audio: item.audioFile.map { folder.appending(path: $0) })
+            return true
+        }
         let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
         let language = SpokenLanguage(code: item.language)
         let waiting = queue.count - 1
@@ -146,7 +166,7 @@ final class PhoneNotes {
         }
         let label = SpeakerTranscript.label
         let transcript = labelled?.text(label: label) ?? item.transcript
-        let result = await app.processLongForm(transcript: transcript, style: style, language: language, speakerLabel: labelled == nil ? nil : label) { [weak self] status in
+        let result = await app.processLongForm(transcript: transcript, style: style, language: language, speakerLabel: labelled == nil ? nil : label, said: item.recorded) { [weak self] status in
             self?.processing = waiting > 0 ? String(localized: "\(status) (\(waiting) more waiting)") : status
         }
         // Writing stops when the app leaves the screen, and then returns the plain transcript: don't file that.

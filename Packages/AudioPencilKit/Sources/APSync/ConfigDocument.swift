@@ -104,6 +104,8 @@ public enum ConfigDocument {
             }
         }
         out += list("tags", config.tags)
+        out += "# Dictations that start with one of these become an Obsidian task (- [ ]).\n"
+        out += list("task_keywords", config.taskKeywords)
         out += "expire_regular_audio_after_a_year: \(config.expireRegularAudio)\n"
         if config.styles.isEmpty {
             out += "styles: []\n"

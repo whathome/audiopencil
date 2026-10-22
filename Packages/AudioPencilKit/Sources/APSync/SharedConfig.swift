@@ -9,6 +9,7 @@ public struct SharedConfig: Codable, Equatable, Sendable {
         case writingSamples = "writing_samples"
         case expireRegularAudio = "expire_regular_audio_after_a_year"
         case languageVocabulary = "vocabulary_by_language"
+        case taskKeywords = "task_keywords"
     }
 
     public var version: Int = 1
@@ -17,6 +18,8 @@ public struct SharedConfig: Codable, Equatable, Sendable {
     public var languageVocabulary: [String: [String]] = [:]
     /// Master tag list (used from milestone 5).
     public var tags: [String] = []
+    /// Dictations starting with one of these become an Obsidian task ("new task …" → "- [ ] …").
+    public var taskKeywords: [String] = TaskKeywords.defaults
     public var styles: [ConfigStyle] = []
     /// The user's writing, for the "Like me" style.
     public var writingSamples: [WritingSample] = []
@@ -33,6 +36,7 @@ public struct SharedConfig: Codable, Equatable, Sendable {
         vocabulary = try c.decodeIfPresent([String].self, forKey: .vocabulary) ?? []
         languageVocabulary = try c.decodeIfPresent([String: [String]].self, forKey: .languageVocabulary) ?? [:]
         tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
+        taskKeywords = try c.decodeIfPresent([String].self, forKey: .taskKeywords) ?? TaskKeywords.defaults
         styles = try c.decodeIfPresent([ConfigStyle].self, forKey: .styles) ?? []
         writingSamples = try c.decodeIfPresent([WritingSample].self, forKey: .writingSamples) ?? []
         expireRegularAudio = try c.decodeIfPresent(Bool.self, forKey: .expireRegularAudio) ?? true

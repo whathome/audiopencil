@@ -15,6 +15,7 @@ public enum ConfigMerger {
             (code, mergeList(base: base.map { $0.languageVocabulary[code] ?? [] }, local: local.languageVocabulary[code] ?? [], remote: remote.languageVocabulary[code] ?? []))
         }).filter { !$0.value.isEmpty }
         merged.tags = mergeList(base: base?.tags, local: local.tags, remote: remote.tags)
+        merged.taskKeywords = mergeList(base: base?.taskKeywords, local: local.taskKeywords, remote: remote.taskKeywords)
         merged.styles = mergeStyles(base: base?.styles, local: local.styles, remote: remote.styles)
         if let base, local.expireRegularAudio != base.expireRegularAudio, remote.expireRegularAudio == base.expireRegularAudio {
             merged.expireRegularAudio = local.expireRegularAudio // changed here only
