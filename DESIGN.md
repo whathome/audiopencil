@@ -266,7 +266,8 @@ These are the system controls inside grouped forms: switches, pop-up pickers, st
 - **Grouping:** two groups (work pages, then Vault and Settings) separated by 14 pt.
 - **Badges:** a count capsule for pending reviews, "Set up" for an unconfigured vault, an orange exclamation for missing permissions.
 - **Rail mode:** 40 × 34 pt icon targets with an 8 pt dot for attention; every rail item has a VoiceOver label and a tooltip.
-- **Shortcuts:** ⌘1–⌘6 follow the sidebar order.
+- **Shortcuts:** ⌘1–⌘7 follow the sidebar order: Dictation, Meetings, Styles, My writing, Notes, Storage, Settings.
+- **Meetings:** a task-focused recording and review page, not a second library. Setup uses native fields and pickers; recording leads with source names, separate meters and Pause/Stop. Review uses a segmented Summary / Actions / Transcript control, serif written content and timestamped speaker turns. A recording badge appears in the sidebar and its collapsed rail.
 
 ### Keycap (signature)
 How the app teaches its hotkeys. A rounded label (SF Rounded, callout medium) on the window ground, with a 6 pt radius, a separator hairline and a 1 pt bottom edge. It's at least 30 × 24 pt and never wraps. Gestures pair keycaps with a title and a one-line detail.

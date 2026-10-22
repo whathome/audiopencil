@@ -31,12 +31,14 @@ public enum AudioRecorderError: LocalizedError {
     case noInputDevice
     case unsupportedFormat(String)
     case deviceSelectionFailed(Int32)
+    case storageTooSlow
 
     public var errorDescription: String? {
         switch self {
         case .noInputDevice: String(localized: "No microphone is available.", bundle: .module)
         case .unsupportedFormat(let format): String(localized: "The microphone format isn't supported (\(format)).", bundle: .module)
         case .deviceSelectionFailed(let status): String(localized: "Couldn't select the microphone (Core Audio error \(status)).", bundle: .module)
+        case .storageTooSlow: String(localized: "Storage couldn't keep up with the recording. Audio already committed to disk is saved.", bundle: .module)
         }
     }
 }
@@ -67,6 +69,8 @@ public final class AudioRecorder: @unchecked Sendable {
         var capturing = false
         var muteSamples = 0
         var onLevel: (@Sendable (Float) -> Void)?
+        var onSamples: (@Sendable ([Float], Double) -> Void)?
+        var keepsSamples = true
     }
     private let tapState = OSAllocatedUnfairLock(initialState: TapState())
 
@@ -85,14 +89,16 @@ public final class AudioRecorder: @unchecked Sendable {
     public func beginRecording(
         deviceID: UInt32?,
         onLevel: @escaping @Sendable (Float) -> Void,
-        onInterruption: @escaping @Sendable () -> Void
+        onInterruption: @escaping @Sendable () -> Void,
+        keepsSamples: Bool = true,
+        onSamples: (@Sendable ([Float], Double) -> Void)? = nil
     ) async throws {
         try await onQueue {
             try self.ensureRunning(deviceID: deviceID)
             self.onInterruption = onInterruption
             self.samples.removeAll()
             self.tapState.withLock {
-                $0 = TapState(capturing: true, muteSamples: 0, onLevel: onLevel)
+                $0 = TapState(capturing: true, muteSamples: 0, onLevel: onLevel, onSamples: onSamples, keepsSamples: keepsSamples)
             }
         }
     }
@@ -201,18 +207,19 @@ public final class AudioRecorder: @unchecked Sendable {
         let resampler = try Resampler(from: inputFormat)
         let store = samples
         let tapState = self.tapState
-        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { buffer, _ in
+        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { buffer, time in
             var chunk = resampler.convert(buffer)
             let count = chunk.count
             guard count > 0 else { return }
-            let (capturing, mute, onLevel) = tapState.withLock { state in
+            let (capturing, mute, onLevel, onSamples, keepsSamples) = tapState.withLock { state in
                 let mute = min(state.muteSamples, count)
                 state.muteSamples -= mute
-                return (state.capturing, mute, state.onLevel)
+                return (state.capturing, mute, state.onLevel, state.onSamples, state.keepsSamples)
             }
             guard capturing else { return } // warmed up, not recording yet
             for index in 0..<mute { chunk[index] = 0 }
-            store.append(chunk)
+            if keepsSamples { store.append(chunk) }
+            onSamples?(chunk, AVAudioTime.seconds(forHostTime: time.hostTime))
             onLevel?(Self.level(of: chunk))
         }
         Log.audio.info("Capturing input at \(inputFormat.sampleRate, privacy: .public) Hz, \(inputFormat.channelCount, privacy: .public) ch")

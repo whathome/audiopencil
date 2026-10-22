@@ -17,6 +17,9 @@ final class NoteMaker {
     private(set) var recent: [RecentNote] = []
     /// What long-form processing is doing right now, if anything.
     private(set) var processing: String?
+    var onOpenMeeting: ((UUID) -> Void)? {
+        didSet { notifications.onOpenMeeting = onOpenMeeting }
+    }
 
     @ObservationIgnored private unowned let app: AppModel
     @ObservationIgnored private let folder: URL
@@ -222,12 +225,17 @@ final class NoteMaker {
 /// Shows banners while the app is active and opens the review when one is clicked.
 private final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     var onOpen: ((String) -> Void)?
+    var onOpenMeeting: ((UUID) -> Void)?
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound]
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        if let raw = response.notification.request.content.userInfo["meetingID"] as? String, let id = UUID(uuidString: raw) {
+            await MainActor.run { self.onOpenMeeting?(id) }
+            return
+        }
         guard let path = response.notification.request.content.userInfo["path"] as? String else { return }
         await MainActor.run { self.onOpen?(path) }
     }

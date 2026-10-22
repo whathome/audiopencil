@@ -43,8 +43,16 @@ let package = Package(
         // Pure logic: settings, gesture detection, diagnostics. No platform frameworks beyond Foundation.
         .target(name: "APCore", resources: [.process("Resources")], swiftSettings: concurrency),
 
+        .target(
+            name: "CSpeexDSP",
+            exclude: ["COPYING"],
+            sources: ["mdf.c", "fftwrap.c", "kiss_fft.c", "kiss_fftr.c"],
+            publicHeadersPath: "include",
+            cSettings: [.define("FLOATING_POINT"), .define("USE_KISS_FFT"), .define("EXPORT", to: "")]
+        ),
+
         // Microphone capture (16 kHz mono), levels, audio cues.
-        .target(name: "APAudio", dependencies: ["APCore"], resources: [.process("Resources")], swiftSettings: concurrency),
+        .target(name: "APAudio", dependencies: ["APCore", "CSpeexDSP"], resources: [.process("Resources")], swiftSettings: concurrency),
 
         // Model residency (one large model at a time), catalogue, on-disk locations.
         .target(name: "APModels", dependencies: ["APCore"], resources: [.process("Resources")], swiftSettings: concurrency),

@@ -1,12 +1,13 @@
 import SwiftUI
 
 enum Page: String, CaseIterable, Identifiable, Hashable {
-    case dictation, styles, writing, notes, vault, settings
+    case dictation, meetings, styles, writing, notes, vault, settings
     var id: Self { self }
 
     var title: LocalizedStringResource {
         switch self {
         case .dictation: "Dictation"
+        case .meetings: "Meetings"
         case .styles: "Styles"
         case .writing: "My writing"
         case .notes: "Notes"
@@ -18,6 +19,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .dictation: "keyboard"
+        case .meetings: "person.2.wave.2"
         case .styles: "paintbrush.pointed"
         case .writing: "text.quote"
         case .notes: "book.closed"
@@ -69,12 +71,13 @@ struct MainWindow: View {
     @ViewBuilder
     private var detail: some View {
         switch app.page {
-        case .dictation: DictationPage(app: app)
-        case .styles: StylesPage(app: app)
-        case .writing: WritingPage(app: app)
+        case .dictation: DictationPage(app: app).disabled(app.meetings.isProcessing)
+        case .meetings: MeetingsPage(app: app, meetings: app.meetings)
+        case .styles: StylesPage(app: app).disabled(app.meetings.isProcessing)
+        case .writing: WritingPage(app: app).disabled(app.meetings.isProcessing)
         case .notes: NotesPage(app: app, notes: app.notes)
         case .vault: VaultPage(vault: app.vault, sync: app.sync)
-        case .settings: SettingsView(app: app, embedded: true)
+        case .settings: SettingsView(app: app, embedded: true).disabled(app.meetings.isProcessing)
         }
     }
 }
@@ -96,7 +99,7 @@ private struct Sidebar: View {
     @Bindable var app: AppModel
     let rail: Bool
 
-    private let mainPages: [Page] = [.dictation, .styles, .writing, .notes]
+    private let mainPages: [Page] = [.dictation, .meetings, .styles, .writing, .notes]
     private let setupPages: [Page] = [.vault, .settings]
 
     var body: some View {
@@ -184,6 +187,7 @@ private struct Sidebar: View {
     /// What the badge or rail dot says, in words, for VoiceOver.
     private func attentionDescription(_ page: Page) -> LocalizedStringResource? {
         switch page {
+        case .meetings where app.meetings.ownsCapture: app.meetings.capture == .paused ? "Meeting paused" : "Meeting recording"
         case .vault where !app.vault.settings.isConfigured: "Not set up"
         case .settings where app.needsSetup: "Permissions need attention"
         default: nil
@@ -192,7 +196,9 @@ private struct Sidebar: View {
 
     @ViewBuilder
     private func badge(_ page: Page) -> some View {
-        if page == .vault, !app.vault.settings.isConfigured {
+        if page == .meetings, app.meetings.ownsCapture {
+            Text(app.meetings.capture == .paused ? "Paused" : "Recording").font(.caption2.weight(.medium)).foregroundStyle(selectedColor(page))
+        } else if page == .vault, !app.vault.settings.isConfigured {
             Text("Set up").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
         } else if page == .settings, app.needsSetup {
             Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
@@ -204,11 +210,15 @@ private struct Sidebar: View {
     private func railBadge(_ page: Page) -> some View {
         let needsAttention = (page == .vault && !app.vault.settings.isConfigured)
             || (page == .settings && app.needsSetup)
+            || (page == .meetings && app.meetings.ownsCapture)
         if needsAttention {
             Circle()
                 .fill(page == .settings ? Color.orange : Color.pencil)
                 .frame(width: 8, height: 8)
                 .offset(x: -3, y: 3)
         }
+
     }
+
+    private func selectedColor(_ page: Page) -> Color { app.page == page ? .white : .secondary }
 }

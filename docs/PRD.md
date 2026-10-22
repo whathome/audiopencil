@@ -16,7 +16,7 @@ Audio Pencil is a private, fully on-device AudioPen equivalent for Mac and iPhon
 **Non-goals**
 
 - Cloud transcription or cloud LLMs of any kind.
-- An in-app library, search, or review screens beyond a minimal recent list.
+- An in-app library or vault search. The macOS Meetings workspace is a bounded exception for recording and reviewing recent meetings, not a general note editor.
 - AudioPen extras: combining notes into one summary, importing audio files, rewriting old notes in a new style.
 - Mixing languages within one recording (each recording has one language; see Languages).
 - App lock (passcode or Face ID).
@@ -86,7 +86,7 @@ The iPhone is the long-form, walk-and-talk recorder, usually with the phone's ow
 **Meeting mode**
 
 - Chosen deliberately before (or during) a recording; enables on-device speaker detection (Speaker 1, Speaker 2…). Default mode assumes a single speaker, and every recording starts in it.
-- Phone sits on the table and picks up the room, including video-call audio from speakers. Also on the Mac (Oct 2026): the recording indicator's Paste / Note / Meeting toggle and "Record a Meeting" in the menu bar; the Mac's microphone hears the room.
+- Phone sits on the table and picks up the room, including video-call audio from speakers. On the Mac, **Meetings** in the sidebar provides in-person capture and selected-app call audio alongside the microphone, with headphone support, disk-backed recovery and Summary / Actions / Transcript review. The dictation pill's older microphone-only meeting toggle remains available. See [macOS meeting specification](meeting-mode-macos.md).
 - The number of speakers is worked out, or chosen (2–6) when known, which helps accuracy.
 - Implemented with Argmax SpeakerKit (pyannote, about 22 MB, downloaded on first use) and a second Whisper pass with word timings; the note keeps the labelled transcript and notes `speakers:` in its frontmatter.
 
@@ -229,6 +229,6 @@ Obsidian is the library and review surface: the app writes consistent frontmatte
 
 **Future work**
 
-- System-audio capture on the Mac for video calls (meeting mode there uses the microphone today).
+- Per-tab capture isolation and hardware-verified speakerphone separation for Mac video calls. The Debug preview includes reference-based echo reduction; real-room/device validation remains outstanding.
 - Storage providers beyond Nextcloud WebDAV.
 - View of audio about to roll off the one-year archive.

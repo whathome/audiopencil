@@ -44,6 +44,7 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         NSMicrophoneUsageDescription: Audio Pencil listens while you dictate and transcribes on this Mac. Audio never leaves the device.
+        NSAudioCaptureUsageDescription: Audio Pencil records audio from the call app you select so meeting notes include the other participants. Processing stays on this Mac.
         NSHumanReadableCopyright: ""
         # Plain-HTTP Nextcloud on the local network (LAN IPs, .local names); public servers still need HTTPS.
         NSAppTransportSecurity:

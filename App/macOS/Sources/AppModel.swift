@@ -45,6 +45,7 @@ final class AppModel: WritingHost {
     let vault = VaultController()
     @ObservationIgnored private(set) var sync: SyncController!
     @ObservationIgnored private(set) var notes: NoteMaker!
+    @ObservationIgnored private(set) var meetings: MeetingController!
     @ObservationIgnored private(set) var advisor: ModelAdvisor!
     /// The user's writing for "Like me". Shared through the vault settings file.
     var writingSamples: [WritingSample] = AppModel.loadWritingSamples() {
@@ -187,11 +188,22 @@ final class AppModel: WritingHost {
             Array(Set(styles.map { notes.folder(for: $0) } + [NoteMaker.defaultFolder, StarterKit.samplesFolder]))
         }
         sync.expireRegularAudio = { [unowned self] in expireRegularAudio }
-        sync.filedNotePaths = { [unowned self] in notes.recent.map(\.path) }
-        sync.filedNotesGone = { [unowned self] paths in notes.forget(paths) }
+        sync.filedNotePaths = { [unowned self] in notes.recent.map(\.path) + (meetings?.sessions.compactMap(\.notePath) ?? []) }
+        sync.filedNotesGone = { [unowned self] paths in
+            notes.forget(paths)
+            meetings?.forget(paths)
+        }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         notes = NoteMaker(app: self)
+        meetings = MeetingController(app: self)
+        indicator.onOpenMeeting = { [weak self] in self?.openMeetings() }
+        indicator.onPauseMeeting = { [weak self] in Task { await self?.meetings.togglePause() } }
+        indicator.onStopMeeting = { [weak self] in Task { await self?.meetings.stop() } }
+        notes.onOpenMeeting = { [weak self] id in
+            self?.meetings.selectedID = id
+            self?.openMeetings()
+        }
         advisor = ModelAdvisor(app: self)
         dictation.onLongForm = { [unowned self] capture in notes.makeLongFormNote(capture) }
         dictation.onPushToTalkText = { [unowned self] text, destination, said in addPushToTalkLine(text, to: destination, said: said) }
@@ -275,6 +287,15 @@ final class AppModel: WritingHost {
                     Self.debugPhononIgnoresVocabulary = command == "phonon:force"
                     phononTrial = command != "phonon:off"
                 case "snapshot": snapshotMainWindow()
+                case "meeting:fixture":
+                    page = .meetings
+                    Task { await meetings.importDebugFixture() }
+                case "meeting:remove-fixtures": meetings.removeDebugFixtures()
+                case "meeting:video-call": meetings.kind = .videoCall
+                case "meeting:in-person": meetings.kind = .inPerson
+                case "meeting:report":
+                    let meeting = meetings.selected
+                    Log.dictation.notice("Meeting: capture \(String(describing: self.meetings.capture), privacy: .public), stage \(meeting?.stage.rawValue ?? "none", privacy: .public), turns \(meeting?.turns.count ?? 0), summary \(meeting?.summary.count ?? 0) characters, error \(self.meetings.error ?? "none", privacy: .public)")
                 case let command where command.hasPrefix("window:width:"):
                     if let width = Double(command.dropFirst("window:width:".count)),
                        let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }) {
@@ -488,6 +509,7 @@ final class AppModel: WritingHost {
     /// Loads the current speech model; `old` (a model being switched away from) is unloaded first.
     /// `modelTask` is replaced right away, so anything waiting for a model waits for this one.
     func prepareModel(unloading old: (any DictationEngine)? = nil) {
+        guard meetings?.isProcessing != true else { return }
         let engine = speech
         let vocabulary = settings.vocabulary(for: activeLanguage)
         let language = activeLanguage
@@ -538,6 +560,12 @@ final class AppModel: WritingHost {
 
     /// Returns true to swallow the key event.
     private func handle(_ event: HotkeyMonitor.KeyEvent, at time: TimeInterval) -> Bool {
+        if meetings.ownsCapture || meetings.isProcessing {
+            holdTask?.cancel()
+            holdRecording = false
+            detector.reset()
+            return false
+        }
         // The style menu is open: Return, Esc and number keys belong to it.
         if indicator.isMenuOpen {
             switch event {
@@ -684,9 +712,15 @@ final class AppModel: WritingHost {
 
     /// Menu bar "Record a Meeting": a recording that becomes a meeting note, speakers labelled.
     func startMeeting() {
-        guard dictation.phase == .idle else { return }
-        startDictation()
-        dictation.setDelivery(.meeting)
+        openMeetings()
+    }
+
+    func openMeetings() {
+        page = .meetings
+        NSApp.activate()
+        if let window = NSApp.windows.first(where: { $0.title == "Audio Pencil" }) {
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 
     /// The Whisper model in use, loaded (speaker labels need its word timings).
@@ -704,7 +738,8 @@ final class AppModel: WritingHost {
 
     /// `raw`: push-to-talk. Otherwise the style remembered for the frontmost app.
     private func startDictation(dryRun: Bool = false, raw: Bool = false) {
-        guard dictation.phase == .idle else { return }
+        guard dictation.phase == .idle, !meetings.ownsCapture, !meetings.isProcessing else { return }
+        meetings.endPreview()
         #if DEBUG
         dictation.dryRun = dryRun || Date() < debugDryRunUntil
         #else

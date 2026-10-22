@@ -50,6 +50,11 @@ final class IndicatorModel {
     private(set) var levels = [Float](repeating: 0, count: barCount)
     private(set) var noAudio = false
     var liveText = ""
+    var meetingStatus: String?
+    var meetingPaused = false
+    @ObservationIgnored var onOpenMeeting: (() -> Void)?
+    @ObservationIgnored var onPauseMeeting: (() -> Void)?
+    @ObservationIgnored var onStopMeeting: (() -> Void)?
     var showLiveText = false
     /// Style of the current recording, shown as a clickable chip; nil when not recording.
     var currentStyle: Style?
@@ -193,7 +198,9 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
         guard let model else { return super.mouseDown(with: event) }
         let local = convert(event.locationInWindow, from: nil)
         let point = isFlipped ? local : CGPoint(x: local.x, y: bounds.height - local.y)
-        if case .error = model.mode {
+        if model.meetingStatus != nil {
+            model.showStyleMenu?()
+        } else if case .error = model.mode {
             let action = model.errorAction
             model.hide()
             action?()
@@ -307,7 +314,8 @@ final class IndicatorPanelController: NSObject {
 
     /// What a click does something to in the current state (see IndicatorHostingView.mouseDown).
     private var clickableFrames: [CGRect] {
-        switch model.mode {
+        if model.meetingStatus != nil { return [model.pillFrame] }
+        return switch model.mode {
         case .listening:
             // Frames linger after their control goes, so only the ones on show now.
             ([model.isPushToTalk ? (model.pushChoices.isEmpty ? .zero : model.destinationFrame) : model.deliveryFrame, model.chipFrame]
@@ -347,6 +355,24 @@ final class IndicatorPanelController: NSObject {
         guard let content = panel.contentView, openMenu == nil else { return }
         let menu = NSMenu()
         menu.autoenablesItems = false
+        if model.meetingStatus != nil {
+            for (action, title) in [
+                ("open", String(localized: "Open Meeting")),
+                ("pause", model.meetingPaused ? String(localized: "Resume Meeting") : String(localized: "Pause Meeting")),
+                ("stop", String(localized: "Stop Meeting"))
+            ] {
+                let item = NSMenuItem(title: title, action: #selector(meetingAction(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = action
+                menu.addItem(item)
+            }
+            openMenu = menu
+            model.isMenuOpen = true
+            menu.popUp(positioning: nil, at: NSPoint(x: model.pillFrame.minX, y: content.bounds.height - model.pillFrame.minY + 4), in: content)
+            model.isMenuOpen = false
+            openMenu = nil
+            return
+        }
         let header = NSMenuItem(title: String(localized: "Write it as"), action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
@@ -436,6 +462,15 @@ final class IndicatorPanelController: NSObject {
     @objc private func chooseDelivery(_ item: NSMenuItem) {
         guard let raw = item.representedObject as? String, let delivery = Delivery(rawValue: raw) else { return }
         model.onSetDelivery?(delivery)
+    }
+
+    @objc private func meetingAction(_ item: NSMenuItem) {
+        switch item.representedObject as? String {
+        case "open": model.onOpenMeeting?()
+        case "pause": model.onPauseMeeting?()
+        case "stop": model.onStopMeeting?()
+        default: break
+        }
     }
 
     @objc private func toggleDailyNote(_ item: NSMenuItem) {
