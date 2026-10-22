@@ -57,6 +57,10 @@ final class SyncController {
     /// Folders notes land in (scanned by the retention pass).
     @ObservationIgnored var retentionFolders: (() -> [String])?
     @ObservationIgnored var expireRegularAudio: (() -> Bool)?
+    /// Vault paths of the notes the app lists as filed; `filedNotesGone` gets the ones no longer there
+    /// (deleted or moved in Obsidian, or on the server).
+    @ObservationIgnored var filedNotePaths: (() -> [String])?
+    @ObservationIgnored var filedNotesGone: (([String]) -> Void)?
 
     @ObservationIgnored private let vault: VaultController
     @ObservationIgnored private let configSync: ConfigSync
@@ -189,6 +193,7 @@ final class SyncController {
             dailyNotesSetup = vault.layout == .obsidian ? await DailyNotesSetup.load(from: location.provider, vaultPath: location.path) : nil
             dailyNotes = dailyNotesSetup == nil ? .off : .on
             await appends.flush(to: location.provider, vaultPath: location.path, daily: dailyNotesSetup)
+            await checkFiledNotes(provider: location.provider, vaultPath: location.path)
             if Date().timeIntervalSince(lastRetentionRun) > 300, let folders = retentionFolders?() {
                 lastRetentionRun = Date()
                 if vault.layout == .obsidian { await checkBoard(provider: location.provider, vaultPath: location.path) }
@@ -270,6 +275,30 @@ final class SyncController {
 
     /// Keep forever or Delete from the app (the board's Retention view does the same in Obsidian): sets the
     /// note's `retention`. A deleted note goes, with its audio, at the retention check run straight after.
+    /// Lists each folder the filed notes are in (one request per folder) and reports the notes missing
+    /// from it. Notes still waiting to upload aren't checked, and a folder that can't be listed is skipped
+    /// unless it's gone altogether.
+    private func checkFiledNotes(provider: any StorageProvider, vaultPath: String) async {
+        guard let paths = filedNotePaths?(), !paths.isEmpty, let filedNotesGone else { return }
+        let uploading = Set(await outbox.pending.map(\.path))
+        let byFolder = Dictionary(grouping: paths.filter { !uploading.contains($0) }, by: StoragePath.parent(of:))
+        var gone: [String] = []
+        for (folder, notes) in byFolder {
+            do {
+                let names = Set(try await provider.list(StoragePath.join(vaultPath, folder)).map(\.name))
+                gone += notes.filter { !names.contains($0.split(separator: "/").last.map(String.init) ?? "") }
+            } catch StorageError.notFound {
+                gone += notes
+            } catch {
+                continue
+            }
+        }
+        if !gone.isEmpty {
+            Log.models.notice("\(gone.count) filed notes are no longer in the vault")
+            filedNotesGone(gone)
+        }
+    }
+
     func setRetention(_ value: Note.Retention, notePath: String) async -> Bool {
         guard let location = vault.vaultLocation else { return false }
         let path = StoragePath.join(location.path, notePath)

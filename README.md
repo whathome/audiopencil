@@ -155,13 +155,14 @@ The hotkey doesn't work while macOS Secure Input is on: password fields, Termina
 
 The iPhone app (`AudioPencilPhone`, iOS 26) is the walk-and-talk recorder. Every recording becomes a note, filed through the same settings file and upload queue as the Mac.
 
-- **Record:** live transcript as you talk, pause and resume, a language switch, then pick a style (it starts on the last one used).
+- **Record:** live transcript as you talk, pause and resume, a language switch, then pick a style (it starts on the last one used). **Make Note** files it; **Copy to Clipboard** writes it in the same style and only copies it (no note, and the audio isn't kept).
 - **Locked in a pocket:** recording carries on with the phone locked (background audio). A Live Activity on the Lock Screen and in the Dynamic Island shows the clock with Pause, Resume and Stop.
 - **Without opening the app:** the Record a Note control (Control Centre, Lock Screen, Action Button via Settings › Action Button › Controls), and Siri or Shortcuts ("Start recording in Audio Pencil", Stop, Pause, Resume). Recordings stopped this way use the last style.
 - **Feedback:** the Mac's start and stop cues with a haptic; an optional heartbeat tap (one or two taps every 1, 2 or 5 minutes) while the app isn't on screen; a distinct alert and an automatic pause when AirPods or another headset disconnects, or a call interrupts.
 - **Quiet:** with no new words for the chosen time (1–5 minutes, default 5), the recording stops, drops the quiet end, and becomes a note as usual.
 - **Noise:** "Reduce wind and traffic noise" (on by default) uses the iPhone's voice processing on the microphone.
 - **Writing the note:** transcription runs on the Neural Engine and keeps up in the background. The writing model needs the GPU, which iOS only allows while the app is on screen (background GPU needs an entitlement a Personal Team can't have). So notes are written while Audio Pencil is open. Leaving stops the current one and it starts again on return, and a recording stopped from the Lock Screen is saved, with a notification, and written up next time the app opens. Notes → Waiting to be written lists them.
+- **Filed:** Notes › Filed lists the recent notes; in an Obsidian vault a tap opens one in Obsidian (`obsidian://open`, using the storage folder's name as the vault name, so the iPhone's Obsidian vault needs the same name). Each sync checks the vault, and notes deleted or moved there leave the list (the Mac's Recent list too).
 
 Recording settings are on this iPhone only (Settings › Recording); sounds use the synced device section. Siri phrases are English for now.
 

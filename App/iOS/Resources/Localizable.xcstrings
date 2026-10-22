@@ -570,6 +570,38 @@
         }
       }
     },
+    "Copied to the clipboard": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiado en el portapapeles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copié dans le presse-papiers"
+          }
+        }
+      }
+    },
+    "Copy to Clipboard": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar en el portapapeles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier dans le presse-papiers"
+          }
+        }
+      }
+    },
     "Couldn't archive %@: %@": {
       "localizations": {
         "en": {
@@ -1692,6 +1724,22 @@
         }
       }
     },
+    "Open Audio Pencil to write it as %@ and copy it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Audio Pencil para escribirlo como %@ y copiarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Audio Pencil pour l'écrire en %@ et le copier."
+          }
+        }
+      }
+    },
     "Open Audio Pencil to write it up as %@.": {
       "localizations": {
         "es": {
@@ -1704,6 +1752,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrez Audio Pencil pour la rédiger en %@."
+          }
+        }
+      }
+    },
+    "Opens the note in Obsidian.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la nota en Obsidian."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre la note dans Obsidian."
           }
         }
       }
@@ -2810,6 +2874,22 @@
         }
       }
     },
+    "Tap a note to open it in Obsidian, in the vault named %@.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca una nota para abrirla en Obsidian, en la bóveda llamada %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez une note pour l'ouvrir dans Obsidian, dans le coffre nommé %@."
+          }
+        }
+      }
+    },
     "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note.": {
       "localizations": {
         "es": {
@@ -3446,6 +3526,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rédiger les notes dans des styles avec %@"
+          }
+        }
+      }
+    },
+    "Writes it in this style and copies it, without filing a note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo escribe en este estilo y lo copia, sin archivar una nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'écrit dans ce style et le copie, sans classer de note."
           }
         }
       }

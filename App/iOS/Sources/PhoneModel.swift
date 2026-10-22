@@ -121,6 +121,8 @@ final class PhoneModel: WritingHost {
             Array(Set(styles.map { notes.folder(for: $0) } + [NoteFiling.defaultFolder, StarterKit.samplesFolder]))
         }
         sync.expireRegularAudio = { [unowned self] in expireRegularAudio }
+        sync.filedNotePaths = { [unowned self] in notes.recent.map(\.path) }
+        sync.filedNotesGone = { [unowned self] paths in notes.forget(paths) }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         recorder = PhoneRecorder(app: self)

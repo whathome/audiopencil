@@ -207,6 +207,13 @@ final class NoteMaker {
         app.vault.obsidianURL(for: path)
     }
 
+    /// Notes no longer in the vault (deleted or moved there) leave the list.
+    func forget(_ paths: [String]) {
+        let gone = Set(paths)
+        recent.removeAll { gone.contains($0.path) }
+        saveRecent()
+    }
+
     private func saveRecent() {
         if let data = try? JSONEncoder().encode(recent) { try? data.write(to: folder.appending(path: "recent.json"), options: .atomic) }
     }

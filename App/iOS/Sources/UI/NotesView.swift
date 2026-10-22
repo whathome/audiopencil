@@ -36,9 +36,30 @@ struct NotesView: View {
                     }
                 }
                 if !app.notes.recent.isEmpty {
-                    Section("Filed") {
+                    Section {
                         ForEach(app.notes.recent) { note in
-                            NoteRow(title: note.title, detail: "\(note.styleName) · \(note.recorded.formatted(date: .abbreviated, time: .shortened))")
+                            let row = NoteRow(title: note.title, detail: "\(note.styleName) · \(note.recorded.formatted(date: .abbreviated, time: .shortened))")
+                            // In an Obsidian vault, a tap opens the note there.
+                            if app.vault.layout == .obsidian, let url = app.vault.obsidianURL(for: note.path) {
+                                Link(destination: url) {
+                                    HStack {
+                                        row
+                                        Spacer()
+                                        Image(systemName: "arrow.up.forward.app").foregroundStyle(.secondary)
+                                    }
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityHint(Text("Opens the note in Obsidian."))
+                            } else {
+                                row
+                            }
+                        }
+                    } header: {
+                        Text("Filed")
+                    } footer: {
+                        if app.vault.layout == .obsidian, let name = app.vault.vaultName {
+                            Text("Tap a note to open it in Obsidian, in the vault named \(name).")
                         }
                     }
                 }

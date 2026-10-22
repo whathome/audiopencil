@@ -187,6 +187,8 @@ final class AppModel: WritingHost {
             Array(Set(styles.map { notes.folder(for: $0) } + [NoteMaker.defaultFolder, StarterKit.samplesFolder]))
         }
         sync.expireRegularAudio = { [unowned self] in expireRegularAudio }
+        sync.filedNotePaths = { [unowned self] in notes.recent.map(\.path) }
+        sync.filedNotesGone = { [unowned self] paths in notes.forget(paths) }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         notes = NoteMaker(app: self)

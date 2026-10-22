@@ -14,6 +14,8 @@ final class PhoneNotes {
     private(set) var recent: [RecentNote] = []
     /// What processing is doing right now, if anything.
     private(set) var processing: String?
+    /// Shown for a moment after a recording was written and copied instead of filed.
+    private(set) var copied = false
 
     @ObservationIgnored private unowned let app: PhoneModel
     @ObservationIgnored private let folder: URL
@@ -55,6 +57,8 @@ final class PhoneNotes {
         var speakers: Int?
         /// Link the note in that day's daily note (optional: older queue entries don't).
         var dailyNote: Bool?
+        /// Written in the style and put on the clipboard, not filed.
+        var copyOnly: Bool?
     }
 
     /// Recordings waiting to be written up, oldest first.
@@ -82,8 +86,13 @@ final class PhoneNotes {
         enqueue(capture, style: style)
     }
 
+    /// From the style sheet: written the same way, then copied instead of filed.
+    func copy(_ capture: PhoneCapture, style: Style) {
+        enqueue(capture, style: style, copyOnly: true)
+    }
+
     /// Saves the recording (audio and transcript) and writes it up now if the app is open, or later if not.
-    func enqueue(_ capture: PhoneCapture, style: Style) {
+    func enqueue(_ capture: PhoneCapture, style: Style, copyOnly: Bool = false) {
         let id = UUID()
         let audioName = "\(id.uuidString).m4a"
         let audioURL = folder.appending(path: audioName)
@@ -98,7 +107,8 @@ final class PhoneNotes {
             queue.append(QueuedRecording(
                 id: id, transcript: capture.transcript, language: capture.language.code, recorded: capture.recorded,
                 duration: capture.duration, styleID: style.id, audioFile: savedAudio ? audioName : nil,
-                meeting: capture.meeting, speakers: capture.speakers, dailyNote: capture.dailyNote
+                meeting: capture.meeting, speakers: capture.speakers, dailyNote: capture.dailyNote,
+                copyOnly: copyOnly ? true : nil
             ))
             saveQueue()
             processing = nil
@@ -107,7 +117,9 @@ final class PhoneNotes {
             } else {
                 Self.notify(
                     title: String(localized: "Recording saved"),
-                    body: String(localized: "Open Audio Pencil to write it up as \(style.displayName).")
+                    body: copyOnly
+                        ? String(localized: "Open Audio Pencil to write it as \(style.displayName) and copy it.")
+                        : String(localized: "Open Audio Pencil to write it up as \(style.displayName).")
                 )
             }
         }
@@ -153,8 +165,7 @@ final class PhoneNotes {
                 language: item.language,
                 body: TaskLine.make(task, said: item.recorded, language: item.language)
             )
-            processing = String(localized: "Filing the note…")
-            await file(note, audio: item.audioFile.map { folder.appending(path: $0) }, dailyNote: item.dailyNote == true)
+            await finish(note, item: item)
             return true
         }
         let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
@@ -194,9 +205,26 @@ final class PhoneNotes {
             transcript: labelled.map { result.body == transcript ? nil : $0.markdown(label: label) } ?? (keepsTranscript(style) ? item.transcript : nil),
             speakers: labelled?.speakerCount
         )
-        processing = String(localized: "Filing the note…")
-        await file(note, audio: item.audioFile.map { folder.appending(path: $0) }, dailyNote: item.dailyNote == true)
+        await finish(note, item: item)
         return true
+    }
+
+    /// Files the written note, or for a copy puts its text on the clipboard and drops the audio.
+    private func finish(_ note: Note, item: QueuedRecording) async {
+        let audio = item.audioFile.map { folder.appending(path: $0) }
+        guard item.copyOnly == true else {
+            processing = String(localized: "Filing the note…")
+            await file(note, audio: audio, dailyNote: item.dailyNote == true)
+            return
+        }
+        UIPasteboard.general.string = note.body
+        if let audio { try? FileManager.default.removeItem(at: audio) }
+        Log.dictation.notice("Copied a written recording (\(note.body.count) characters)")
+        copied = true
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            copied = false
+        }
     }
 
     /// Who said what in a meeting recording: Whisper again over the whole audio with word timings, and the
@@ -260,6 +288,13 @@ final class PhoneNotes {
     /// Rewritten notes keep the raw transcript under a Transcript heading; tidy and raw ones don't need it.
     private func keepsTranscript(_ style: Style) -> Bool {
         !style.isRaw && style.intensity != .light
+    }
+
+    /// Notes no longer in the vault (deleted or moved there) leave the list.
+    func forget(_ paths: [String]) {
+        let gone = Set(paths)
+        recent.removeAll { gone.contains($0.path) }
+        saveRecent()
     }
 
     private func saveRecent() {

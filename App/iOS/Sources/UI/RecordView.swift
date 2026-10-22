@@ -45,6 +45,8 @@ struct RecordView: View {
     private var statusLine: some View {
         if let reason = recorder.pauseReason, recorder.phase == .paused {
             StatusRow(symbol: "pause.circle.fill", text: reason, tint: .orange)
+        } else if app.notes.copied {
+            StatusRow(symbol: "doc.on.clipboard", text: String(localized: "Copied to the clipboard"), tint: Color.pencil)
         } else if let processing = app.notes.processing {
             StatusRow(symbol: nil, text: processing)
         } else if let error = recorder.lastError, !recorder.isActive {
@@ -323,8 +325,7 @@ struct StyleSheet: View {
                             .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }
                     Button {
-                        guard let style = app.enabledStyles.first(where: { $0.id == selection }) else { return }
-                        app.lastStyleID = style.id
+                        guard let style = chooseStyle() else { return }
                         app.notes.make(capture, style: style)
                         dismiss()
                     } label: {
@@ -332,6 +333,17 @@ struct StyleSheet: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    // Same writing, but only onto the clipboard: no note is filed.
+                    Button {
+                        guard let style = chooseStyle() else { return }
+                        app.notes.copy(capture, style: style)
+                        dismiss()
+                    } label: {
+                        Label("Copy to Clipboard", systemImage: "doc.on.doc").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .accessibilityHint(Text("Writes it in this style and copies it, without filing a note."))
                 }
                 .padding()
                 .background(.bar)
@@ -344,5 +356,12 @@ struct StyleSheet: View {
         }
         .onAppear { selection = app.lastStyle.id }
         .interactiveDismissDisabled()
+    }
+
+    /// The selected style, remembered as the last one used.
+    private func chooseStyle() -> Style? {
+        guard let style = app.enabledStyles.first(where: { $0.id == selection }) else { return nil }
+        app.lastStyleID = style.id
+        return style
     }
 }
