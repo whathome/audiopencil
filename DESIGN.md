@@ -146,6 +146,10 @@ The system rejects two looks outright. It must not look like a **SaaS dashboard*
 - Flat, tonal layers with hairline edges; nothing in the window casts a shadow.
 - Keycaps teach the hotkeys wherever gestures are explained.
 
+### iPad adaptation
+
+The universal iOS app keeps Pencil Amber, semantic system surfaces and New York for the written word. Native adaptive tabs become a sidebar where the window permits; Notes and Meetings use system list/detail split views, collapsing in compact windows. Recording has a bounded reading measure rather than stretching across the tablet. Forms, segmented review controls and toolbars remain standard SwiftUI controls with Dynamic Type. iPad supports both orientations and window resizing; microphone-only Meetings is distinct from the Mac's selected-app call capture.
+
 ## Colors
 
 The palette is a single warm accent over neutral, appearance-aware system greys, with status colours kept to their system meanings.
@@ -260,6 +264,8 @@ Native and restrained: the macOS button styles, tinted by the accent.
 
 ### Inputs / Fields
 These are the system controls inside grouped forms: switches, pop-up pickers, steppers, sliders with value read-outs in monospaced digits, and the text editor for vocabulary. Fields aren't restyled. A setting's explanation sits under its label as the second line of the control's label. A section's footer is callout size, secondary and left-aligned, so it reads as a note on the rows above rather than another setting.
+
+Settings uses five categories in both the main page and the standalone window: **General** (app behavior and sounds), **Dictation** (hotkeys, push-to-talk timing, delivery, microphones, languages and vocabulary), **Notes** (saving, retention, daily notes, push-to-talk filing and task keywords), **Models**, and **Permissions**. Categories are touch-friendly square buttons with an SF Symbol above the label, sized to the available width. Selection uses an amber outline and a light amber fill with primary-colour text; the Permissions button carries its own attention badge. Common hotkey controls and push-to-talk delay stay visible; backup shortcuts, double-tap timing and mic warm-up sit under **Timing and shortcuts**. Links from Dictation and Notes open their corresponding category, not General.
 
 ### Navigation
 - **Sidebar:** 30 pt rows with an SF Symbol and title. The selected row fills Pencil Amber with white text and icon.

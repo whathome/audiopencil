@@ -3,6 +3,20 @@ import APModels
 import APSummary
 import Foundation
 
+enum RewriteError: LocalizedError {
+    case modelNotDownloaded
+    case lowMemory
+    case languageUnsupported(language: String, model: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .modelNotDownloaded: String(localized: "The writing model isn't downloaded yet")
+        case .lowMemory: String(localized: "Memory is low")
+        case .languageUnsupported(let language, let model): String(localized: "\(model) can't write \(language)")
+        }
+    }
+}
+
 struct ProcessedLongForm {
     var body: String
     var title: String?

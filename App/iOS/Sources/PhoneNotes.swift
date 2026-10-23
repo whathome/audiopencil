@@ -33,11 +33,25 @@ final class PhoneNotes {
     init(app: PhoneModel) {
         self.app = app
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        folder = support.appending(path: "AudioPencil/Pending", directoryHint: .isDirectory)
+        #if DEBUG && targetEnvironment(simulator)
+        let name = ProcessInfo.processInfo.arguments.contains("--ui-testing") ? "Pending-UITests" : "Pending"
+        #else
+        let name = "Pending"
+        #endif
+        folder = support.appending(path: "AudioPencil/\(name)", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         recent = (try? JSONDecoder().decode([RecentNote].self, from: Data(contentsOf: folder.appending(path: "recent.json")))) ?? []
         queue = (try? JSONDecoder().decode([QueuedRecording].self, from: Data(contentsOf: folder.appending(path: "queue.json")))) ?? []
         copiedNotes = (try? JSONDecoder().decode([CopiedNote].self, from: Data(contentsOf: folder.appending(path: "copied.json")))) ?? []
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing"),
+           ProcessInfo.processInfo.arguments.contains("--notes-review-fixture"), copiedNotes.isEmpty {
+            let note = Note(title: "Tablet note fixture", styleID: "raw", status: .needsReview,
+                            recorded: .now, duration: 10, device: "ipad", mode: .longForm,
+                            folder: NoteFiling.defaultFolder, body: "A private tablet note.")
+            copiedNotes = [.init(note: note, styleName: "Raw", dailyNote: false)]
+        }
+        #endif
         fileLeftoverReviews()
         watchAppState()
     }
@@ -139,6 +153,7 @@ final class PhoneNotes {
     /// Writes and files queued recordings one at a time, while the app is open and not recording.
     func processQueue() {
         guard processTask == nil, !queue.isEmpty, !app.recorder.isActive,
+              app.meetings?.ownsCapture != true, app.meetings?.isProcessing != true,
               UIApplication.shared.applicationState == .active
         else { return }
         processTask = Task {
@@ -166,6 +181,8 @@ final class PhoneNotes {
     var waitingReason: String? {
         guard !queue.isEmpty, processTask == nil || app.recorder.isActive else { return nil }
         if app.recorder.isActive { return String(localized: "Paused while you record. Writing carries on when you stop.") }
+        if app.meetings.ownsCapture { return String(localized: "Waiting until the meeting recording stops.") }
+        if app.meetings.isProcessing { return String(localized: "Waiting for meeting processing to finish.") }
         if UIApplication.shared.applicationState != .active { return String(localized: "Written while Audio Pencil is open.") }
         return String(localized: "Not started yet.")
     }
@@ -182,7 +199,7 @@ final class PhoneNotes {
                 status: .needsReview,
                 recorded: item.recorded,
                 duration: item.duration,
-                device: "iphone",
+                device: UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone",
                 mode: .quick,
                 folder: folder(for: style),
                 language: item.language,
@@ -217,7 +234,7 @@ final class PhoneNotes {
             status: .needsReview,
             recorded: item.recorded,
             duration: item.duration,
-            device: "iphone",
+            device: UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone",
             mode: labelled == nil ? .longForm : .meeting,
             tags: result.knownTags + added,
             folder: folder(for: style),

@@ -62,14 +62,16 @@ struct PhoneSetupView: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Audio Pencil").font(.system(.largeTitle, design: .serif).bold())
-                    Text("Walk and talk. Your iPhone writes it up as a note, on the iPhone.")
+                    Text("Talk it through. Your device writes it up as a note, privately.")
                         .font(.title3).foregroundStyle(.secondary)
                 }
                 Point(symbol: "waveform", title: "Transcribed as you talk", detail: "Watch the words arrive. Pause when you need to.")
-                Point(symbol: "lock", title: "Private by design", detail: "Speech recognition and writing happen on this iPhone. What you say isn't sent anywhere.")
+                Point(symbol: "lock", title: "Private by design", detail: "Speech recognition and writing happen on this device. What you say isn't sent anywhere.")
                 Point(symbol: "doc.text", title: "Notes in your own folder", detail: "Each recording becomes a Markdown note with its audio, in Obsidian or any folder, on Nextcloud or iCloud Drive.")
             }
             .padding(24)
+            .frame(maxWidth: 640, alignment: .leading)
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -102,7 +104,7 @@ struct PhoneSetupView: View {
             } header: {
                 Text("Speech")
             } footer: {
-                Text("Each is prepared for this iPhone's chip the first time it's used, which takes a few minutes once.")
+                Text("Each is prepared for this device's chip the first time it's used, which takes a few minutes once.")
             }
             Section {
                 Toggle(isOn: $wantsWriting) {

@@ -58,7 +58,9 @@ The Mac app is a paste-and-forget workflow accelerator: hotkey, talk, hotkey, an
 
 **App presence:** Dock icon by default; menu bar mode as an option. Launch at login.
 
-## iPhone (phase 2)
+## iPhone and iPad (phase 2)
+
+The iOS target is universal. iPad uses adaptive native sidebar/tab navigation, regular-width list/detail note reading and all orientations, including compact multitasking windows. A dedicated Meetings workspace records in-person conversations to recoverable disk segments and reviews summaries, actions and speaker-labelled transcripts. It shares the Mac's processing and conflict-safe filing pipeline, but not macOS selected-app audio capture. Recording supports background audio; meeting inference is foreground-only and resumes saved processing on return.
 
 The iPhone is the long-form, walk-and-talk recorder, usually with the phone's own mic held like a speakerphone, sometimes AirPods.
 

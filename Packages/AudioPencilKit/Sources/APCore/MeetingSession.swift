@@ -89,6 +89,14 @@ public struct MeetingSession: Codable, Identifiable, Sendable {
     }
 
     public var processing: Bool { stage == .transcribing || stage == .writing }
+
+    public mutating func recoverAfterInterruption(audioDuration: Double) {
+        guard [.recording, .paused, .transcribing, .writing].contains(stage) else { return }
+        stage = .saved
+        duration = audioDuration.isFinite ? max(0, audioDuration) : 0
+        warnings.append(String(localized: "Interrupted session recovered. Process the saved recording when ready.", bundle: .module))
+        processingRequested = false
+    }
 }
 
 /// Matches only speakers whose turns overlap the previous window. New identities remain distinct

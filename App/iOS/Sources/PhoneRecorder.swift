@@ -112,6 +112,10 @@ final class PhoneRecorder: RecordingControlling {
 
     func start() async {
         guard phase == .idle else { return }
+        guard !app.meetings.ownsCapture, !app.meetings.isProcessing else {
+            lastError = String(localized: "Finish the current meeting or processing job first.")
+            return
+        }
         lastError = nil
         pauseReason = nil
         phase = .starting

@@ -60,7 +60,7 @@ struct PhoneSettingsView: View {
                 Section {
                     Button("Run Setup Again") { app.setupCompleted = false }
                 } footer: {
-                    Text("Private, on-device. Audio and text stay on this iPhone until you file a note in your own storage.")
+                    Text("Private, on-device. Audio and text stay on this device until you file a note in your own storage.")
                 }
             }
             .navigationTitle("Settings")
@@ -380,7 +380,7 @@ struct ModelsSettingsView: View {
             } header: {
                 Text("Speech")
             } footer: {
-                Text("Each model downloads once and is prepared for this iPhone's chip the first time it's used.")
+                Text("Each model downloads once and is prepared for this device's chip the first time it's used.")
             }
             Section {
                 Picker("Model", selection: $app.settings.writingModel) {
@@ -403,9 +403,9 @@ struct WritingModelRow: View {
 
     var body: some View {
         if !PhoneModel.canRunWritingModel {
-            Text("The writing model runs on a real iPhone, not in the simulator.").font(.footnote).foregroundStyle(.secondary)
+            Text("The writing model runs on a real iPhone or iPad, not in the simulator.").font(.footnote).foregroundStyle(.secondary)
         } else if app.writingModelDownloaded {
-            Label("On this iPhone", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+            Label("On this device", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
         } else if case .downloading(let fraction) = app.writingModelState {
             HStack {
                 ProgressView(value: fraction).tint(Color.pencil)
@@ -469,7 +469,7 @@ struct RecordingSettingsView: View {
             Section {
                 Toggle(isOn: $app.reduceNoise) {
                     Text("Reduce wind and traffic noise")
-                    Text("Uses the iPhone's voice processing on the microphone. Turn it off if voices sound muffled.")
+                    Text("Uses the device's voice processing on the microphone. Turn it off if voices sound muffled.")
                 }
                 Picker("Stop after quiet", selection: $app.autoStopMinutes) {
                     ForEach([1, 2, 3, 5], id: \.self) { Text("\($0) min").tag($0) }

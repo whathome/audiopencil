@@ -24,6 +24,8 @@ struct RecordView: View {
                 }
                 .padding(.bottom, 28)
             }
+            .frame(maxWidth: 820)
+            .frame(maxWidth: .infinity)
             .navigationTitle("Record")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -43,7 +45,11 @@ struct RecordView: View {
 
     @ViewBuilder
     private var statusLine: some View {
-        if let reason = recorder.pauseReason, recorder.phase == .paused {
+        if app.meetings.ownsCapture {
+            StatusRow(symbol: "person.2", text: String(localized: "A meeting is recording or paused. Open Meetings for its controls."))
+        } else if app.meetings.isProcessing {
+            StatusRow(symbol: nil, text: app.meetings.progress)
+        } else if let reason = recorder.pauseReason, recorder.phase == .paused {
             StatusRow(symbol: "pause.circle.fill", text: reason, tint: .orange)
         } else if app.notes.justCopied {
             StatusRow(symbol: "doc.on.clipboard", text: String(localized: "Copied to the clipboard"), tint: Color.pencil)
@@ -84,7 +90,7 @@ struct RecordView: View {
 
     private var placeholder: LocalizedStringResource {
         switch recorder.phase {
-        case .idle: "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note."
+        case .idle: "Tap the button and talk. It's transcribed on this device as you go, then written up as a note."
         case .starting: "Starting the microphone…"
         case .recording: "Listening…"
         case .paused: "Paused."
@@ -188,6 +194,7 @@ struct RecordView: View {
             CircleButton(symbol: "mic.fill", label: "Record", size: 88, prominent: true) {
                 Task { await recorder.start() }
             }
+            .disabled(app.meetings.ownsCapture || app.meetings.isProcessing)
         case .starting, .finishing:
             ProgressView()
                 .controlSize(.large)
@@ -256,7 +263,7 @@ struct ModelStatusRow: View {
             }
         case .loading:
             if let preparation = app.preparation {
-                PreparationStatus(title: String(localized: "Preparing Whisper \(app.speechModelName) for this iPhone"), preparation: preparation)
+                PreparationStatus(title: String(localized: "Preparing Whisper \(app.speechModelName) for this device"), preparation: preparation)
             } else {
                 StatusRow(symbol: nil, text: String(localized: "Loading Whisper \(app.speechModelName)…"))
             }
@@ -324,7 +331,7 @@ struct StyleSheet: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 6) {
                     if let style = app.enabledStyles.first(where: { $0.id == selection }), !style.isRaw, !app.writingModelDownloaded {
-                        Text("The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.")
+                        Text("The writing model isn't on this device yet, so the note keeps the transcript as spoken.")
                             .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }
                     Button {

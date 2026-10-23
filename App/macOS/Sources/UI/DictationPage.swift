@@ -95,7 +95,7 @@ private struct HotkeyCard: View {
             }
             HStack {
                 Spacer()
-                Button("Change…") { app.settingsTab = .general; app.page = .settings }
+                Button("Change…") { app.settingsTab = .dictation; app.page = .settings }
                     .buttonStyle(.link)
             }
         }

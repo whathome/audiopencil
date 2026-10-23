@@ -17,8 +17,9 @@ public actor StreamingTranscriber {
         public var heldBackSegments: Int = 2
         /// If the unconfirmed tail grows past this, hold back only one segment so passes stay short.
         public var longTail: Double = 20
-        /// Peak 100 ms RMS below this counts as silence (about -40 dBFS).
-        public var silenceThreshold: Float = 0.01
+        /// Peak 100 ms RMS below this counts as silence (-60 dBFS, matching the recording meter).
+        /// Quiet interface microphones must still reach the speech model's own no-speech filter.
+        public var silenceThreshold: Float = 0.001
         public var pollInterval: Duration = .milliseconds(200)
         /// At stop, transcribe the whole recording in one pass and use that, rather than adding the tail
         /// to what the live passes confirmed. The live passes then only feed the live text.
@@ -67,10 +68,14 @@ public actor StreamingTranscriber {
         await stopLoop()
         if configuration.wholeRecordingAtStop { confirmed = [] }
         let tail = source.samples(from: configuration.wholeRecordingAtStop ? 0 : confirmedEndSample)
-        if tail.count >= Int(0.3 * configuration.sampleRate), containsSound(tail) {
-            let segments = try await engine.transcribe(tail)
-            passCount += 1
-            confirmed += segments
+        if tail.count >= Int(0.3 * configuration.sampleRate) {
+            if containsSound(tail) {
+                let segments = try await engine.transcribe(tail)
+                passCount += 1
+                confirmed += segments
+            } else {
+                Log.transcription.notice("Skipped quiet tail: \(tail.count) samples below RMS threshold \(self.configuration.silenceThreshold, privacy: .public)")
+            }
         }
         pendingText = ""
         return TranscriptCleaner.join(confirmed)

@@ -21,6 +21,7 @@ private func sampleConfig() -> SharedConfig {
     device.key = "right-option"
     device.start = "single-tap"
     device.shortcut = "cmd+shift+2"
+    device.pushToTalkDelay = 0.15
     device.multilingualModel = "openai_whisper-small"
     config.devices = ["Wes’s MacBook Air": device, "iPhone": DeviceSection()]
     config.writingSamples = [
@@ -77,6 +78,29 @@ struct ConfigDocumentTests {
         config.devices["Work Mac"]?.apply(to: &settings)
         #expect(settings.stopGesture == .doubleTapFn)
         #expect(settings.returnStops) // missing keys keep defaults
+        #expect(settings.pushToTalkDelay == 0.35)
+    }
+
+    @Test(arguments: [-1.0, 0.1, 0.15, 0.35, 1.0, 10.0])
+    func pushToTalkDelaySyncsPerDevice(_ delay: Double) throws {
+        var settings = DictationSettings()
+        settings.pushToTalkDelay = delay
+        var config = SharedConfig()
+        config.devices["Mac"] = DeviceSection(settings)
+        config.devices["Other Mac"] = DeviceSection()
+        let markdown = ConfigDocument.render(config)
+        #expect(markdown.contains("push_to_talk_delay:"))
+        let restored = try ConfigDocument.parse(markdown)
+        var applied = DictationSettings()
+        restored.devices["Mac"]?.apply(to: &applied)
+        #expect(applied.pushToTalkDelay == min(max(delay, 0.1), 1.0))
+        #expect(restored.devices["Other Mac"]?.pushToTalkDelay == 0.35)
+    }
+
+    @Test(arguments: [".nan", ".inf", "-.inf"])
+    func rejectsNonfinitePushToTalkDelay(_ value: String) {
+        let markdown = "```yaml\ndevices:\n  Mac:\n    push_to_talk_delay: \(value)\n```"
+        #expect(throws: (any Error).self) { try ConfigDocument.parse(markdown) }
     }
 
     @Test func reportsYAMLErrorsWithNoteLineNumbers() {

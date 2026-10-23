@@ -5,9 +5,25 @@ import APStorage
 import APSummary
 import APSync
 import APTranscription
-import AppKit
 import AVFoundation
 import UserNotifications
+#if os(macOS)
+import AppKit
+typealias MeetingApp = AppModel
+#else
+import UIKit
+typealias MeetingApp = PhoneModel
+#endif
+
+enum MeetingCaptureError: LocalizedError {
+    case unavailable(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unavailable(let message): message
+        }
+    }
+}
 
 @Observable
 final class MeetingController {
@@ -25,7 +41,9 @@ final class MeetingController {
     var processAfterRecording = true
     var selectedID: UUID?
     private(set) var sessions: [MeetingSession] = []
+    #if os(macOS)
     private(set) var applications: [CallApplication] = []
+    #endif
     private(set) var capture: CaptureState = .idle
     private(set) var microphoneLevel: Float = 0
     private(set) var callLevel: Float = 0
@@ -39,11 +57,16 @@ final class MeetingController {
     private(set) var filing = false
     private(set) var filed: Set<UUID> = []
 
-    @ObservationIgnored private unowned let app: AppModel
+    @ObservationIgnored private unowned let app: MeetingApp
     @ObservationIgnored private let root: URL
     @ObservationIgnored private let microphone = AudioRecorder()
     @ObservationIgnored private var archive: MeetingAudioArchive?
+    #if os(macOS)
     @ObservationIgnored private var callAudio: CallAudioCapture?
+    #else
+    @ObservationIgnored private let recordingActivity = RecordingActivity()
+    @ObservationIgnored private var recordingActivityStarted = false
+    #endif
     @ObservationIgnored private var recordingID: UUID?
     @ObservationIgnored private var recordingStart = Date()
     @ObservationIgnored private var pausedAt: Date?
@@ -66,15 +89,31 @@ final class MeetingController {
     var isProcessing: Bool { processingID != nil }
     var selected: MeetingSession? { sessions.first { $0.id == selectedID } }
     var recent: [MeetingSession] { Array(sessions.prefix(50)) }
+    private var dictationActive: Bool {
+        #if os(macOS)
+        app.dictation.isActive
+        #else
+        app.recorder.isActive
+        #endif
+    }
+    #if os(macOS)
     var resolvedMicrophone: Microphone? {
         if !microphoneUID.isEmpty { return app.microphones.first { $0.id == microphoneUID } }
         return app.currentMicrophone ?? MicrophoneCatalog.systemDefault(among: app.microphones)
     }
+    #endif
 
-    init(app: AppModel) {
+    init(app: MeetingApp) {
         self.app = app
-        root = ModelLocations.root.deletingLastPathComponent().appending(path: "Meetings", directoryHint: .isDirectory)
+        #if DEBUG && targetEnvironment(simulator)
+        let folder = ProcessInfo.processInfo.arguments.contains("--ui-testing") ? "Meetings-UITests" : "Meetings"
+        #else
+        let folder = "Meetings"
+        #endif
+        root = ModelLocations.root.deletingLastPathComponent().appending(path: folder, directoryHint: .isDirectory)
+        #if os(macOS)
         if let saved = UserDefaults.standard.string(forKey: "meetingKind"), let kind = MeetingSession.Kind(rawValue: saved) { self.kind = kind }
+        #endif
         do {
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             for directory in try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey]) {
@@ -83,21 +122,23 @@ final class MeetingController {
                 do {
                     var session = try JSONDecoder().decode(MeetingSession.self, from: Data(contentsOf: file))
                     let segments = try MeetingAudioArchive.segments(in: directory)
-                    if [.recording, .paused, .transcribing, .writing].contains(session.stage) {
-                        session.stage = .saved
-                        session.duration = segments.map(\.end).max() ?? 0
-                        session.warnings.append(String(localized: "Interrupted session recovered. Process the saved recording when ready."))
-                        session.processingRequested = false
-                    }
+                    session.recoverAfterInterruption(audioDuration: segments.map(\.end).max() ?? 0)
                     sessions.append(session)
                 } catch { report(error) }
             }
             sessions.sort { $0.recorded > $1.recorded }
         } catch { report(error) }
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--meeting-review-fixture") { installReviewFixture() }
+        #endif
+        #if os(macOS)
         let sleeping = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.interrupt(String(localized: "Your Mac went to sleep. Recording is paused; resume when the sources are available.")) }
         }
         observers.append(sleeping)
+        #else
+        observeMobileSession()
+        #endif
         queuePoller = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(2))
@@ -116,6 +157,7 @@ final class MeetingController {
         max(0, (pausedAt ?? now).timeIntervalSince(recordingStart) - pausedSeconds)
     }
 
+    #if os(macOS)
     func refreshApplications() async {
         guard !ownsCapture else { return }
         loadingApplications = true
@@ -176,14 +218,19 @@ final class MeetingController {
         previewing = false
         microphoneLevel = 0
     }
+    #endif
 
     func start() async {
-        guard !ownsCapture, !app.dictation.isActive, !previewStarting else { return }
+        guard !ownsCapture, !dictationActive, !isProcessing, !previewStarting else { return }
+        #if os(macOS)
         guard kind != .videoCall || CallAudioCapture.isAvailable else {
             report(MeetingCaptureError.unavailable(String(localized: "Video-call recording is not available in this build while call capture is being verified. Choose In person for microphone-only recording.")))
             return
         }
         endPreview()
+        #else
+        app.notes.pauseProcessing(because: "a meeting started")
+        #endif
         capture = .starting
         startingFailure = nil
         error = nil
@@ -193,6 +240,7 @@ final class MeetingController {
             return
         }
         guard await microphonePermission() else { capture = .idle; return }
+        #if os(macOS)
         guard let device = resolvedMicrophone else {
             report(MeetingCaptureError.unavailable(String(localized: "The selected microphone is unavailable. Choose a connected microphone.")))
             capture = .idle
@@ -208,6 +256,11 @@ final class MeetingController {
         if session.title.isEmpty { session.title = String(localized: "Meeting \(Date().formatted(date: .abbreviated, time: .shortened))") }
         session.applicationName = application?.name
         session.applicationBundleID = application?.bundleID
+        #else
+        var session = MeetingSession(title: title.trimmingCharacters(in: .whitespacesAndNewlines), kind: .inPerson,
+                                     microphoneUID: "", microphoneName: String(localized: "System microphone"), language: language.code)
+        if session.title.isEmpty { session.title = String(localized: "Meeting \(Date().formatted(date: .abbreviated, time: .shortened))") }
+        #endif
         session.speakerHint = speakerHint
         session.dailyNote = dailyNote
         session.stage = .recording
@@ -236,6 +289,7 @@ final class MeetingController {
                 }
             }
             self.archive = archive
+            #if os(macOS)
             // Start the remote source first. A permission or filter failure must not look like a call recording.
             if let application {
                 let audio = CallAudioCapture(onSamples: { [weak self] samples, time in
@@ -250,7 +304,18 @@ final class MeetingController {
                 callAudio = audio
                 try await audio.start(applicationID: application.id)
             }
-            try await microphone.beginRecording(deviceID: device.deviceID, onLevel: { [weak self] level in
+            let deviceID: UInt32? = device.deviceID
+            #else
+            try activateMobileAudio()
+            let input = AVAudioSession.sharedInstance().currentRoute.inputs.first
+            change(id) {
+                $0.microphoneUID = input?.uid ?? ""
+                $0.microphoneName = input?.portName ?? String(localized: "System microphone")
+            }
+            microphone.setVoiceProcessing(false)
+            let deviceID: UInt32? = nil
+            #endif
+            try await microphone.beginRecording(deviceID: deviceID, onLevel: { [weak self] level in
                 guard !echoCancellation else { return }
                 Task { @MainActor in self?.microphoneLevel = level }
             }, onInterruption: { [weak self] in
@@ -259,9 +324,12 @@ final class MeetingController {
                 archive.append(samples, source: .microphone, hostTime: time)
             })
             if let startingFailure { throw MeetingCaptureError.unavailable(startingFailure) }
+            #if os(macOS)
             activity = ProcessInfo.processInfo.beginActivity(options: [.idleSystemSleepDisabled, .userInitiated], reason: "Recording a meeting")
+            #endif
             capture = .recording
             showIndicator()
+            #if os(macOS)
             sourceMonitor = Task { [weak self] in
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .seconds(1))
@@ -278,10 +346,15 @@ final class MeetingController {
                     }
                 }
             }
+            #endif
         } catch {
             microphone.stop()
+            #if os(macOS)
             if let callAudio { do { try await callAudio.stop() } catch { Log.audio.error("Call cleanup: \(error.localizedDescription, privacy: .public)") } }
             callAudio = nil
+            #else
+            deactivateMobileAudio()
+            #endif
             if let archive { do { _ = try await archive.finish() } catch { Log.audio.error("Meeting cleanup: \(error.localizedDescription, privacy: .public)") } }
             self.archive = nil
             capture = .idle
@@ -303,12 +376,17 @@ final class MeetingController {
             callLevel = 0
             showIndicator()
         } else if capture == .paused {
+            #if os(macOS)
             let previousDevice = sessions.first(where: { $0.id == id })?.microphoneUID
             guard let device = app.microphones.first(where: { $0.id == (microphoneUID.isEmpty ? previousDevice : microphoneUID) }) else {
                 report(MeetingCaptureError.unavailable(String(localized: "Reconnect the original microphone before resuming, or stop and save this meeting.")))
                 return
             }
+            #endif
+            capture = .starting
+            startingFailure = nil
             do {
+                #if os(macOS)
                 if let session = sessions.first(where: { $0.id == id }), session.kind == .videoCall, !session.callAudioEnded {
                     guard let application = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == session.applicationBundleID }) else {
                         throw MeetingCaptureError.unavailable(String(localized: "Reopen the call app before resuming."))
@@ -324,29 +402,49 @@ final class MeetingController {
                     callAudio = audio
                     try await audio.start(applicationID: application.processIdentifier)
                 }
+                #else
+                try activateMobileAudio()
+                #endif
                 microphone.stop()
                 let echoCancellation = sessions.first(where: { $0.id == id })?.kind == .videoCall
-                try await microphone.beginRecording(deviceID: device.deviceID, onLevel: { [weak self] level in
+                #if os(macOS)
+                let deviceID: UInt32? = device.deviceID
+                #else
+                let input = AVAudioSession.sharedInstance().currentRoute.inputs.first
+                let deviceID: UInt32? = nil
+                #endif
+                try await microphone.beginRecording(deviceID: deviceID, onLevel: { [weak self] level in
                     guard !echoCancellation else { return }
                     Task { @MainActor in self?.microphoneLevel = level }
                 }, onInterruption: { [weak self] in Task { @MainActor in self?.interrupt(String(localized: "Microphone interrupted.")) } }, keepsSamples: false, onSamples: { samples, time in
                     archive.append(samples, source: .microphone, hostTime: time)
                 })
+                if let startingFailure { throw MeetingCaptureError.unavailable(startingFailure) }
                 if let pausedAt { pausedSeconds += Date().timeIntervalSince(pausedAt) }
                 self.pausedAt = nil
                 archive.setPaused(false)
                 capture = .recording
                 change(id) {
                     $0.stage = .recording
+                    #if os(macOS)
                     if $0.microphoneUID != device.id {
                         $0.warnings.append(String(localized: "Microphone changed from \($0.microphoneName) to \(device.name) while paused."))
                         $0.microphoneUID = device.id
                         $0.microphoneName = device.name
                     }
+                    #else
+                    $0.microphoneUID = input?.uid ?? ""
+                    $0.microphoneName = input?.portName ?? String(localized: "System microphone")
+                    #endif
                 }
                 error = nil
                 showIndicator()
-            } catch { report(error) }
+            } catch {
+                microphone.setPaused(true)
+                capture = .paused
+                report(error)
+                showIndicator()
+            }
         }
     }
 
@@ -364,6 +462,7 @@ final class MeetingController {
         showIndicator()
     }
 
+    #if os(macOS)
     func continueWithoutCallAudio() async {
         guard capture == .paused, let id = recordingID else { return }
         if let callAudio {
@@ -377,31 +476,46 @@ final class MeetingController {
         }
         await togglePause()
     }
+    #endif
 
     func stop(discard: Bool = false) async {
         guard let id = recordingID, capture == .recording || capture == .paused else { return }
         let duration = elapsed(at: Date())
+        #if os(iOS)
+        let background = UIApplication.shared.beginBackgroundTask(withName: "Saving a meeting")
+        defer { UIApplication.shared.endBackgroundTask(background) }
+        #endif
         capture = .stopping
         sourceMonitor?.cancel()
         sourceMonitor = nil
         microphone.stop()
+        #if os(macOS)
         if let callAudio {
             do { try await callAudio.stop() }
             catch { report(error) }
         }
         callAudio = nil
+        #else
+        recordingActivity.end()
+        recordingActivityStarted = false
+        deactivateMobileAudio()
+        #endif
         var failure: String?
         if let archive {
             do { _ = try await archive.finish() }
             catch { failure = error.localizedDescription; report(error) }
         }
         archive = nil
+        #if os(macOS)
         if let activity { ProcessInfo.processInfo.endActivity(activity) }
+        #endif
         activity = nil
         recordingID = nil
         capture = .idle
+        #if os(macOS)
         app.indicator.meetingStatus = nil
         app.indicator.hide()
+        #endif
         change(id) {
             $0.duration = duration
             $0.ended = Date()
@@ -413,12 +527,27 @@ final class MeetingController {
     }
 
     private func showIndicator() {
+        #if os(macOS)
         app.indicator.meetingStatus = capture == .paused ? String(localized: "Meeting paused") : String(localized: "Meeting recording")
         app.indicator.meetingPaused = capture == .paused
         app.indicator.show(.notice(app.indicator.meetingStatus ?? String(localized: "Meeting")))
+        #else
+        let now = Date()
+        let state = RecordingAttributes.ContentState(clockStart: now.addingTimeInterval(-elapsed(at: now)),
+                                                     pausedAt: capture == .paused ? now : nil,
+                                                     language: language.badge,
+                                                     notice: String(localized: "Meeting"))
+        if capture == .recording, !recordingActivityStarted {
+            recordingActivity.start(state)
+            recordingActivityStarted = true
+        } else {
+            recordingActivity.update(state)
+        }
+        #endif
     }
 
     private func microphonePermission() async -> Bool {
+        #if os(macOS)
         if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined { _ = await AVCaptureDevice.requestAccess(for: .audio) }
         app.permissions.refresh()
         guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else {
@@ -426,6 +555,13 @@ final class MeetingController {
             return false
         }
         return true
+        #else
+        guard await AVAudioApplication.requestRecordPermission() else {
+            report(MeetingCaptureError.unavailable(String(localized: "Allow microphone access in Settings > Privacy & Security > Microphone, then try again.")))
+            return false
+        }
+        return true
+        #endif
     }
 
     func update(_ id: UUID, title: String? = nil, actions: String? = nil, speaker: String? = nil, name: String? = nil, reviewed: Bool? = nil) {
@@ -443,7 +579,11 @@ final class MeetingController {
         guard recordingID != id, processingID != id, !filing else { return }
         do {
             let directory = directory(for: id)
+            #if os(macOS)
             _ = try FileManager.default.trashItem(at: directory, resultingItemURL: nil)
+            #else
+            try FileManager.default.removeItem(at: directory)
+            #endif
             sessions.removeAll { $0.id == id }
             if selectedID == id { selectedID = nil }
         } catch { report(error) }
@@ -523,25 +663,95 @@ final class MeetingController {
     }
 }
 
+#if os(iOS)
+extension MeetingController {
+    #if DEBUG && targetEnvironment(simulator)
+    private func installReviewFixture() {
+        guard ProcessInfo.processInfo.arguments.contains("--ui-testing") else { return }
+        let id = UUID(uuid: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1))
+        guard !sessions.contains(where: { $0.id == id }) else { return }
+        var session = MeetingSession(title: "Planning fixture", kind: .inPerson, microphoneUID: "fixture",
+                                     microphoneName: "Synthetic fixture", language: "en")
+        session.id = id
+        session.stage = .ready
+        session.duration = 30
+        session.turns = [.init(speaker: "Speaker 1", start: 1, end: 5, text: "I will send the notes.")]
+        session.summary = "## Summary\nPlanning the release.\n\n## Decisions\nShip Friday.\n\n## Open questions\nNone."
+        session.actions = "- [ ] Speaker 1: send the notes"
+        do {
+            try FileManager.default.createDirectory(at: directory(for: id), withIntermediateDirectories: true)
+            sessions.insert(session, at: 0)
+            try persist(id)
+        } catch { report(error) }
+    }
+    #endif
+
+    private func activateMobileAudio() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .default, options: [.allowBluetoothHFP, .defaultToSpeaker])
+        try session.setActive(true)
+    }
+
+    private func deactivateMobileAudio() {
+        do { try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation) }
+        catch { report(error) }
+    }
+
+    private func observeMobileSession() {
+        let center = NotificationCenter.default
+        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+            let began = (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) == AVAudioSession.InterruptionType.began.rawValue
+            if began {
+                MainActor.assumeIsolated { self?.interrupt(String(localized: "Audio was interrupted. Resume when the microphone is available.")) }
+            }
+        })
+        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] note in
+            let disconnected = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt) == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue
+            if disconnected {
+                MainActor.assumeIsolated { self?.interrupt(String(localized: "An audio device disconnected. Check the microphone before resuming.")) }
+            }
+        })
+        observers.append(center.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.processingTask?.cancel()
+            }
+        })
+        observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.startNextProcessing() }
+        })
+    }
+}
+#endif
+
 extension MeetingController {
     func process(_ id: UUID, retrySummaryOnly: Bool = false) {
         guard let session = sessions.first(where: { $0.id == id }), processingID != id else { return }
         change(id) { $0.processingRequested = true }
-        guard !isProcessing, !app.dictation.isActive, !ownsCapture, app.notes.processing == nil else { return }
+        guard !isProcessing, !dictationActive, !ownsCapture, app.notes.processing == nil, canProcess else { return }
         processingID = id
         change(id) { $0.processingRequested = false }
         selectedID = id
+        #if os(macOS)
         let pendingModel = app.modelTask
+        #endif
         processingTask = Task {
             defer {
                 processingID = nil
                 progress = ""
                 processingTask = nil
                 app.restoreWhisper()
+                #if os(iOS)
+                app.notes.processQueue()
+                #endif
             }
             do {
+                #if os(macOS)
                 do { try await pendingModel?.value }
                 catch { Log.models.error("Previous speech load failed; loading the meeting's model separately: \(error.localizedDescription, privacy: .public)") }
+                #else
+                try await app.waitForModel()
+                try Task.checkCancellation()
+                #endif
                 let directory = directory(for: id)
                 let savedSegments = try MeetingAudioArchive.segments(in: directory)
                 let segments: [MeetingAudioArchive.Segment]
@@ -563,7 +773,11 @@ extension MeetingController {
                     try MeetingAudioArchive.export(directory: directory, segments: segments, to: output)
                 }.value
                 if !retrySummaryOnly || session.turns.isEmpty {
+                    #if os(macOS)
                     let engine = AppModel.engine(for: AppModel.bestVariant(for: SpokenLanguage(code: session.language), settings: app.settings))
+                    #else
+                    let engine = WhisperEngine(variant: SpeechModels.bestVariant(for: SpokenLanguage(code: session.language), settings: app.settings))
+                    #endif
                     guard engine.isDownloaded else {
                         throw MeetingCaptureError.unavailable(String(localized: "The speech model is not downloaded. Download it in Settings, then process this saved meeting."))
                     }
@@ -660,8 +874,10 @@ extension MeetingController {
                     }
                 }
                 guard let current = sessions.first(where: { $0.id == id }) else { return }
+                try Task.checkCancellation()
                 change(id) { $0.stage = .writing }
                 let result = try await writeSummary(current)
+                try Task.checkCancellation()
                 change(id) {
                     $0.summary = result.summary
                     // A summary retry must not overwrite tasks the user has already corrected.
@@ -684,7 +900,13 @@ extension MeetingController {
                         content.userInfo = ["meetingID": id.uuidString]
                         try await center.add(UNNotificationRequest(identifier: id.uuidString, content: content, trigger: nil))
                     }
+                } catch is CancellationError {
+                    change(id) { $0.stage = .saved; $0.processingRequested = true }
                 } catch {
+                    if Task.isCancelled {
+                        change(id) { $0.stage = .saved; $0.processingRequested = true }
+                        return
+                    }
                     Log.dictation.error("Meeting notification unavailable: \(error.localizedDescription, privacy: .public)")
                 }
             } catch {
@@ -695,9 +917,17 @@ extension MeetingController {
     }
 
     private func startNextProcessing() {
-        guard !isProcessing, !ownsCapture, !app.dictation.isActive, app.notes.processing == nil,
+        guard !isProcessing, !ownsCapture, !dictationActive, app.notes.processing == nil, canProcess,
               let next = sessions.last(where: { $0.processingRequested }) else { return }
         process(next.id, retrySummaryOnly: !next.turns.isEmpty)
+    }
+
+    private var canProcess: Bool {
+        #if os(iOS)
+        UIApplication.shared.applicationState == .active
+        #else
+        true
+        #endif
     }
 
     private func writeSummary(_ session: MeetingSession) async throws -> (summary: String, actions: String) {
@@ -725,6 +955,7 @@ extension MeetingController {
             }
             var notes: [String] = []
             for (index, section) in sections.enumerated() {
+                try Task.checkCancellation()
                 while ownsCapture { try await Task.sleep(for: .seconds(1)) }
                 progress = String(localized: "Summarising part \(index + 1) of \(sections.count)…")
                 let result = try await engine.generate(instructions: rules + "\nCompress this section into factual notes under 400 words, retaining explicit actions, decisions, questions and speaker labels.", input: "<transcript>\n\(section)\n</transcript>", maxTokens: 850)
@@ -733,6 +964,7 @@ extension MeetingController {
             sections = PromptBuilder.sections(ofTurns: notes.joined(separator: "\n\n"), limit: 1_500)
         }
         progress = String(localized: "Writing the meeting note…")
+        try Task.checkCancellation()
         let result = try await engine.generate(
             instructions: rules + """
 
@@ -773,6 +1005,9 @@ extension MeetingController {
                             recorded: session.recorded, duration: session.duration, mode: .meeting, folder: NoteFiling.defaultFolder,
                             language: session.language, body: session.displayingSpeakerNames(in: session.body), transcript: session.transcript,
                             speakers: Set(session.turns.map(\.speaker)).count)
+            #if os(iOS)
+            note.device = UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
+            #endif
             note.audioPath = session.audioExpired ? nil : audioPath
             note.retention = session.retention
             let markdown = "# \(session.title)\n\n" + note.body
@@ -793,7 +1028,7 @@ extension MeetingController {
                 }
             } else if session.filedMarkdown != rendered {
                 guard let location = app.vault.vaultLocation else {
-                    throw MeetingCaptureError.unavailable(String(localized: "Review edits are saved on this Mac. Connect storage to update the filed note."))
+                    throw MeetingCaptureError.unavailable(String(localized: "Review edits are saved on this device. Connect storage to update the filed note."))
                 }
                 guard !(await app.sync.outbox.pending).contains(where: { $0.path == path }) else {
                     throw MeetingCaptureError.unavailable(String(localized: "Review edits are saved locally. Wait for the original note to sync, then update it."))
@@ -815,7 +1050,7 @@ extension MeetingController {
     }
 
     func filingStatus(_ session: MeetingSession) -> String {
-        if session.notePath == nil { return String(localized: "Saved on this Mac") }
+        if session.notePath == nil { return String(localized: "Saved on this device") }
         if !app.vault.settings.isConfigured { return String(localized: "Waiting for storage setup") }
         if filed.contains(session.id) { return String(localized: "Filed") }
         switch app.sync.status {
@@ -827,7 +1062,7 @@ extension MeetingController {
     }
 }
 
-#if DEBUG
+#if DEBUG && os(macOS)
 extension MeetingController {
     /// Uses synthetic speech only and never queues a fixture in the user's storage.
     func importDebugFixture() async {

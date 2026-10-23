@@ -142,6 +142,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     public var shortcut: String = "ctrl+opt+49"
     public var returnStops: Bool = true
     public var holdForRaw: Bool = true
+    public var pushToTalkDelay: Double = DictationSettings().pushToTalkDelay
     public var fallbackShortcut: Bool = true
     public var doubleTapWindow: Double = 0.4
     public var warmMicOnFirstTap: Bool = true
@@ -161,6 +162,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey {
         case microphones, stop, key, start, shortcut
         case returnStops = "return_stops", holdForRaw = "hold_for_raw", fallbackShortcut = "fallback_shortcut"
+        case pushToTalkDelay = "push_to_talk_delay"
         case doubleTapWindow = "double_tap_window", warmMicOnFirstTap = "warm_mic_on_first_tap"
         case transcriptionModel = "transcription_model", writingModel = "writing_model"
         case multilingualModel = "multilingual_transcription_model", languages
@@ -179,6 +181,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         shortcut = Self.encode(settings.fallbackShortcut)
         returnStops = settings.returnStops
         holdForRaw = settings.holdFnForRaw
+        pushToTalkDelay = settings.pushToTalkDelay
         fallbackShortcut = settings.fallbackShortcutEnabled
         doubleTapWindow = settings.doubleTapWindow
         warmMicOnFirstTap = settings.warmMicOnFirstTap
@@ -205,6 +208,10 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         shortcut = try c.decodeIfPresent(String.self, forKey: .shortcut) ?? defaults.shortcut
         returnStops = try c.decodeIfPresent(Bool.self, forKey: .returnStops) ?? defaults.returnStops
         holdForRaw = try c.decodeIfPresent(Bool.self, forKey: .holdForRaw) ?? defaults.holdForRaw
+        pushToTalkDelay = try c.decodeIfPresent(Double.self, forKey: .pushToTalkDelay) ?? defaults.pushToTalkDelay
+        guard pushToTalkDelay.isFinite else {
+            throw DecodingError.dataCorruptedError(forKey: .pushToTalkDelay, in: c, debugDescription: "push_to_talk_delay must be a finite number of seconds")
+        }
         fallbackShortcut = try c.decodeIfPresent(Bool.self, forKey: .fallbackShortcut) ?? defaults.fallbackShortcut
         doubleTapWindow = try c.decodeIfPresent(Double.self, forKey: .doubleTapWindow) ?? defaults.doubleTapWindow
         warmMicOnFirstTap = try c.decodeIfPresent(Bool.self, forKey: .warmMicOnFirstTap) ?? defaults.warmMicOnFirstTap
@@ -255,6 +262,7 @@ public struct DeviceSection: Codable, Equatable, Sendable {
         settings.fallbackShortcut = Self.decode(shortcut) ?? settings.fallbackShortcut
         settings.returnStops = returnStops
         settings.holdFnForRaw = holdForRaw
+        settings.pushToTalkDelay = min(max(pushToTalkDelay, DictationSettings.pushToTalkDelayRange.lowerBound), DictationSettings.pushToTalkDelayRange.upperBound)
         settings.fallbackShortcutEnabled = fallbackShortcut
         settings.doubleTapWindow = min(max(doubleTapWindow, 0.2), 0.8)
         settings.warmMicOnFirstTap = warmMicOnFirstTap

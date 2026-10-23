@@ -55,6 +55,28 @@ struct WhisperIntegrationTests {
         await coordinator.unload(engine)
     }
 
+    @Test func transcribesQuietInterfaceSpeech() async throws {
+        let variant = ProcessInfo.processInfo.environment["AUDIOPENCIL_MODEL"] ?? "openai_whisper-small.en"
+        let speech = try Self.synthesise("The quick brown fox jumps over the lazy dog.")
+        let peak = try #require(speech.map { abs($0) }.max())
+        try #require(peak > 0)
+        let source = GrowingSource()
+        source.append([Float](repeating: 0, count: 4_800))
+        source.append(speech.map { $0 * (0.008 / peak) })
+        let engine = WhisperEngine(variant: variant)
+        if !engine.isDownloaded { try await engine.download { _ in } }
+        let coordinator = ModelCoordinator()
+        try await coordinator.ensureLoaded(engine)
+        let streamer = StreamingTranscriber(engine: engine, source: source)
+        await streamer.passIfNeeded()
+        let text = try await streamer.finish()
+        #expect(await streamer.passCount > 0)
+        for word in ["fox", "lazy", "dog"] {
+            #expect(text.lowercased().contains(word), "Quiet speech missing \(word): \(text)")
+        }
+        await coordinator.unload(engine)
+    }
+
     /// Meeting mode end to end: two synthesised voices taking turns, transcribed with word timings,
     /// labelled by SpeakerKit (downloads ~22 MB of speaker models), and merged into turns.
     @Test func labelsTwoSpeakersTakingTurns() async throws {

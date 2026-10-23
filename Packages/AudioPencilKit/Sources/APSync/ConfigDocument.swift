@@ -160,6 +160,7 @@ public enum ConfigDocument {
                 out += "    shortcut: \(scalar(device.shortcut))  # modifiers + virtual key code; 49 is Space\n"
                 out += "    return_stops: \(device.returnStops)\n"
                 out += "    hold_for_raw: \(device.holdForRaw)\n"
+                out += "    push_to_talk_delay: \(number(device.pushToTalkDelay))  # seconds, 0.1 to 1.0; default 0.35\n"
                 out += "    fallback_shortcut: \(device.fallbackShortcut)\n"
                 out += "    double_tap_window: \(number(device.doubleTapWindow))\n"
                 out += "    warm_mic_on_first_tap: \(device.warmMicOnFirstTap)\n"

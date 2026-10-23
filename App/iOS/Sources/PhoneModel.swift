@@ -81,6 +81,7 @@ final class PhoneModel: WritingHost {
     @ObservationIgnored private(set) var sync: SyncController!
     @ObservationIgnored private(set) var recorder: PhoneRecorder!
     @ObservationIgnored private(set) var notes: PhoneNotes!
+    @ObservationIgnored private(set) var meetings: MeetingController!
 
     @ObservationIgnored let coordinator = ModelCoordinator()
     private(set) var whisper: WhisperEngine
@@ -121,14 +122,18 @@ final class PhoneModel: WritingHost {
             Array(Set(styles.map { notes.folder(for: $0) } + [NoteFiling.defaultFolder, StarterKit.samplesFolder]))
         }
         sync.expireRegularAudio = { [unowned self] in expireRegularAudio }
-        sync.filedNotePaths = { [unowned self] in notes.recent.map(\.path) }
-        sync.filedNotesGone = { [unowned self] paths in notes.forget(paths) }
+        sync.filedNotePaths = { [unowned self] in notes.recent.map(\.path) + (meetings?.sessions.compactMap(\.notePath) ?? []) }
+        sync.filedNotesGone = { [unowned self] paths in
+            notes.forget(paths)
+            meetings?.forget(paths)
+        }
         vault.onLocationReady = { [unowned self] in sync.syncSoon(after: .zero) }
         vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         recorder = PhoneRecorder(app: self)
         notes = PhoneNotes(app: self)
+        meetings = MeetingController(app: self)
         // Lock Screen, Control Centre, Action Button, Siri: these can wake the app without a window.
-        RecordingControl.handler = recorder
+        RecordingControl.handler = self
     }
 
     @ObservationIgnored private var bootstrapped = false
@@ -136,6 +141,9 @@ final class PhoneModel: WritingHost {
     func bootstrap() {
         guard !bootstrapped else { return }
         bootstrapped = true
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") { return }
+        #endif
         memoryMonitor = MemoryPressureMonitor { level in
             Task { @MainActor [weak self] in self?.memoryPressure = level }
         }
@@ -178,6 +186,7 @@ final class PhoneModel: WritingHost {
 
     /// Downloads (if needed), prepares and loads the current Whisper model.
     func prepareModel(unloading old: WhisperEngine? = nil) {
+        guard meetings?.isProcessing != true else { return }
         let engine = whisper
         let language = currentLanguage
         let vocabulary = settings.vocabulary(for: language)
@@ -186,6 +195,7 @@ final class PhoneModel: WritingHost {
             await engine.setPreparationHandler { [weak self] preparation in
                 Task { @MainActor in self?.preparation = preparation }
             }
+
             await engine.setLanguage(language.code)
             await engine.setVocabulary(vocabulary)
             do {
@@ -343,5 +353,33 @@ final class PhoneModel: WritingHost {
 
     private func save<T: Encodable>(_ value: T, as key: String) {
         if let data = try? JSONEncoder().encode(value) { UserDefaults.standard.set(data, forKey: key) }
+    }
+}
+
+extension PhoneModel: RecordingControlling {
+    var isRecording: Bool { recorder.isRecording || meetings.ownsCapture }
+
+    func startRecordingFromIntent() async throws {
+        guard !meetings.ownsCapture, !meetings.isProcessing else {
+            throw PhoneRecorder.RecordingError.couldNotStart(String(localized: "Finish the current meeting or processing job first."))
+        }
+        try await recorder.startRecordingFromIntent()
+    }
+
+    func pauseRecording() {
+        if meetings.ownsCapture {
+            if meetings.capture == .recording { Task { await meetings.togglePause() } }
+        } else { recorder.pause() }
+    }
+
+    func resumeRecording() {
+        if meetings.ownsCapture {
+            if meetings.capture == .paused { Task { await meetings.togglePause() } }
+        } else { recorder.resume() }
+    }
+
+    func stopRecordingFromIntent() async {
+        if meetings.ownsCapture { await meetings.stop() }
+        else { await recorder.stopRecordingFromIntent() }
     }
 }

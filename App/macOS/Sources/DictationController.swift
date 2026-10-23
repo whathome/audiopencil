@@ -26,20 +26,6 @@ struct DictationReport {
 /// `progress` gets 0…1 estimates as text streams.
 typealias StyleRewriter = (_ transcript: String, _ style: Style, _ progress: @escaping @MainActor @Sendable (Double) -> Void) async throws -> String
 
-enum RewriteError: LocalizedError {
-    case modelNotDownloaded
-    case lowMemory
-    case languageUnsupported(language: String, model: String)
-
-    var errorDescription: String? {
-        switch self {
-        case .modelNotDownloaded: String(localized: "The writing model isn't downloaded yet")
-        case .lowMemory: String(localized: "Memory is low")
-        case .languageUnsupported(let language, let model): String(localized: "\(model) can't write \(language)")
-        }
-    }
-}
-
 /// A recording past the long-form threshold, handed off for note processing instead of pasting.
 struct LongFormCapture {
     var transcript: String

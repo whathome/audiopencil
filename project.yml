@@ -105,8 +105,9 @@ targets:
         UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         ITSAppUsesNonExemptEncryption: false
-        NSMicrophoneUsageDescription: Audio Pencil listens while you record and transcribes on this iPhone. Audio never leaves the device unless you file it in your own notes folder.
+        NSMicrophoneUsageDescription: Audio Pencil listens while you record and transcribes on this device. Audio never leaves the device unless you file it in your own notes folder.
         # Keeps recording with the phone locked; the Live Activity shows the clock and controls.
         UIBackgroundModes: [audio]
         NSSupportsLiveActivities: true
@@ -118,7 +119,7 @@ targets:
         PRODUCT_NAME: Audio Pencil
         PRODUCT_MODULE_NAME: AudioPencilPhone
         PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         SWIFT_EMIT_LOC_STRINGS: YES
         CODE_SIGN_STYLE: Automatic
@@ -164,12 +165,26 @@ targets:
       base:
         PRODUCT_NAME: AudioPencilWidgets
         PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.widgets
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         SWIFT_EMIT_LOC_STRINGS: YES
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         APPLICATION_EXTENSION_API_ONLY: YES
+
+  AudioPencilMobileUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - Tests/MobileUITests
+    dependencies:
+      - target: AudioPencilPhone
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.uitests
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
 
 schemes:
   AudioPencil:
@@ -197,5 +212,9 @@ schemes:
         AudioPencilPhone: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - AudioPencilMobileUITests
     archive:
       config: Release

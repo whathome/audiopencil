@@ -1,6 +1,6 @@
 import APAudio
 import APCore
-import ActivityKit
+@preconcurrency import ActivityKit
 import AudioToolbox
 import Foundation
 import UIKit
@@ -101,7 +101,7 @@ final class RecordingActivity {
     init() {
         // A crash or a force quit can leave one behind.
         for leftover in Activity<RecordingAttributes>.activities {
-            Task { await leftover.end(nil, dismissalPolicy: .immediate) }
+            Task { @MainActor in await leftover.end(nil, dismissalPolicy: .immediate) }
         }
     }
 
@@ -124,12 +124,12 @@ final class RecordingActivity {
         let configuration = alert.map {
             AlertConfiguration(title: LocalizedStringResource(stringLiteral: $0.title), body: LocalizedStringResource(stringLiteral: $0.body), sound: .default)
         }
-        Task { await activity.update(content, alertConfiguration: configuration) }
+        Task { @MainActor in await activity.update(content, alertConfiguration: configuration) }
     }
 
     func end() {
         guard let activity else { return }
         self.activity = nil
-        Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        Task { @MainActor in await activity.end(nil, dismissalPolicy: .immediate) }
     }
 }

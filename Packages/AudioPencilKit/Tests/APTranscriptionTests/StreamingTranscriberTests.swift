@@ -10,7 +10,12 @@ final class TestSource: SampleSource {
     var count: Int { storage.withLock { $0.count } }
     func samples(from start: Int) -> [Float] { storage.withLock { Array($0[min(start, $0.count)...]) } }
     func append(seconds: Double, loud: Bool) {
-        let chunk = [Float](repeating: loud ? 0.2 : 0, count: Int(seconds * 16_000))
+        append(seconds: seconds, amplitude: loud ? 0.2 : 0)
+    }
+    func append(seconds: Double, amplitude: Float) {
+        let chunk = (0..<Int(seconds * 16_000)).map { index in
+            amplitude * sin(2 * .pi * 200 * Float(index) / 16_000)
+        }
         storage.withLock { $0 += chunk }
     }
 }
@@ -87,6 +92,42 @@ struct StreamingTranscriberTests {
         await streamer.passIfNeeded()
         let text = try await streamer.finish()
         #expect(text.isEmpty)
+        #expect(await engine.calls.isEmpty)
+    }
+
+    @Test(arguments: [false, true])
+    func quietMicrophoneReachesEngine(wholeRecordingAtStop: Bool) async throws {
+        let source = TestSource()
+        let engine = FakeEngine(source: source)
+        var configuration = StreamingTranscriber.Configuration()
+        configuration.wholeRecordingAtStop = wholeRecordingAtStop
+        let streamer = StreamingTranscriber(engine: engine, source: source, configuration: configuration)
+        // Quiet interface audio can have RMS well below the former 0.01 cutoff.
+        source.append(seconds: 0.3, loud: false)
+        source.append(seconds: 2, amplitude: 0.008)
+        #expect(await streamer.passIfNeeded())
+        #expect(await engine.calls.count == 1)
+        #expect(try await streamer.finish() == "s0 s2")
+        #expect(await engine.calls.count == 2)
+    }
+
+    @Test func quietShortHoldIsTranscribedAtStop() async throws {
+        let source = TestSource()
+        let engine = FakeEngine(source: source)
+        let streamer = StreamingTranscriber(engine: engine, source: source)
+        source.append(seconds: 0.5, amplitude: 0.008)
+        #expect(await streamer.passIfNeeded() == false)
+        #expect(try await streamer.finish() == "s0")
+        #expect(await engine.calls == [8_000])
+    }
+
+    @Test func subThresholdNoiseIsNotTranscribed() async throws {
+        let source = TestSource()
+        let engine = FakeEngine(source: source)
+        let streamer = StreamingTranscriber(engine: engine, source: source)
+        source.append(seconds: 3, amplitude: 0.0005)
+        await streamer.passIfNeeded()
+        #expect(try await streamer.finish().isEmpty)
         #expect(await engine.calls.isEmpty)
     }
 }

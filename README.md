@@ -1,6 +1,6 @@
 # Audio Pencil
 
-Private, fully on-device dictation and summarisation for Mac and iPhone. See [docs/PRD.md](docs/PRD.md).
+Private, fully on-device dictation and summarisation for Mac, iPhone and iPad. See [docs/PRD.md](docs/PRD.md).
 
 **Status:** milestone 8 (guided setup, storage without Obsidian, models ready in the background). Phase 1 (Mac) is feature-complete in English, French and Spanish; phase 2 (iPhone) is next. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or this Mac, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
 
@@ -63,7 +63,8 @@ Settings (⌘,) also has:
 
 - **Microphones**: a priority list. The first connected one is used, otherwise the system default. Unplugged entries stay in the list.
 - **Dictation languages**: any of Whisper's 100 languages, one per recording. Each app starts in the language you last spoke there (remembered on this Mac only); new apps start in the language chosen here. When more than one language is in the list, the recording indicator shows a badge such as **FR**; click it to switch, and what you've said so far is transcribed again in the new language. English uses the English model (Small (English) by default); every other language uses the multilingual model set in Settings › Models. Languages the writing model can't write (SmolLM3: English, French, Spanish, German, Italian, Portuguese) are marked "Raw only" and paste the raw transcript.
-- **Hotkey**: choose the key (Fn, Right ⌥ or Right ⌘), how to start (double-tap or tap) and stop (tap or double-tap; a tap start always stops with a tap), hold-for-raw, Return-also-stops, and a backup shortcut you record yourself (⌃⌥Space by default).
+- **Settings categories**: General contains app behavior and sounds; Dictation contains recording, delivery, microphones, languages and vocabulary; Notes contains filing, retention, daily notes and task keywords. Models and Permissions keep their own categories. The same categories appear in the main window and the ⌘, Settings window.
+- **Hotkey** (Settings › Dictation): choose the key (Fn, Right ⌥ or Right ⌘), how to start (double-tap or tap) and stop (tap or double-tap; a tap start always stops with a tap), hold-for-raw and Return-also-stops. **Timing and shortcuts** expands to show double-tap timing, microphone warm-up and a backup shortcut you record yourself (⌃⌥Space by default). **Push-to-talk delay** stays visible in its own section and adjusts the initial hold from 100–1,000 ms (default 350 ms), in 50 ms steps. Shorter delays start sooner but can trigger recordings during slower taps or modifier use; microphone startup time is additional. The delay is saved per device and syncs as `push_to_talk_delay` in seconds.
 - **Try it here** (Dictation page): a text box to dictate into without leaving the app, showing the style, language and model a dictation will use.
 - **Models in the background**: other languages use a quick starter model (Whisper Small) within about 90 s, while the more accurate one (Large v3 Turbo) prepares in the background without holding up dictation; the switch happens between recordings. First-time preparation shows its step, a clock and an estimate.
 - **Interface language**: English, French or Spanish, following macOS (System Settings › General › Language & Region, which can also set Audio Pencil's language on its own). Preset style names and descriptions are shown translated while a preset keeps its default name; the instructions the writing model reads stay as written.
@@ -84,7 +85,7 @@ Dates are read in English, French and Spanish: today, tomorrow, weekdays ("next 
 
 When the vault has Obsidian's **Daily notes** core plugin on, notes can be linked in that day's daily note. Settings › Daily note (Mac and iPhone) turns this on by default and sets the heading the links go under (`## Audio Pencil`; blank adds them at the end) and whether each is a link (`- 21:44 [[…|Weekend Garden Tasks]]`) or an embed (`![[…]]`). Override it per recording: the pill's style menu on the Mac (**Link in today's daily note**), the **Daily note** button above the clock on the iPhone. The daily note is made if it doesn't exist yet, in the plugin's folder and date format, from its template. The app reads `.obsidian/core-plugins.json` and `.obsidian/daily-notes.json`; while Daily notes is off, these settings are greyed out and say why, and nothing is offered on the pill or the recorder. Additions wait in a queue on the device and are written when the vault is reachable.
 
-**Push to talk** (hold Fn) only pastes, and makes no note. While holding, the pill shows a **Paste** badge in place of the Paste / Note toggle; click it to also add the text as a line to the daily note or to one file you choose (Settings › Push to talk: the file, such as `Inbox.md`, and the heading the lines go under, blank for the end). Lines read `- 21:47 Remember the parcel is at the front desk.`; a task-keyword dictation goes in as the task, without the time: `- [ ] Renew the car insurance 📅 2026-11-05`. The badge only appears when one of those is available, and push-to-talk always pastes, however long it's held.
+**Push to talk** (hold Fn) only pastes, and makes no note. While holding, the pill shows a **Paste** badge in place of the Paste / Note toggle; click it to also add the text as a line to the daily note or to one file you choose (Settings › Notes › Push-to-talk filing: the file, such as `Inbox.md`, and the heading the lines go under, blank for the end). Lines read `- 21:47 Remember the parcel is at the front desk.`; a task-keyword dictation goes in as the task, without the time: `- [ ] Renew the car insurance 📅 2026-11-05`. The badge only appears when one of those is available, and push-to-talk always pastes, however long it's held.
 
 ### Meeting mode
 
@@ -104,7 +105,7 @@ Labelling 18 s of two voices takes about 2.5 s on an M1 once the models are prep
 
 ### Notes
 
-A hotkey recording longer than the long-form threshold (5 minutes by default; Settings › General › Notes) doesn't paste. While you talk, the indicator shows the elapsed time after 30 s and counts down "Note in 0:25" for the last 30 s, and its **Paste / Note** toggle switches to Note with one soft cue as the recording crosses over. Click the toggle (or choose under "When you stop" in the style menu) to decide for this recording only: make a short dictation into a note, or paste a long one. A note:
+A hotkey recording longer than the long-form threshold (5 minutes by default; Settings › Notes › Saving and retention) doesn't paste. While you talk, the indicator shows the elapsed time after 30 s and counts down "Note in 0:25" for the last 30 s, and its **Paste / Note** toggle switches to Note with one soft cue as the recording crosses over. Click the toggle (or choose under "When you stop" in the style menu) to decide for this recording only: make a short dictation into a note, or paste a long one. A note:
 
 1. Keeps the audio (`Audio Pencil/Recordings/*.m4a`, AAC mono, about 1.2 MB for 5 minutes).
 2. Writes it up in the recording's style. Long transcripts go section by section, and summaries are combined from per-section notes.
@@ -129,7 +130,7 @@ Every note has `retention: regular | archive | delete`, shown as the **Retention
 
 - **delete:** the note and its audio are removed.
 - **archive:** kept forever.
-- **regular:** the audio is removed a year after recording (Settings › General › Notes, on by default, shared by all devices). The note stays and gets `audio_expired`.
+- **regular:** the audio is removed a year after recording (Settings › Notes › Saving and retention, on by default, shared by all devices). The note stays and gets `audio_expired`.
 
 Removed files go to Nextcloud's trash, or the macOS Trash for a local vault. Recordings expiring within 30 days are listed on the Notes page with **Keep forever**. Older notes without the property are marked `regular`.
 
@@ -151,7 +152,7 @@ The Storage page offers Nextcloud, any WebDAV server (URL, user name and passwor
 
 Once storage is connected (Storage page), the app keeps `Audio Pencil/Settings.md` in it: a short note with one `yaml` block holding the shared styles, vocabulary and tags, plus a section per device (microphones, hotkey options, models). Edit it in Obsidian and the app picks the changes up within a minute, or when you switch to it. Changes made on both sides merge field by field against the last synced version. If both sides changed the same style, the vault's version wins. If the YAML has a mistake, syncing pauses until you fix it, and the file is never overwritten. Per-app style memory and stats stay on the device.
 
-**Keep what's on my clipboard** (Settings › General › Pasting, on by default) pastes through the clipboard without losing what you'd copied:
+**Keep what's on my clipboard** (Settings › Dictation › After recording, on by default) pastes through the clipboard without losing what you'd copied:
 
 - Your clipboard is saved first: every item and format, in memory only. Items marked concealed (passwords from a password manager) are never kept, and clipboards over 32 MB are left alone.
 - The dictation goes on the clipboard marked transient, so clipboard managers skip it, and it's handed over only when an app asks for it.
@@ -163,9 +164,15 @@ With the setting off, each dictation stays on the clipboard after pasting, as be
 
 The hotkey doesn't work while macOS Secure Input is on: password fields, Terminal with Secure Keyboard Entry, some password managers.
 
-## iPhone
+## iPhone and iPad
 
-The iPhone app (`AudioPencilPhone`, iOS 26) is the walk-and-talk recorder. Every recording becomes a note, filed through the same settings file and upload queue as the Mac.
+The universal app (`AudioPencilPhone`, iOS/iPadOS 26) records on iPhone and iPad. Every recording becomes a note, filed through the same settings file and upload queue as the Mac.
+
+On iPad, native adaptive navigation provides Record, Meetings, Notes and Settings in a sidebar or tab bar as the window changes size. Notes has a list-and-reading split view at regular widths; compact windows retain the phone layout. iPad supports portrait, landscape and resizable multitasking windows; iPhone remains portrait-first.
+
+**Meetings** records in-person conversations through the current system microphone, including connected USB inputs and headsets. Audio goes directly to bounded five-second disk segments, not an ever-growing in-memory recording. Pause, resume, stop/save and destructive discard are available in-app; Live Activity controls route to the current meeting. The saved meeting can be processed later, played back, and reviewed in Summary / Actions / Transcript, with editable titles, speaker names and Markdown tasks, review status, copying and conflict-safe filing. Ordinary Record keeps its existing Meeting toggle.
+
+iPad does **not** capture audio directly from another app. Meeting processing runs only while the app is active, pauses on leaving, and retries saved work on return. Download speech and writing models in Settings; without a writing model, the transcript remains available and the summary can be retried later. Recording itself continues in the background; audio interruptions and disconnected inputs pause it and require an explicit resume. Recovery retains completed audio segments after termination (up to the last five seconds may be lost). The Simulator cannot run the MLX writing model: validate summary quality, real microphone routes, Bluetooth, lock-screen recording and interruption recovery on physical iPad hardware.
 
 - **Record:** live transcript as you talk, pause and resume, a language switch, then pick a style (it starts on the last one used). **Make Note** files it; **Copy to Clipboard** writes it in the same style and only copies it; it waits under Notes › Copied, not filed, with its audio, where **File** files it as Make Note would have (or swipe to delete it).
 - **Locked in a pocket:** recording carries on with the phone locked (background audio). A Live Activity on the Lock Screen and in the Dynamic Island shows the clock with Pause, Resume and Stop.
@@ -229,7 +236,7 @@ Writing-model benchmark (downloads each candidate; must run through xcodebuild f
 cd Packages/AudioPencilKit && TEST_RUNNER_AUDIOPENCIL_BENCH=1 TEST_RUNNER_AUDIOPENCIL_BENCH_OUT=$PWD/../../docs/benchmarks/run.md xcodebuild test -scheme AudioPencilKit-Package -destination platform=macOS -only-testing:APSummaryTests
 ```
 
-Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each dictation logs its stop→text and stop→paste times.
+Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each dictation logs its stop→text and stop→paste times. The transcription silence gate matches the recording meter's -60 dBFS floor, so quiet external microphones still reach the speech model's own no-speech filter; skipped quiet tails are logged.
 
 ## Milestones
 

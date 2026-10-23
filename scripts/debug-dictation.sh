@@ -5,6 +5,7 @@
 #   debug-dictation.sh start | tap-start | warm | stop | cancel
 #   debug-dictation.sh key:fnDown 0.6 key:fnUp          # simulated keys through the real gesture logic
 #   debug-dictation.sh page:settings snapshot           # switch page, snapshot the window
+#   debug-dictation.sh settings:dictation snapshot      # general, dictation, notes, models, permissions
 #   debug-dictation.sh scroll:end | scroll:top | scroll:<points> | appearance:light|dark|system
 #   debug-dictation.sh languages:en,fr,es | language:fr | report:language
 set -euo pipefail

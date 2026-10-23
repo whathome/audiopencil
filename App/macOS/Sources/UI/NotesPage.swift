@@ -135,7 +135,7 @@ struct NotesPage: View {
                 }
 
                 Button("Note saving and audio retention…") {
-                    app.settingsTab = .general
+                    app.settingsTab = .notes
                     app.page = .settings
                 }
                 .buttonStyle(.link)

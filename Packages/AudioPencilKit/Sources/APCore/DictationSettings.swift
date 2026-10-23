@@ -107,6 +107,9 @@ public struct DictationSettings: Codable, Equatable, Sendable {
     public var stopGesture: StopGesture = .singleTapFn
     /// Press and hold Fn to talk; release to paste the raw transcript.
     public var holdFnForRaw: Bool = true
+    /// Seconds to hold the gesture key before push-to-talk starts.
+    public var pushToTalkDelay: Double = 0.35
+    public static let pushToTalkDelayRange: ClosedRange<Double> = 0.1...1.0
     /// Return / Enter also stops a recording (the key press is swallowed).
     public var returnStops: Bool = true
     /// The recorded shortcut toggles recording.
@@ -205,6 +208,8 @@ public struct DictationSettings: Codable, Equatable, Sendable {
         startGesture = try c.decodeIfPresent(StartGesture.self, forKey: .startGesture) ?? defaults.startGesture
         fallbackShortcut = try c.decodeIfPresent(KeyShortcut.self, forKey: .fallbackShortcut) ?? defaults.fallbackShortcut
         holdFnForRaw = try c.decodeIfPresent(Bool.self, forKey: .holdFnForRaw) ?? defaults.holdFnForRaw
+        pushToTalkDelay = try c.decodeIfPresent(Double.self, forKey: .pushToTalkDelay) ?? defaults.pushToTalkDelay
+        pushToTalkDelay = min(max(pushToTalkDelay, Self.pushToTalkDelayRange.lowerBound), Self.pushToTalkDelayRange.upperBound)
         returnStops = try c.decodeIfPresent(Bool.self, forKey: .returnStops) ?? defaults.returnStops
         fallbackShortcutEnabled = try c.decodeIfPresent(Bool.self, forKey: .fallbackShortcutEnabled) ?? defaults.fallbackShortcutEnabled
         doubleTapWindow = try c.decodeIfPresent(Double.self, forKey: .doubleTapWindow) ?? defaults.doubleTapWindow

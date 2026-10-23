@@ -137,8 +137,6 @@ final class AppModel: WritingHost {
     @ObservationIgnored private var holdTask: Task<Void, Never>?
     /// A press-and-hold recording is running; releasing Fn stops it.
     @ObservationIgnored private var holdRecording = false
-    /// Longer than the longest tap (0.30 s), short enough to feel immediate.
-    static let holdThreshold: TimeInterval = 0.35
     #if DEBUG
     /// Simulated key presses from the debug hook make dictations dry runs until this time.
     @ObservationIgnored private var debugDryRunUntil = Date.distantPast
@@ -287,6 +285,11 @@ final class AppModel: WritingHost {
                     Self.debugPhononIgnoresVocabulary = command == "phonon:force"
                     phononTrial = command != "phonon:off"
                 case "snapshot": snapshotMainWindow()
+                case let command where command.hasPrefix("settings:"):
+                    if let tab = SettingsTab(rawValue: String(command.dropFirst("settings:".count))) {
+                        settingsTab = tab
+                        page = .settings
+                    }
                 case "meeting:fixture":
                     page = .meetings
                     Task { await meetings.importDebugFixture() }
@@ -664,10 +667,12 @@ final class AppModel: WritingHost {
     private func scheduleHoldCheck() {
         guard settings.holdFnForRaw, dictation.phase == .idle else { return }
         holdTask?.cancel()
+        let delay = settings.pushToTalkDelay
         holdTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(Self.holdThreshold))
+            try? await Task.sleep(for: .seconds(delay))
             guard let self, !Task.isCancelled, dictation.phase == .idle,
-                  detector.isHeld(for: Self.holdThreshold, at: ProcessInfo.processInfo.systemUptime)
+                  settings.holdFnForRaw,
+                  detector.isHeld(for: delay, at: ProcessInfo.processInfo.systemUptime)
             else { return }
             holdRecording = true
             trace("→ Fn held: recording until release (raw)")

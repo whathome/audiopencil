@@ -4,12 +4,14 @@ import APModels
 import SwiftUI
 
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, models, permissions
+    case general, dictation, notes, models, permissions
     var id: Self { self }
 
     var title: LocalizedStringResource {
         switch self {
         case .general: "General"
+        case .dictation: "Dictation"
+        case .notes: "Notes"
         case .models: "Models"
         case .permissions: "Permissions"
         }
@@ -18,14 +20,16 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .general: "gearshape"
+        case .dictation: "mic"
+        case .notes: "doc.text"
         case .models: "cpu"
         case .permissions: "checkmark.shield"
         }
     }
 }
 
-/// Settings in three tabs: General, Models, Permissions (which used to be the Setup page).
-/// A page in the main window (segmented tabs under the title) or the ⌘, window (tab bar).
+/// Focused settings categories, shared by the main page and the standalone Settings window.
+/// A page in the main window or the ⌘, window, with the same category buttons in both.
 struct SettingsView: View {
     @Bindable var app: AppModel
     /// Shown as a page in the main window rather than the ⌘, Settings window.
@@ -35,14 +39,15 @@ struct SettingsView: View {
         if embedded {
             content(app.settingsTab)
         } else {
-            TabView(selection: $app.settingsTab) {
-                ForEach(SettingsTab.allCases) { tab in
-                    content(tab)
-                        .tabItem { Label { Text(tab.title) } icon: { Image(systemName: tab.symbol) } }
-                        .tag(tab)
-                }
+            VStack(spacing: 0) {
+                SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
+                Divider()
+                content(app.settingsTab)
             }
-            .frame(width: 560, height: 660)
+            .frame(width: 640, height: 740)
         }
     }
 
@@ -50,27 +55,22 @@ struct SettingsView: View {
     private func content(_ tab: SettingsTab) -> some View {
         switch tab {
         case .general: GeneralSettings(app: app, embedded: embedded)
+        case .dictation: DictationSettingsView(app: app, embedded: embedded)
+        case .notes: NoteSettings(app: app, embedded: embedded)
         case .models: ModelSettings(app: app, embedded: embedded)
         case .permissions: SetupView(app: app, showsHeader: false, settingsHeader: embedded)
         }
     }
 }
 
-/// Page title and tab switcher, placed in each tab's first section header so it lines up with the form.
+/// Page title and categories, aligned with the first form section.
 struct SettingsHeader: View {
     @Bindable var app: AppModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            PageHeader(title: "Settings", subtitle: "Hotkey and sounds, the models on this Mac, and permissions.")
-            HStack(spacing: 8) {
-                SettingsTabControl(selection: $app.settingsTab)
-                    .frame(maxWidth: 380)
-                if app.needsSetup {
-                    Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
-                        .help("Permissions need attention")
-                }
-            }
+            PageHeader(title: "Settings", subtitle: "App behavior, dictation, notes, models and permissions.")
+            SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup)
         }
         .padding(.top, 8)
         .padding(.bottom, 10)
@@ -80,41 +80,57 @@ struct SettingsHeader: View {
     }
 }
 
-/// Segmented tabs with the ⌘, window's tab-bar symbols. SwiftUI's segmented picker drops a Label's icon
-/// on macOS, so this is the AppKit control.
-private struct SettingsTabControl: NSViewRepresentable {
+private struct SettingsCategoryControl: View {
     @Binding var selection: SettingsTab
+    let needsPermissions: Bool
 
-    func makeNSView(context: Context) -> NSSegmentedControl {
-        let control = NSSegmentedControl(
-            labels: SettingsTab.allCases.map { String(localized: $0.title) },
-            trackingMode: .selectOne,
-            target: context.coordinator,
-            action: #selector(Coordinator.changed(_:))
-        )
-        for (index, tab) in SettingsTab.allCases.enumerated() {
-            control.setImage(NSImage(systemSymbolName: tab.symbol, accessibilityDescription: nil), forSegment: index)
-            control.setImageScaling(.scaleProportionallyDown, forSegment: index)
+    var body: some View {
+        GeometryReader { geometry in
+            let side = min(96, (geometry.size.width - 32) / CGFloat(SettingsTab.allCases.count))
+            HStack(spacing: 8) {
+                ForEach(SettingsTab.allCases) { tab in
+                    let selected = selection == tab
+                    Button {
+                        selection = tab
+                    } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: tab.symbol)
+                                .font(.system(size: 22, weight: .medium))
+                                .foregroundStyle(selected ? Color.pencil : Color.secondary)
+                                .accessibilityHidden(true)
+                            Text(tab.title)
+                                .font(.callout.weight(selected ? .semibold : .regular))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
+                        }
+                        .padding(6)
+                        .frame(width: side, height: side)
+                        .background(selected ? Color.pencil.opacity(0.14) : Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(selected ? Color.pencil : Color.secondary.opacity(0.25), lineWidth: selected ? 1.5 : 0.5)
+                        }
+                        .overlay(alignment: .topTrailing) {
+                            if tab == .permissions, needsPermissions {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .foregroundStyle(.orange)
+                                    .padding(6)
+                                    .help("Permissions need attention")
+                                    .accessibilityHidden(true)
+                            }
+                        }
+                        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(tab.title))
+                    .accessibilityAddTraits(selected ? [.isSelected] : [])
+                    .accessibilityValue(tab == .permissions && needsPermissions ? Text("Permissions need attention") : Text(""))
+                    .help(Text(tab.title))
+                }
+            }
         }
-        control.segmentDistribution = .fillEqually
-        return control
-    }
-
-    func updateNSView(_ control: NSSegmentedControl, context: Context) {
-        context.coordinator.selection = $selection
-        control.selectedSegment = SettingsTab.allCases.firstIndex(of: selection) ?? 0
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(selection: $selection) }
-
-    final class Coordinator: NSObject {
-        var selection: Binding<SettingsTab>
-        init(selection: Binding<SettingsTab>) { self.selection = selection }
-
-        @objc func changed(_ control: NSSegmentedControl) {
-            guard SettingsTab.allCases.indices.contains(control.selectedSegment) else { return }
-            selection.wrappedValue = SettingsTab.allCases[control.selectedSegment]
-        }
+        .frame(height: 96)
     }
 }
 
@@ -178,6 +194,65 @@ private struct GeneralSettings: View {
     @Bindable var app: AppModel
     var embedded = false
 
+    var body: some View {
+        Form {
+            Section {
+                Toggle(isOn: $app.settings.menuBarMode) {
+                    Text("Menu bar only")
+                    Text("Hide the Dock icon and show Audio Pencil in the menu bar.")
+                }
+                Toggle("Launch at login", isOn: Binding(get: { app.launchAtLogin }, set: { app.setLaunchAtLogin($0) }))
+                if app.launchAtLoginNeedsApproval {
+                    Text("Approve Audio Pencil in System Settings › General › Login Items.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+                LabeledContent {
+                    Button("Run Setup Again…") { app.showSetup(hidingMainWindow: false) }
+                } label: {
+                    Text("Setup")
+                    Text("Walks through the dictation key, permissions, languages, storage and models. Nothing is reset.")
+                }
+            } header: {
+                FirstSectionHeader(app: app, embedded: embedded, title: "App")
+            }
+
+            Section("Sounds") {
+                HStack {
+                    Picker("Start and stop sounds", selection: $app.settings.cueTheme) {
+                        ForEach(CueTheme.allCases, id: \.self) { Text($0.label).tag($0.rawValue) }
+                    }
+                    Button {
+                        app.dictation.previewSounds()
+                    } label: {
+                        Label("Play", systemImage: "speaker.wave.2")
+                    }
+                    .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
+                }
+                LabeledContent("Volume") {
+                    HStack {
+                        Image(systemName: "speaker.fill").foregroundStyle(.secondary)
+                        Slider(value: $app.settings.cueVolume, in: 0.05...1) { editing in
+                            if !editing { app.dictation.previewSounds() }
+                        }
+                        .accessibilityLabel(Text("Sound volume"))
+                        Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
+                    }
+                }
+                .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
+            }
+            .onChange(of: app.settings.cueTheme) { app.dictation.previewSounds() }
+        }
+        .formStyle(.grouped)
+        .pageAligned(embedded)
+    }
+}
+
+private struct DictationSettingsView: View {
+    @Bindable var app: AppModel
+    var embedded = false
+    @State private var showsHotkeyOptions = false
+
     private var clipboardDetail: LocalizedStringResource {
         if #available(macOS 15.4, *), NSPasteboard.general.accessBehavior == .alwaysDeny {
             return "macOS is set to deny Audio Pencil clipboard access (Privacy & Security › Paste from Other Apps), so dictations stay on the clipboard."
@@ -209,85 +284,115 @@ private struct GeneralSettings: View {
                     }
                 }
                 .disabled(app.settings.startGesture == .singleTap)
-                Toggle(isOn: $app.settings.holdFnForRaw) {
-                    Text("Hold \(key.name) for a raw transcript")
-                    Text("Press and hold, talk, release to paste. Pressing another key while holding cancels, so \(key.name) still works as a modifier.")
-                }
                 Toggle("Return also stops", isOn: $app.settings.returnStops)
-                LabeledContent {
-                    HStack(spacing: 8) {
-                        ShortcutRecorder(app: app)
-                            .disabled(!app.settings.fallbackShortcutEnabled)
-                        Toggle("", isOn: $app.settings.fallbackShortcutEnabled)
-                            .labelsHidden()
-                            .toggleStyle(.switch)
-                            .accessibilityLabel(Text("Shortcut"))
+                DisclosureGroup("Timing and shortcuts", isExpanded: $showsHotkeyOptions) {
+                    LabeledContent {
+                        HStack(spacing: 8) {
+                            ShortcutRecorder(app: app)
+                                .disabled(!app.settings.fallbackShortcutEnabled)
+                            Toggle("", isOn: $app.settings.fallbackShortcutEnabled)
+                                .labelsHidden()
+                                .toggleStyle(.switch)
+                                .accessibilityLabel(Text("Shortcut"))
+                        }
+                    } label: {
+                        Text("Shortcut")
+                        Text("Also starts and stops dictation. Click it to record a different one.")
                     }
-                } label: {
-                    Text("Shortcut")
-                    Text("Also starts and stops dictation. Click it to record a different one.")
-                }
-                if app.settings.startGesture == .doubleTap || app.settings.effectiveStopGesture == .doubleTapFn {
-                    LabeledContent("Double-tap speed") {
-                        HStack {
-                            Slider(value: $app.settings.doubleTapWindow, in: 0.25...0.7, step: 0.05)
-                            Text("\(Int(app.settings.doubleTapWindow * 1000)) ms")
-                                .monospacedDigit()
-                                .frame(width: 60, alignment: .trailing)
+                    if app.settings.startGesture == .doubleTap || app.settings.effectiveStopGesture == .doubleTapFn {
+                        LabeledContent("Double-tap speed") {
+                            HStack {
+                                Slider(value: $app.settings.doubleTapWindow, in: 0.25...0.7, step: 0.05) {
+                                    Text("Double-tap speed")
+                                }
+                                .labelsHidden()
+                                .accessibilityValue(Text("\(Int((app.settings.doubleTapWindow * 1000).rounded())) milliseconds"))
+                                Text("\(Int((app.settings.doubleTapWindow * 1000).rounded())) ms")
+                                    .monospacedDigit()
+                                    .frame(width: 70, alignment: .trailing)
+                            }
                         }
                     }
-                }
-                if app.settings.startGesture == .doubleTap {
-                    Toggle(isOn: $app.settings.warmMicOnFirstTap) {
-                        Text("Start the mic on the first \(key.name) tap")
-                        Text("Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone \(key.name) tap.")
+                    if app.settings.startGesture == .doubleTap {
+                        Toggle(isOn: $app.settings.warmMicOnFirstTap) {
+                            Text("Start the mic on the first \(key.name) tap")
+                            Text("Recording starts instantly on the second tap. The mic indicator flashes briefly on a lone \(key.name) tap.")
+                        }
                     }
                 }
             } header: {
                 FirstSectionHeader(app: app, embedded: embedded, title: "Dictation hotkey")
             }
 
+            Section("Push-to-talk") {
+                Toggle(isOn: $app.settings.holdFnForRaw) {
+                    Text("Hold \(app.settings.gestureKey.name) for a raw transcript")
+                    Text("Press and hold, talk, release to paste. Pressing another key while holding cancels, so \(app.settings.gestureKey.name) still works as a modifier.")
+                }
+                if app.settings.holdFnForRaw {
+                    LabeledContent {
+                        HStack {
+                            Slider(value: $app.settings.pushToTalkDelay, in: DictationSettings.pushToTalkDelayRange, step: 0.05) {
+                                Text("Push-to-talk delay")
+                            }
+                            .labelsHidden()
+                            .accessibilityValue(Text("\(Int((app.settings.pushToTalkDelay * 1000).rounded())) milliseconds"))
+                            Text("\(Int((app.settings.pushToTalkDelay * 1000).rounded())) ms")
+                                .monospacedDigit()
+                                .frame(width: 70, alignment: .trailing)
+                        }
+                    } label: {
+                        Text("Push-to-talk delay")
+                        Text("Shorter starts sooner but makes accidental recordings easier. Default: 350 ms.")
+                    }
+                }
+            }
 
-            Section("Pasting") {
+            Section("After recording") {
+                Toggle(isOn: $app.settings.pickStyleAfterStop) {
+                    Text("Show a style picker after stopping")
+                    Text("The style for this app is preselected and picked automatically unless you press a number.")
+                }
+                if app.settings.pickStyleAfterStop {
+                    LabeledContent("Pick automatically after") {
+                        HStack {
+                            Slider(value: $app.settings.pickerAutoConfirm, in: 0.5...3, step: 0.25) {
+                                Text("Style picker delay")
+                            }
+                            .labelsHidden()
+                            Text(String(format: "%.2g s", app.settings.pickerAutoConfirm))
+                                .monospacedDigit()
+                                .frame(width: 44, alignment: .trailing)
+                        }
+                    }
+                }
                 Toggle(isOn: $app.settings.keepClipboard) {
                     Text("Keep what's on my clipboard")
                     Text(clipboardDetail)
                 }
             }
 
-            TaskKeywordsSection(app: app)
+            MicrophonePriorityList(app: app)
 
-            Section("Sounds") {
-                HStack {
-                    Picker("Start and stop sounds", selection: $app.settings.cueTheme) {
-                        ForEach(CueTheme.allCases, id: \.self) { Text($0.label).tag($0.rawValue) }
-                    }
-                    Button {
-                        app.dictation.previewSounds()
-                    } label: {
-                        Label("Play", systemImage: "speaker.wave.2")
-                    }
-                    .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
-                }
-                LabeledContent("Volume") {
-                    HStack {
-                        Image(systemName: "speaker.fill").foregroundStyle(.secondary)
-                        Slider(value: $app.settings.cueVolume, in: 0.05...1) { editing in
-                            if !editing { app.dictation.previewSounds() }
-                        }
-                        Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
-                    }
-                }
-                .disabled(app.settings.cueTheme == CueTheme.none.rawValue)
+            Section("Recording indicator") {
+                Toggle("Show live transcript above the indicator", isOn: $app.settings.showLiveText)
             }
-            .onChange(of: app.settings.cueTheme) { app.dictation.previewSounds() }
 
             DictationLanguagesSection(app: app)
 
-            MicrophonePriorityList(app: app)
-
             VocabularySection(app: app)
+        }
+        .formStyle(.grouped)
+        .pageAligned(embedded)
+    }
+}
 
+private struct NoteSettings: View {
+    @Bindable var app: AppModel
+    var embedded = false
+
+    var body: some View {
+        Form {
             Section {
                 LabeledContent {
                     HStack(spacing: 6) {
@@ -307,7 +412,7 @@ private struct GeneralSettings: View {
                     Text("The note stays. Notes you move to Archive on the board keep their audio. Removed files go to the trash.")
                 }
             } header: {
-                Text("Notes")
+                FirstSectionHeader(app: app, embedded: embedded, title: "Saving and retention")
             } footer: {
                 FormFooter("Notes go to each style's folder (set on the Styles page), or \(String(NoteMaker.defaultFolder.dropFirst())). Audio goes to \(String(NoteMaker.recordingsFolder.dropFirst())).")
             }
@@ -316,24 +421,7 @@ private struct GeneralSettings: View {
 
             PushToTalkSection(app: app)
 
-            Section("App") {
-                Toggle(isOn: $app.settings.menuBarMode) {
-                    Text("Menu bar only")
-                    Text("Hide the Dock icon and show Audio Pencil in the menu bar.")
-                }
-                Toggle("Launch at login", isOn: Binding(get: { app.launchAtLogin }, set: { app.setLaunchAtLogin($0) }))
-                if app.launchAtLoginNeedsApproval {
-                    Text("Approve Audio Pencil in System Settings › General › Login Items.")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
-                LabeledContent {
-                    Button("Run Setup Again…") { app.showSetup(hidingMainWindow: false) }
-                } label: {
-                    Text("Setup")
-                    Text("Walks through the dictation key, permissions, languages, storage and models. Nothing is reset.")
-                }
-            }
+            TaskKeywordsSection(app: app)
         }
         .formStyle(.grouped)
         .pageAligned(embedded)
@@ -406,7 +494,6 @@ private struct DictationLanguagesSection: View {
     }
 }
 
-/// One list for every language, plus a list per language; a recording uses both.
 /// Linking new notes in Obsidian's daily note. Greyed out until the vault has Daily notes on.
 private struct DailyNoteSection: View {
     @Bindable var app: AppModel
@@ -448,7 +535,7 @@ private struct PushToTalkSection: View {
             TextField("File", text: $app.settings.pushToTalkFile, prompt: Text(verbatim: "Inbox.md"))
             TextField("Under the heading", text: $app.settings.pushToTalkHeading, prompt: Text("At the end of the file"))
         } header: {
-            Text("Push-to-talk")
+            Text("Push-to-talk filing")
         } footer: {
             FormFooter("Push-to-talk pastes, and that's all unless you choose otherwise: while holding the key, click the pill's \"Paste\" badge to also add the text to today's daily note or this file (in your storage, created if missing), as \"- 14:32 the text\". A task keyword gives a task line with no time.")
         }
@@ -478,6 +565,7 @@ private struct TaskKeywordsSection: View {
     }
 }
 
+/// One list for every language, plus a list per language; a recording uses both.
 private struct VocabularySection: View {
     @Bindable var app: AppModel
     /// "" edits the list for all languages; otherwise a Whisper code.
@@ -549,18 +637,6 @@ private struct ModelSettings: View {
                         }
                     }
                 }
-                Toggle(isOn: $app.settings.pickStyleAfterStop) {
-                    Text("Show a style picker after stopping")
-                    Text("The style for this app is preselected and picked automatically unless you press a number.")
-                }
-                if app.settings.pickStyleAfterStop {
-                    LabeledContent("Pick automatically after") {
-                        HStack {
-                            Slider(value: $app.settings.pickerAutoConfirm, in: 0.5...3, step: 0.25)
-                            Text(String(format: "%.2g s", app.settings.pickerAutoConfirm)).monospacedDigit().frame(width: 44, alignment: .trailing)
-                        }
-                    }
-                }
             } header: {
                 FirstSectionHeader(app: app, embedded: embedded, title: "Styles")
             } footer: {
@@ -595,7 +671,6 @@ private struct ModelSettings: View {
                     }
                 }
                 .disabled(app.dictation.isActive)
-                Toggle("Show live transcript above the indicator", isOn: $app.settings.showLiveText)
             }
 
             ModelSuggestionsSection(advisor: app.advisor)

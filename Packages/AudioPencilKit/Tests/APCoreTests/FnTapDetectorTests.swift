@@ -70,6 +70,19 @@ struct FnTapDetectorTests {
         #expect(!detector.isHeld(for: 0.35, at: 0.5))
     }
 
+    @Test(arguments: [0.1, 0.15, 0.35, 1.0])
+    func holdUsesConfiguredDelay(_ delay: Double) {
+        var detector = FnTapDetector()
+        _ = detector.handle(.keyDown(at: 0))
+        #expect(!detector.isHeld(for: delay, at: delay - 0.001))
+        #expect(detector.isHeld(for: delay, at: delay))
+        _ = detector.handle(.keyUp(at: delay + 0.01))
+        detector.reset() // release consumed by push-to-talk, even if it was shorter than a tap
+        #expect(!detector.isHeld(for: delay, at: delay + 0.02))
+        _ = detector.handle(.keyDown(at: delay + 0.1))
+        #expect(detector.handle(.keyUp(at: delay + 0.15)) == .singleTap)
+    }
+
     @Test func gapIsConfigurable() {
         let tight = FnTapDetector.Configuration(maxTapDuration: 0.3, maxGapBetweenTaps: 0.1)
         let gestures = run([.keyDown(at: 0), .keyUp(at: 0.05), .keyDown(at: 0.25), .keyUp(at: 0.3)], config: tight)
@@ -83,6 +96,21 @@ struct DictationSettingsTests {
         let settings = try JSONDecoder().decode(DictationSettings.self, from: json)
         #expect(settings.stopGesture == .doubleTapFn)
         #expect(settings.returnStops)
+        #expect(settings.pushToTalkDelay == 0.35)
         #expect(settings.transcriptionModel == "openai_whisper-small.en")
+    }
+
+    @Test func pushToTalkDelayPersists() throws {
+        var settings = DictationSettings()
+        settings.pushToTalkDelay = 0.15
+        let restored = try JSONDecoder().decode(DictationSettings.self, from: JSONEncoder().encode(settings))
+        #expect(restored == settings)
+    }
+
+    @Test(arguments: [-1.0, 0.0, 0.1, 0.15, 0.35, 1.0, 10.0])
+    func pushToTalkDelayIsBounded(_ delay: Double) throws {
+        let json = Data("{\"pushToTalkDelay\":\(delay)}".utf8)
+        let settings = try JSONDecoder().decode(DictationSettings.self, from: json)
+        #expect(settings.pushToTalkDelay == min(max(delay, 0.1), 1.0))
     }
 }

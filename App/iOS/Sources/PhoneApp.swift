@@ -20,8 +20,17 @@ struct PhoneApp: App {
         WindowGroup {
             RootView(app: app)
                 .tint(Color.pencil)
+                .preferredColorScheme(testAppearance)
                 .task { app.bootstrap() }
         }
+    }
+
+    private var testAppearance: ColorScheme? {
+        #if DEBUG && targetEnvironment(simulator)
+        ProcessInfo.processInfo.arguments.contains("--ui-testing-dark") ? .dark : nil
+        #else
+        nil
+        #endif
     }
 }
 
@@ -30,7 +39,7 @@ struct RootView: View {
     @State private var tab = Tab.record
 
     enum Tab: Hashable {
-        case record, notes, settings
+        case record, meetings, notes, settings
     }
 
     var body: some View {
@@ -38,12 +47,19 @@ struct RootView: View {
             SwiftUI.Tab("Record", systemImage: "mic", value: Tab.record) {
                 RecordView(app: app)
             }
+            SwiftUI.Tab("Meetings", systemImage: "person.2", value: Tab.meetings) {
+                MobileMeetingsView(app: app, meetings: app.meetings)
+            }
             SwiftUI.Tab("Notes", systemImage: "doc.text", value: Tab.notes) {
                 NotesView(app: app)
             }
             SwiftUI.Tab("Settings", systemImage: "gearshape", value: Tab.settings) {
                 PhoneSettingsView(app: app)
             }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        .onChange(of: app.meetings.ownsCapture) { _, recording in
+            if recording { tab = .meetings }
         }
         .fullScreenCover(isPresented: Binding(get: { !app.setupCompleted }, set: { _ in })) {
             PhoneSetupView(app: app)

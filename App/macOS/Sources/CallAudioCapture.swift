@@ -11,16 +11,6 @@ struct CallApplication: Identifiable, Hashable {
     let bundleID: String
 }
 
-enum MeetingCaptureError: LocalizedError {
-    case unavailable(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .unavailable(let message): message
-        }
-    }
-}
-
 /// ScreenCaptureKit's audio output only. No screen output or image is installed or retained.
 nonisolated final class CallAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
     #if DEBUG

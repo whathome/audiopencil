@@ -3,6 +3,38 @@ import Foundation
 import Testing
 
 struct MeetingSessionTests {
+    @Test(arguments: [MeetingSession.Stage.recording, .paused, .transcribing, .writing])
+    func interruptedMeetingsRecoverWithoutLosingReview(_ stage: MeetingSession.Stage) {
+        var meeting = MeetingSession(title: "Planning", kind: .inPerson, microphoneUID: "", microphoneName: "iPad", language: "en")
+        meeting.stage = stage
+        meeting.processingRequested = true
+        meeting.turns = [.init(speaker: "Speaker 1", start: 1, end: 2, text: "Send the notes.")]
+        meeting.actions = "- [ ] Alex: send the notes"
+        meeting.speakerNames["Speaker 1"] = "Alex"
+        meeting.recoverAfterInterruption(audioDuration: 23)
+        #expect(meeting.stage == .saved)
+        #expect(meeting.duration == 23)
+        #expect(!meeting.processingRequested)
+        #expect(meeting.warnings.count == 1)
+        #expect(meeting.transcript == "Alex: Send the notes.")
+        #expect(meeting.actions == "- [ ] Alex: send the notes")
+        meeting.recoverAfterInterruption(audioDuration: 0)
+        #expect(meeting.warnings.count == 1)
+        #expect(meeting.duration == 23)
+    }
+
+    @Test func finishedMeetingsAreNotResetWhenReopened() {
+        var meeting = MeetingSession(title: "Planning", kind: .inPerson, microphoneUID: "", microphoneName: "", language: "en")
+        meeting.stage = .ready
+        meeting.duration = 60
+        meeting.reviewed = true
+        meeting.recoverAfterInterruption(audioDuration: 0)
+        #expect(meeting.stage == .ready)
+        #expect(meeting.duration == 60)
+        #expect(meeting.reviewed)
+        #expect(meeting.warnings.isEmpty)
+    }
+
     @Test func reviewAndSourceIdentityRoundTrip() throws {
         var meeting = MeetingSession(title: "Planning", kind: .videoCall, microphoneUID: "usb-interface", microphoneName: "Komplete Audio 6", language: "en")
         meeting.turns = [.init(speaker: "you", start: 1, end: 2, text: "I will send the notes.")]
