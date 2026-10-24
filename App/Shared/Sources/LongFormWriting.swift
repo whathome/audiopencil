@@ -76,6 +76,8 @@ extension WritingHost {
         language: SpokenLanguage,
         speakerLabel: String? = nil,
         said: Date = Date(),
+        /// How far the current step has got, when it's made of parts (set after the step's status).
+        progress: @escaping @MainActor (Double) -> Void = { _ in },
         status: @escaping @MainActor (String) -> Void
     ) async -> ProcessedLongForm {
         let fallback = ProcessedLongForm(body: transcript, title: nil, knownTags: [], newTags: [])
@@ -111,6 +113,7 @@ extension WritingHost {
                     var notes: [String] = []
                     for (index, section) in sections.enumerated() {
                         status(String(localized: "Summarising part \(index + 1) of \(sections.count)…"))
+                        progress(Double(index) / Double(sections.count))
                         notes.append(try await generateText(PromptBuilder.sectionNotesPrompt(section: section, index: index + 1, count: sections.count, vocabulary: vocabulary, language: language, speakerLabel: speakerLabel)))
                     }
                     status(String(localized: "Writing the note…"))
@@ -120,6 +123,7 @@ extension WritingHost {
                     var parts: [String] = []
                     for (index, section) in sections.enumerated() {
                         status(String(localized: "Writing part \(index + 1) of \(sections.count)…"))
+                        progress(Double(index) / Double(sections.count))
                         parts.append(try await generateText(stylePrompt(for: style, transcript: section, context: .longForm, language: language, speakerLabel: speakerLabel)))
                     }
                     body = parts.joined(separator: "\n\n")

@@ -6,7 +6,7 @@
 
 ios
 
-Native Apple: SwiftUI on a shared Swift package. Phase 1 is the **macOS** app (current); phase 2 adds the iPhone app and a keyboard extension once a paid developer account exists. Apple HIG governs structure and interaction on both.
+Native Apple: SwiftUI on a shared Swift package. Phase 1, the **macOS** app, and phase 2, the **iPhone** app (with widgets and a Live Activity), are built and in daily use. Phase 3 adds an iPhone keyboard extension. Apple HIG governs structure and interaction on both.
 
 ## Users
 
@@ -27,8 +27,10 @@ Everything runs on the device: Whisper for transcription and a small local LLM f
 
 ## Operating Context
 
-- Mac quick dictation: double-tap Fn starts, tap Fn or Return stops, Esc cancels, hold Fn for push-to-talk raw. A floating indicator sits at the bottom of the screen; tricorder-style beeps confirm start and stop. Number keys switch style while recording.
-- Recordings longer than the long-form threshold (default 5 min) become notes, with a review prompt for title, tags and folder.
+- Mac quick dictation: double-tap Fn starts, tap Fn or Return stops, Esc cancels. A floating pill sits at the bottom of the screen; tricorder-style beeps confirm start and stop. Number keys switch style while recording, and the pill's Paste / Note / Meeting toggle decides what stopping does for this recording.
+- Push-to-talk (hold Fn) pastes the raw text; while holding, its pill badge can also add the line to the Obsidian daily note or a chosen file.
+- Recordings longer than the long-form threshold (default 5 min) become notes, filed straight away as needs-review with suggested title and tags; review happens on the Obsidian board, not in the app. Notes can be linked in the day's daily note.
+- iPhone: a walk-and-talk recorder that keeps going with the phone locked in a pocket (Live Activity, Control Centre, Action Button, Siri). Transcription keeps up in the background, but the writing model needs the app on screen, so notes queue and are written while it's open. A recording can also be copied instead of filed and filed later.
 - Obsidian Bases board in the vault: Professional review (Kanban by status), Diary, All recordings, and Retention (Regular / Archive / Delete).
 - The app runs mostly in the background (Dock or menu bar). The main window is for configuring, checking status and occasional review, not a place to spend time.
 - Target hardware is 8 GB of RAM, so the transcription and writing models are never resident together. Styled output takes seconds; raw output is near-instant.
@@ -38,9 +40,11 @@ Everything runs on the device: Whisper for transcription and a small local LLM f
 - Styles: Raw (0), Polished, Diary, Professional and Like me, plus user-defined styles with intensity, tone and length. Per-app style memory.
 - My writing: interview prompts collect writing samples, which are used as few-shot examples for Like me.
 - Model discovery on Hugging Face scales to the machine's RAM. Nothing switches without approval.
-- Vault: one provider at a time (Nextcloud, or a local/iCloud folder). Writes are offline-first, go through a queue, and are merged with ETags. Settings and board files can be repaired, with backups.
+- Storage: one provider at a time (Nextcloud, any WebDAV server, or a local or iCloud folder), as an Obsidian vault or plain Markdown. Writes are offline-first, go through a queue, and are merged with ETags. Settings and board files can be repaired, with backups.
+- Tasks: action items and task-keyword dictations become Obsidian Tasks lines with spoken due and start dates.
+- Meeting mode labels speakers on device (Mac and iPhone).
 - Retention: quick dictations aren't saved by default; long-form audio is kept for 1 year unless archived; the board's Delete column removes the note and its audio.
-- No network except Nextcloud WebDAV and Hugging Face model downloads. English only. No app lock.
+- No network except the user's own storage and Hugging Face model downloads. Interface in English, French and Spanish; dictation in any of Whisper's languages. No app lock.
 - Builds and runs locally from Xcode with a Personal Team, outside the App Store.
 
 ## Brand Commitments

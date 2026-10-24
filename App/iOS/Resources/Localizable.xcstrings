@@ -116,6 +116,38 @@
         }
       }
     },
+    "%lld percent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld por ciento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pour cent"
+          }
+        }
+      }
+    },
+    "%lld waiting to be written": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld esperando redacción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld en attente de rédaction"
+          }
+        }
+      }
+    },
     "%lld waiting to be written: carries on when you stop": {
       "localizations": {
         "es": {
@@ -704,6 +736,22 @@
         }
       }
     },
+    "Couldn't copy it: your storage can't be reached, and this note's text isn't on this device.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo copiar: no se puede acceder a tu almacenamiento y el texto de esta nota no está en este dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copie impossible : votre stockage est injoignable et le texte de cette note n'est pas sur cet appareil."
+          }
+        }
+      }
+    },
     "Couldn't start the microphone: %@": {
       "localizations": {
         "es": {
@@ -838,6 +886,22 @@
         }
       }
     },
+    "Discard Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l'enregistrement"
+          }
+        }
+      }
+    },
     "Discard recording": {
       "localizations": {
         "es": {
@@ -850,6 +914,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Supprimer l’enregistrement"
+          }
+        }
+      }
+    },
+    "Discard this %@ recording?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar esta grabación de %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer cet enregistrement de %@ ?"
           }
         }
       }
@@ -1244,18 +1324,66 @@
         }
       }
     },
-    "Labelling the speakers…": {
+    "It can't be brought back.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Identificando a los interlocutores…"
+            "value": "No se podrá recuperar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Identification des intervenants…"
+            "value": "Il ne pourra pas être récupéré."
+          }
+        }
+      }
+    },
+    "Keep Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder l'enregistrement"
+          }
+        }
+      }
+    },
+    "Labelling the speakers: finding who spoke when…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificando a los hablantes: quién habló cuándo…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identification des intervenants : qui a parlé quand…"
+          }
+        }
+      }
+    },
+    "Labelling the speakers: transcribing again…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificando a los hablantes: transcribiendo de nuevo…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identification des intervenants : nouvelle transcription…"
           }
         }
       }
@@ -1496,6 +1624,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modèles"
+          }
+        }
+      }
+    },
+    "Needs storage": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requiere almacenamiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stockage requis"
           }
         }
       }
@@ -1752,6 +1896,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Désactivée"
+          }
+        }
+      }
+    },
+    "Off in Obsidian": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado en Obsidian"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé dans Obsidian"
           }
         }
       }
@@ -2284,18 +2444,18 @@
         }
       }
     },
-    "Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board.": {
+    "Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board. Ones you only copy wait here until you file them.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las grabaciones se convierten en notas: redactadas en un estilo, con su audio, archivadas en tu carpeta de notas. Revísalas en tu tablero de Obsidian."
+            "value": "Las grabaciones se convierten en notas: redactadas en un estilo, con su audio, archivadas en tu carpeta de notas. Revísalas en tu tablero de Obsidian. Las que solo copias esperan aquí hasta que las archives."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les enregistrements deviennent des notes : rédigées dans un style, avec leur audio, classées dans votre dossier de notes. Relisez-les sur votre tableau Obsidian."
+            "value": "Les enregistrements deviennent des notes : rédigées dans un style, avec leur audio, classées dans votre dossier de notes. Relisez-les sur votre tableau Obsidian. Celles que vous copiez seulement attendent ici jusqu'à ce que vous les classiez."
           }
         }
       }
@@ -3050,18 +3210,18 @@
         }
       }
     },
-    "Tap the button and talk. It's transcribed on this iPhone as you go, then written up as a note.": {
+    "Tap the button and talk. It's transcribed on this device as you go, then written up as a note or copied.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toca el botón y habla. Se transcribe en este iPhone sobre la marcha y luego se redacta como una nota."
+            "value": "Toca el botón y habla. Se transcribe en este dispositivo sobre la marcha y luego se redacta como nota o se copia."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Touchez le bouton et parlez. La transcription se fait sur cet iPhone au fil de l’eau, puis devient une note."
+            "value": "Touchez le bouton et parlez. C'est transcrit sur cet appareil au fur et à mesure, puis rédigé en note ou copié."
           }
         }
       }
@@ -3146,18 +3306,18 @@
         }
       }
     },
-    "The writing model isn't on this iPhone yet, so the note keeps the transcript as spoken.": {
+    "The writing model isn't on this device yet, so this keeps the transcript as spoken. Get it to write in %@.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El modelo de redacción aún no está en este iPhone, así que la nota conserva la transcripción tal como se dijo."
+            "value": "El modelo de redacción aún no está en este dispositivo, así que se conserva la transcripción tal cual. Descárgalo para escribir como %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le modèle de rédaction n’est pas encore sur cet iPhone : la note garde donc la transcription telle que dite."
+            "value": "Le modèle de rédaction n'est pas encore sur cet appareil : la transcription est gardée telle quelle. Téléchargez-le pour rédiger en %@."
           }
         }
       }
@@ -3670,6 +3830,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Détecter"
+          }
+        }
+      }
+    },
+    "Write Now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redactar ahora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédiger maintenant"
           }
         }
       }

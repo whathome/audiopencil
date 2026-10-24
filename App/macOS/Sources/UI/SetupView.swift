@@ -23,7 +23,7 @@ struct SetupView: View {
                     title: "Accessibility",
                     detail: "To see the hotkey and paste into the active field.",
                     granted: app.permissions.accessibility,
-                    action: ("Open Settings…", { app.permissions.requestAccessibility() })
+                    action: ("Allow…", { app.permissions.requestAccessibility() })
                 )
                 if app.settings.gestureKey == .fn {
                     PermissionRow(
@@ -35,10 +35,12 @@ struct SetupView: View {
                         action: ("Keyboard Settings…", { app.permissions.openKeyboardSettings() })
                     )
                 }
-                LabeledContent("Input Monitoring") {
-                    Text(app.permissions.inputMonitoring ? "Granted" : "Not needed so far")
-                        .foregroundStyle(.secondary)
-                }
+                PermissionRow(
+                    title: "Online meeting audio",
+                    detail: "To record the call app's audio. Optional for dictation.",
+                    granted: app.permissions.onlineMeetingAudio,
+                    action: ("Allow…", { app.permissions.requestOnlineMeetingAudio() })
+                )
             } header: {
                 VStack(alignment: .leading, spacing: 18) {
                     if settingsHeader {

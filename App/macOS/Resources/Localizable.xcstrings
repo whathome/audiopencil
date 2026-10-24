@@ -5268,6 +5268,22 @@
         }
       }
     },
+    "Online meeting audio": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio de reuniones en línea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio des réunions en ligne"
+          }
+        }
+      }
+    },
     "On this Mac": {
       "localizations": {
         "es": {
@@ -8368,6 +8384,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pour repérer la touche de dictée et coller dans l’app que vous utilisez."
+          }
+        }
+      }
+    },
+    "To record the call app's audio. Optional for dictation.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para grabar el audio de la app de llamadas. Opcional para dictar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour enregistrer l'audio de l'app d'appel. Facultatif pour la dictée."
           }
         }
       }

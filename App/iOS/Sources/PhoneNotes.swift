@@ -12,8 +12,14 @@ import UserNotifications
 @Observable
 final class PhoneNotes {
     private(set) var recent: [RecentNote] = []
-    /// What processing is doing right now, if anything.
-    private(set) var processing: String?
+    /// What processing is doing right now, if anything. A new step drops the last one's progress.
+    private(set) var processing: String? {
+        didSet { if processing != oldValue { processingFraction = nil } }
+    }
+    /// How far the current step has got, 0…1, when that's known (parts written, words transcribed again).
+    private(set) var processingFraction: Double?
+    /// When the recording being written up was started on, for the elapsed time beside the progress.
+    private(set) var processingSince: Date?
     /// Shown for a moment after a recording was written and copied instead of filed.
     private(set) var justCopied = false
     /// Recordings written and copied but not filed, newest first: kept with their audio until filed or deleted.
@@ -163,6 +169,7 @@ final class PhoneNotes {
                 saveQueue()
             }
             processing = nil
+            processingSince = nil
             processTask = nil
             // Stopped part-way while it could carry on (a recording started and ended during a slow step):
             // pick up again rather than wait for the app to be reopened.
@@ -189,6 +196,7 @@ final class PhoneNotes {
 
     /// True once the note is filed; false if writing was stopped part-way.
     private func process(_ item: QueuedRecording) async -> Bool {
+        processingSince = Date()
         // "New task: book the dentist" → a one-line task note, as said (no writing model needed).
         if item.meeting != true, let task = TaskKeywords.remainder(of: item.transcript, keywords: app.taskKeywords) {
             let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
@@ -213,13 +221,15 @@ final class PhoneNotes {
         let waiting = queue.count - 1
         var labelled: SpeakerTranscript?
         if item.meeting == true, let audio = item.audioFile.map({ folder.appending(path: $0) }) {
-            processing = String(localized: "Labelling the speakers…")
             labelled = await labelSpeakers(audio, language: language, speakers: item.speakers)
             if Task.isCancelled { return false }
         }
         let label = SpeakerTranscript.label
         let transcript = labelled?.text(label: label) ?? item.transcript
-        let result = await app.processLongForm(transcript: transcript, style: style, language: language, speakerLabel: labelled == nil ? nil : label, said: item.recorded) { [weak self] status in
+        let result = await app.processLongForm(
+            transcript: transcript, style: style, language: language, speakerLabel: labelled == nil ? nil : label, said: item.recorded,
+            progress: { [weak self] fraction in self?.processingFraction = fraction }
+        ) { [weak self] status in
             self?.processing = waiting > 0 ? String(localized: "\(status) (\(waiting) more waiting)") : status
         }
         // Writing stops when the app leaves the screen, and then returns the plain transcript: don't file that.
@@ -309,7 +319,26 @@ final class PhoneNotes {
             guard engine.isDownloaded else { return nil }
             try await app.coordinator.ensureLoaded(engine)
             await engine.setLanguage(language.code)
-            let labelled = try await speakerLabeler.transcribe(samples, with: engine, speakers: speakers)
+            // Two steps, said separately: Whisper again over every word (with progress), then the speaker model.
+            processing = String(localized: "Labelling the speakers: transcribing again…")
+            let watch = Task { [weak self] in
+                while !Task.isCancelled {
+                    let fraction = await engine.transcriptionProgress
+                    if fraction > 0, fraction < 1 { self?.processingFraction = fraction }
+                    try? await Task.sleep(for: .milliseconds(500))
+                }
+            }
+            let words: [TimedWord]
+            do {
+                words = try await engine.transcribeTimedWords(samples)
+                watch.cancel()
+            } catch {
+                watch.cancel()
+                throw error
+            }
+            processing = String(localized: "Labelling the speakers: finding who spoke when…")
+            let spans = try await speakerLabeler.speakerSpans(samples, speakers: speakers)
+            let labelled = SpeakerTranscript.align(words: words, spans: spans)
             await speakerLabeler.unload()
             if engine !== app.whisper { app.prepareModel() } // the coordinator swapped the app's model out
             return labelled
@@ -337,7 +366,7 @@ final class PhoneNotes {
         let styleName = app.styles.first { $0.id == note.styleID }?.displayName ?? note.styleID
         do {
             let filed = try await NoteFiling.queue(note, audio: audio, outbox: app.sync.outbox, layout: app.vault.layout ?? .plain)
-            recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: filed.path, status: note.status, body: note.body), at: 0)
+            recent.insert(RecentNote(id: note.id, title: note.title, styleName: styleName, recorded: note.recorded, path: filed.path, status: note.status, body: note.body, duration: note.duration), at: 0)
             recent = Array(recent.prefix(50))
             saveRecent()
             Log.dictation.notice("Note queued: \(filed.path, privacy: .public)")

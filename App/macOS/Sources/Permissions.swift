@@ -11,8 +11,8 @@ final class Permissions {
 
     private(set) var microphone: MicrophoneStatus = .notDetermined
     private(set) var accessibility = false
-    /// Not required while the active event tap works under Accessibility; shown for diagnosis.
-    private(set) var inputMonitoring = false
+    /// Optional for dictation; ScreenCaptureKit needs this to capture the call app's audio.
+    private(set) var onlineMeetingAudio = false
     /// System Settings › Keyboard › "Press 🌐 key to": 0 Do Nothing, 1 Change Input Source,
     /// 2 Show Emoji & Symbols, 3 Start Dictation.
     private(set) var fnKeyAction: Int?
@@ -37,7 +37,7 @@ final class Permissions {
         default: microphone = .denied
         }
         accessibility = AXIsProcessTrusted()
-        inputMonitoring = CGPreflightListenEventAccess()
+        onlineMeetingAudio = CGPreflightScreenCaptureAccess()
         fnKeyAction = CFPreferencesCopyAppValue("AppleFnUsageType" as CFString, "com.apple.HIToolbox" as CFString) as? Int
     }
 
@@ -59,9 +59,9 @@ final class Permissions {
         refresh()
     }
 
-    func requestInputMonitoring() {
-        if !CGRequestListenEventAccess() {
-            Self.openSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")
+    func requestOnlineMeetingAudio() {
+        if !CGRequestScreenCaptureAccess() {
+            Self.openSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
         }
         refresh()
     }

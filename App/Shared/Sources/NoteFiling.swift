@@ -25,6 +25,8 @@ struct RecentNote: Codable, Identifiable, Equatable {
     var retention: Note.Retention?
     /// The written text, for copying when the vault can't be reached (older entries don't have it).
     var body: String?
+    /// Seconds of audio (older entries don't have it).
+    var duration: TimeInterval?
 }
 
 /// Where notes and recordings go in the vault, and handing them to the upload queue.

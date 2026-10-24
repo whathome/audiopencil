@@ -12,6 +12,8 @@ struct NotesView: View {
     @State private var noteText: String?
     @State private var reading = false
     @State private var retry = UUID()
+    /// Why the last copy didn't happen, shown for a moment at the bottom.
+    @State private var copyProblem: String?
 
     private var notes: PhoneNotes { app.notes }
     private var rowLayout: AnyLayout {
@@ -62,9 +64,9 @@ struct NotesView: View {
                         Text("Until then, filed notes wait on this device.")
                     }
                 }
-                if let processing = notes.processing, !app.recorder.isActive {
+                if notes.processing != nil, !app.recorder.isActive {
                     Section {
-                        StatusRow(symbol: nil, text: processing)
+                        WritingProgressRow(notes: notes)
                     }
                 }
                 if !notes.queue.isEmpty { waiting }
@@ -76,11 +78,23 @@ struct NotesView: View {
                     ContentUnavailableView {
                         Label("No notes yet", systemImage: "doc.text")
                     } description: {
-                        Text("Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board.")
+                        Text("Recordings become notes: written up in a style, with their audio, filed in your notes folder. Review them on your Obsidian board. Ones you only copy wait here until you file them.")
                     }
                     .allowsHitTesting(false)
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                if let copyProblem {
+                    Label(copyProblem, systemImage: "exclamationmark.triangle.fill")
+                        .font(.footnote)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(.regularMaterial, in: Capsule())
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.snappy, value: copyProblem)
             .navigationTitle("Notes")
     }
 
@@ -137,9 +151,9 @@ struct NotesView: View {
         Section {
             ForEach(notes.queue) { item in
                 rowLayout {
-                    selectableRow(item.id, title: NoteRenderer.fallbackTitle(from: item.transcript), detail: item.recorded.formatted(date: .abbreviated, time: .shortened))
+                    selectableRow(item.id, title: NoteRenderer.fallbackTitle(from: item.transcript), detail: details(item.duration, item.recorded))
                     if !typeSize.isAccessibilitySize { Spacer() }
-                    CopyButton(label: "Copy the transcript") { item.transcript }
+                    CopyButton(label: "Copy the transcript", failed: reportCopyProblem) { item.transcript }
                 }
             }
             // Nothing is running and nothing stops it: let it be started by hand.
@@ -148,6 +162,7 @@ struct NotesView: View {
                     notes.processQueue()
                 } label: {
                     Label("Write them now", systemImage: "pencil.and.scribble")
+                        .font(.body.weight(.semibold))
                 }
                 .accessibilityHint(Text(reason))
             }
@@ -162,10 +177,10 @@ struct NotesView: View {
         Section {
             ForEach(notes.copiedNotes) { item in
                 rowLayout {
-                    selectableRow(item.id, title: item.note.title, detail: "\(item.styleName) · \(item.note.recorded.formatted(date: .abbreviated, time: .shortened))")
+                    selectableRow(item.id, title: item.note.title, detail: details(item.note.duration, item.note.recorded, style: item.styleName))
                     if !typeSize.isAccessibilitySize { Spacer() }
                     HStack(spacing: 12) {
-                        CopyButton(label: "Copy the note") { item.note.body }
+                        CopyButton(label: "Copy the note", failed: reportCopyProblem) { item.note.body }
                         Button("File") { notes.file(item) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
@@ -188,7 +203,7 @@ struct NotesView: View {
             ForEach(notes.recent) { note in
                 rowLayout {
                     filedRow(note)
-                    CopyButton(label: "Copy the note") { await notes.text(of: note) }
+                    CopyButton(label: "Copy the note", failed: reportCopyProblem) { await notes.text(of: note) }
                 }
             }
         } header: {
@@ -200,9 +215,28 @@ struct NotesView: View {
         }
     }
 
+    /// "Polished · 12m 40s · Oct 22 at 1:05 PM": the length tells a walk from a quick thought.
+    private func details(_ duration: TimeInterval?, _ recorded: Date, style: String? = nil) -> String {
+        let length = duration.map {
+            Duration.seconds($0.rounded()).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow, maximumUnitCount: 2))
+        }
+        return [style, length, recorded.formatted(date: .abbreviated, time: .shortened)].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// A copy that couldn't happen says why, on screen and to VoiceOver, instead of only buzzing.
+    private func reportCopyProblem() {
+        let message = String(localized: "Couldn't copy it: your storage can't be reached, and this note's text isn't on this device.")
+        copyProblem = message
+        AccessibilityNotification.Announcement(message).post()
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            if copyProblem == message { copyProblem = nil }
+        }
+    }
+
     @ViewBuilder
     private func filedRow(_ note: RecentNote) -> some View {
-        let row = NoteRow(title: note.title, detail: "\(note.styleName) · \(note.recorded.formatted(date: .abbreviated, time: .shortened))")
+        let row = NoteRow(title: note.title, detail: details(note.duration, note.recorded, style: note.styleName))
         // In an Obsidian vault, a tap opens the note there.
         if sizeClass == .regular {
             Button {
@@ -258,15 +292,17 @@ private struct NoteRow: View {
 /// Copies a note's text, showing a tick for a moment once it's on the clipboard.
 private struct CopyButton: View {
     let label: LocalizedStringResource
+    let failed: () -> Void
     let text: () async -> String?
     @State private var done = false
-    @State private var failed = false
+    @State private var failures = 0
 
     var body: some View {
         Button {
             Task {
                 guard let text = await text(), !text.isEmpty else {
-                    failed.toggle()
+                    failures += 1
+                    failed()
                     return
                 }
                 UIPasteboard.general.string = text
@@ -283,7 +319,7 @@ private struct CopyButton: View {
         .buttonStyle(.borderless) // its own tap target inside a row that opens the note
         .tint(done ? .green : Color.pencil)
         .sensoryFeedback(.success, trigger: done) { _, new in new }
-        .sensoryFeedback(.error, trigger: failed)
+        .sensoryFeedback(.error, trigger: failures)
         .accessibilityLabel(Text(done ? "Copied" : label))
     }
 }

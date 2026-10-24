@@ -228,7 +228,7 @@ private struct PermissionsStep: View {
                         title: "Accessibility",
                         detail: "To notice the dictation key and paste into the app you're using.",
                         granted: app.permissions.accessibility,
-                        action: ("Open Settings…", { app.permissions.requestAccessibility() })
+                        action: ("Allow…", { app.permissions.requestAccessibility() })
                     )
                     if app.settings.gestureKey == .fn {
                         PermissionRow(
