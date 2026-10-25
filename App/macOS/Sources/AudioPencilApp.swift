@@ -9,7 +9,7 @@ struct AudioPencilApp: App {
         Window("Audio Pencil", id: "main") {
             MainWindow(app: delegate.app)
         }
-        .windowResizability(.contentMinSize)
+        .windowResizability(.contentSize)
         .commands {
             // Command-number shortcuts follow the sidebar order.
             CommandGroup(after: .sidebar) {

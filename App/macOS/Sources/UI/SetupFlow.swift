@@ -387,7 +387,7 @@ private struct StorageStep: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             } else if !vault.settings.isConfigured {
-                Text("You can skip this: notes wait on this Mac until you choose a place on the Storage page.")
+                Text("You can skip this: notes wait on this Mac until you choose a place in Settings › Storage.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

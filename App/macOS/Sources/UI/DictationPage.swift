@@ -11,12 +11,6 @@ struct DictationPage: View {
             VStack(alignment: .leading, spacing: 18) {
                 PageHeader(title: "Dictation", subtitle: "Talk anywhere. Text lands where you're typing, transcribed on this Mac.")
 
-                if app.needsSetup {
-                    Banner(symbol: "exclamationmark.triangle.fill", message: "Finish setup so the hotkey can start dictation.", actionTitle: "Finish setup") {
-                        app.openPermissions()
-                    }
-                }
-
                 // Side by side when there's room; stats move underneath, in a grid, when narrow.
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: 16) {

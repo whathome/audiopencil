@@ -299,6 +299,10 @@ final class AppModel: WritingHost {
                 case "meeting:report":
                     let meeting = meetings.selected
                     Log.dictation.notice("Meeting: capture \(String(describing: self.meetings.capture), privacy: .public), stage \(meeting?.stage.rawValue ?? "none", privacy: .public), turns \(meeting?.turns.count ?? 0), summary \(meeting?.summary.count ?? 0) characters, error \(self.meetings.error ?? "none", privacy: .public)")
+                case "window:report":
+                    if let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }) {
+                        Log.dictation.notice("Window sizing: width \(window.frame.width), maximum width \(window.maxSize.width), maximum height \(window.maxSize.height)")
+                    }
                 case let command where command.hasPrefix("window:width:"):
                     if let width = Double(command.dropFirst("window:width:".count)),
                        let window = NSApp.windows.first(where: { $0.isVisible && $0.title == "Audio Pencil" }) {

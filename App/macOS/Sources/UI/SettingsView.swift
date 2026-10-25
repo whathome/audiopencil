@@ -4,7 +4,7 @@ import APModels
 import SwiftUI
 
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, dictation, notes, models, permissions
+    case general, dictation, notes, storage, models, permissions
     var id: Self { self }
 
     var title: LocalizedStringResource {
@@ -12,6 +12,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: "General"
         case .dictation: "Dictation"
         case .notes: "Notes"
+        case .storage: "Storage"
         case .models: "Models"
         case .permissions: "Permissions"
         }
@@ -22,10 +23,16 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: "gearshape"
         case .dictation: "mic"
         case .notes: "doc.text"
+        case .storage: "externaldrive.connected.to.line.below"
         case .models: "cpu"
         case .permissions: "checkmark.shield"
         }
     }
+}
+
+enum SettingsLayout {
+    static let contentWidth: CGFloat = 576
+    static let formWidth: CGFloat = contentWidth + 44
 }
 
 /// Focused settings categories, shared by the main page and the standalone Settings window.
@@ -40,7 +47,7 @@ struct SettingsView: View {
             content(app.settingsTab)
         } else {
             VStack(spacing: 0) {
-                SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup)
+                SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup, needsStorage: !app.vault.settings.isConfigured)
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
                     .padding(.bottom, 12)
@@ -57,6 +64,7 @@ struct SettingsView: View {
         case .general: GeneralSettings(app: app, embedded: embedded)
         case .dictation: DictationSettingsView(app: app, embedded: embedded)
         case .notes: NoteSettings(app: app, embedded: embedded)
+        case .storage: StorageSettingsView(app: app, embedded: embedded)
         case .models: ModelSettings(app: app, embedded: embedded)
         case .permissions: SetupView(app: app, showsHeader: false, settingsHeader: embedded)
         }
@@ -66,71 +74,79 @@ struct SettingsView: View {
 /// Page title and categories, aligned with the first form section.
 struct SettingsHeader: View {
     @Bindable var app: AppModel
+    var inForm = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            PageHeader(title: "Settings", subtitle: "App behavior, dictation, notes, models and permissions.")
-            SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup)
+            PageHeader(title: "Settings", subtitle: "App behavior, dictation, notes, storage, models and permissions.")
+            SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup, needsStorage: !app.vault.settings.isConfigured)
         }
         .padding(.top, 8)
         .padding(.bottom, 10)
         // Section headers sit inset to the form's rows; pull the page title back to the 24 pt edge
         // the other pages' titles use.
-        .padding(.leading, -10)
+        .padding(.leading, inForm ? -10 : 0)
+        .padding(.trailing, inForm ? 0 : 10)
     }
 }
 
 private struct SettingsCategoryControl: View {
     @Binding var selection: SettingsTab
     let needsPermissions: Bool
+    let needsStorage: Bool
 
     var body: some View {
-        GeometryReader { geometry in
-            let side = min(96, (geometry.size.width - 32) / CGFloat(SettingsTab.allCases.count))
-            HStack(spacing: 8) {
-                ForEach(SettingsTab.allCases) { tab in
-                    let selected = selection == tab
-                    Button {
-                        selection = tab
-                    } label: {
-                        VStack(spacing: 8) {
-                            Image(systemName: tab.symbol)
-                                .font(.system(size: 22, weight: .medium))
-                                .foregroundStyle(selected ? Color.pencil : Color.secondary)
-                                .accessibilityHidden(true)
-                            Text(tab.title)
-                                .font(.callout.weight(selected ? .semibold : .regular))
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.85)
-                        }
-                        .padding(6)
-                        .frame(width: side, height: side)
-                        .background(selected ? Color.pencil.opacity(0.14) : Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(selected ? Color.pencil : Color.secondary.opacity(0.25), lineWidth: selected ? 1.5 : 0.5)
-                        }
-                        .overlay(alignment: .topTrailing) {
-                            if tab == .permissions, needsPermissions {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .foregroundStyle(.orange)
-                                    .padding(6)
-                                    .help("Permissions need attention")
-                                    .accessibilityHidden(true)
-                            }
-                        }
-                        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(tab.title))
-                    .accessibilityAddTraits(selected ? [.isSelected] : [])
-                    .accessibilityValue(tab == .permissions && needsPermissions ? Text("Permissions need attention") : Text(""))
-                    .help(Text(tab.title))
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 96), spacing: 8)], alignment: .leading, spacing: 8) {
+            ForEach(SettingsTab.allCases) { tab in
+                let selected = selection == tab
+                let attention: LocalizedStringResource? = if tab == .permissions, needsPermissions {
+                    "Permissions need attention"
+                } else if tab == .storage, needsStorage {
+                    "Not set up"
+                } else {
+                    nil
                 }
+                Button {
+                    selection = tab
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: tab.symbol)
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(selected ? Color.pencil : Color.secondary)
+                            .accessibilityHidden(true)
+                        Text(tab.title)
+                            .font(.callout.weight(selected ? .semibold : .regular))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.85)
+                    }
+                    .padding(6)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .aspectRatio(1, contentMode: .fit)
+                    .background(selected ? Color.pencil.opacity(0.14) : Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(selected ? Color.pencil : Color.secondary.opacity(0.25), lineWidth: selected ? 1.5 : 0.5)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if let attention {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .foregroundStyle(.orange)
+                                .padding(6)
+                                .help(Text(attention))
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(tab.title))
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
+                .accessibilityValue(attention.map { Text($0) } ?? Text(""))
+                .help(Text(tab.title))
             }
         }
-        .frame(height: 96)
     }
 }
 
@@ -146,7 +162,7 @@ private struct PageAlignedForm: ViewModifier {
     let enabled: Bool
     /// A grouped form caps its sections at about 600 pt and centres them in the space it gets. Give it just
     /// over that, so the sections (and the title in the first header) start at the other pages' 24 pt edge.
-    static let maxWidth: CGFloat = 620
+    static let maxWidth = SettingsLayout.formWidth
 
     func body(content: Content) -> some View {
         if enabled {

@@ -199,7 +199,7 @@ The palette is a single warm accent over neutral, appearance-aware system greys,
 
 ## Layout
 
-The main window is a two-column split: a sidebar of 220 pt, which becomes a 64 pt icon rail when collapsed or when the window is narrower than 760 pt, and a detail page. The window's minimum size is 520 × 560 pt.
+The main window is a two-column split: a sidebar of 220 pt, which becomes a 64 pt icon rail when collapsed or when the window is narrower than 760 pt, and a detail page. The window's minimum size is 520 × 560 pt. Its maximum width follows the useful page width plus the sidebar: 845 pt for Settings and 1,201 pt for content pages, reduced by 156 pt when the sidebar is explicitly collapsed. Height remains freely resizable.
 
 Pages use a 24 pt margin and a 980 pt maximum content width, aligned to the leading edge, never centred. The stack rhythm is 18 pt between page sections and 16 pt between cards. Inside a card it's 16 pt of padding and 10 pt between elements. Grids of cards use 14 pt gutters.
 
@@ -213,7 +213,7 @@ Responsive behaviour is content-driven:
 ### Named Rules
 **The One Edge Rule.** Every page title, card and form section starts at the same 24 pt leading edge. A centred form or a page that starts elsewhere breaks the window into separate apps.
 
-**The Two Containers Rule.** Preferences live in grouped forms; status and content live in cards. A toggle inside a card is a sign the setting belongs in Settings. The one exception is the Vault page's connection steps (storage, account, folder), which form a setup flow and stay in cards.
+**The Two Containers Rule.** Preferences live in grouped forms; status and content live in cards. A toggle inside a card is a sign the setting belongs in Settings. The one exception is Settings › Storage's connection steps (storage, account, folder), which form a setup flow and stay in cards.
 
 ## Elevation & Depth
 
@@ -265,14 +265,14 @@ Native and restrained: the macOS button styles, tinted by the accent.
 ### Inputs / Fields
 These are the system controls inside grouped forms: switches, pop-up pickers, steppers, sliders with value read-outs in monospaced digits, and the text editor for vocabulary. Fields aren't restyled. A setting's explanation sits under its label as the second line of the control's label. A section's footer is callout size, secondary and left-aligned, so it reads as a note on the rows above rather than another setting.
 
-Settings uses five categories in both the main page and the standalone window: **General** (app behavior and sounds), **Dictation** (hotkeys, push-to-talk timing, delivery, microphones, languages and vocabulary), **Notes** (saving, retention, daily notes, push-to-talk filing and task keywords), **Models**, and **Permissions**. Categories are touch-friendly square buttons with an SF Symbol above the label, sized to the available width. Selection uses an amber outline and a light amber fill with primary-colour text; the Permissions button carries its own attention badge. Common hotkey controls and push-to-talk delay stay visible; backup shortcuts, double-tap timing and mic warm-up sit under **Timing and shortcuts**. Links from Dictation and Notes open their corresponding category, not General.
+Settings uses six categories in both the main page and the standalone window: **General** (app behavior and sounds), **Dictation** (hotkeys, push-to-talk timing, delivery, microphones, languages and vocabulary), **Notes** (saving, retention, daily notes, push-to-talk filing and task keywords), **Storage** (provider, account, folder and sync), **Models**, and **Permissions**. Categories are touch-friendly square buttons with an SF Symbol above the label, wrapping into extra rows at narrow widths. Selection uses an amber outline and a light amber fill with primary-colour text; Storage and Permissions carry attention badges when setup is needed. Common hotkey controls and push-to-talk delay stay visible; backup shortcuts, double-tap timing and mic warm-up sit under **Timing and shortcuts**. Links from Dictation and Notes open their corresponding category, not General.
 
 ### Navigation
-- **Sidebar:** 30 pt rows with an SF Symbol and title. The selected row fills Pencil Amber with white text and icon.
-- **Grouping:** two groups (work pages, then Vault and Settings) separated by 14 pt.
-- **Badges:** a count capsule for pending reviews, "Set up" for an unconfigured vault, an orange exclamation for missing permissions.
+- **Sidebar:** 30 pt rows with an SF Symbol fitted into a shared 16 × 16 pt icon slot and a title. The selected row fills Pencil Amber with white text and icon.
+- **Grouping:** work pages, then Settings, separated by 14 pt. Storage lives inside Settings, not in the sidebar.
+- **Badges:** a count capsule for pending reviews and an orange exclamation on Settings for missing permissions or unconfigured storage.
 - **Rail mode:** 40 × 34 pt icon targets with an 8 pt dot for attention; every rail item has a VoiceOver label and a tooltip.
-- **Shortcuts:** ⌘1–⌘7 follow the sidebar order: Dictation, Meetings, Styles, My writing, Notes, Storage, Settings.
+- **Shortcuts:** ⌘1–⌘6 follow the sidebar order: Dictation, Meetings, Styles, My writing, Notes, Settings.
 - **Meetings:** a task-focused recording and review page, not a second library. Setup uses native fields and pickers; recording leads with source names, separate meters and Pause/Stop. Review uses a segmented Summary / Actions / Transcript control, serif written content and timestamped speaker turns. A recording badge appears in the sidebar and its collapsed rail.
 
 ### Keycap (signature)

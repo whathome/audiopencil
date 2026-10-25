@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum Page: String, CaseIterable, Identifiable, Hashable {
-    case dictation, meetings, styles, writing, notes, vault, settings
+    case dictation, meetings, styles, writing, notes, settings
     var id: Self { self }
 
     var title: LocalizedStringResource {
@@ -11,7 +11,6 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .styles: "Styles"
         case .writing: "My writing"
         case .notes: "Notes"
-        case .vault: "Storage"
         case .settings: "Settings"
         }
     }
@@ -23,7 +22,6 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
         case .styles: "paintbrush.pointed"
         case .writing: "text.quote"
         case .notes: "book.closed"
-        case .vault: "externaldrive.connected.to.line.below"
         case .settings: "gearshape"
         }
     }
@@ -37,13 +35,20 @@ struct MainWindow: View {
 
     /// Below this window width the sidebar becomes a rail regardless of the toggle.
     private static let railBelowWidth: CGFloat = 760
+    private static let sidebarWidth: CGFloat = 220
+    private static let railWidth: CGFloat = 64
+
+    private var maximumWidth: CGFloat {
+        let contentWidth = app.page == .settings ? SettingsLayout.contentWidth + 48 : 980
+        return (collapsed ? Self.railWidth : Self.sidebarWidth) + 1 + contentWidth
+    }
 
     var body: some View {
         GeometryReader { geometry in
             let rail = collapsed || geometry.size.width < Self.railBelowWidth
             HStack(spacing: 0) {
                 Sidebar(app: app, rail: rail)
-                    .frame(width: rail ? 64 : 220)
+                    .frame(width: rail ? Self.railWidth : Self.sidebarWidth)
                     .background(SidebarMaterial().ignoresSafeArea())
                 Divider().ignoresSafeArea()
                 detail
@@ -52,7 +57,7 @@ struct MainWindow: View {
             }
             .animation(.easeInOut(duration: 0.18), value: rail)
         }
-        .frame(minWidth: 520, minHeight: 560)
+        .frame(minWidth: 520, maxWidth: maximumWidth, minHeight: 560, maxHeight: .infinity)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
@@ -76,7 +81,6 @@ struct MainWindow: View {
         case .styles: StylesPage(app: app).disabled(app.meetings.isProcessing)
         case .writing: WritingPage(app: app).disabled(app.meetings.isProcessing)
         case .notes: NotesPage(app: app, notes: app.notes)
-        case .vault: VaultPage(vault: app.vault, sync: app.sync)
         case .settings: SettingsView(app: app, embedded: true).disabled(app.meetings.isProcessing)
         }
     }
@@ -100,7 +104,7 @@ private struct Sidebar: View {
     let rail: Bool
 
     private let mainPages: [Page] = [.dictation, .meetings, .styles, .writing, .notes]
-    private let setupPages: [Page] = [.vault, .settings]
+    private let setupPages: [Page] = [.settings]
 
     var body: some View {
         VStack(alignment: rail ? .center : .leading, spacing: 2) {
@@ -151,6 +155,13 @@ private struct Sidebar: View {
         }
     }
 
+    private func icon(_ page: Page) -> some View {
+        Image(systemName: page.symbol)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 16, height: 16)
+    }
+
     private func row(_ page: Page) -> some View {
         let selected = app.page == page
         return Button {
@@ -158,13 +169,12 @@ private struct Sidebar: View {
         } label: {
             Group {
                 if rail {
-                    Image(systemName: page.symbol)
-                        .font(.system(size: 16))
+                    icon(page)
                         .frame(width: 40, height: 34)
                         .overlay(alignment: .topTrailing) { railBadge(page) }
                 } else {
                     HStack {
-                        Label { Text(page.title) } icon: { Image(systemName: page.symbol) }
+                        Label { Text(page.title) } icon: { icon(page) }
                         Spacer()
                         badge(page)
                     }
@@ -188,8 +198,8 @@ private struct Sidebar: View {
     private func attentionDescription(_ page: Page) -> LocalizedStringResource? {
         switch page {
         case .meetings where app.meetings.ownsCapture: app.meetings.capture == .paused ? "Meeting paused" : "Meeting recording"
-        case .vault where !app.vault.settings.isConfigured: "Not set up"
         case .settings where app.needsSetup: "Permissions need attention"
+        case .settings where !app.vault.settings.isConfigured: "Not set up"
         default: nil
         }
     }
@@ -198,9 +208,7 @@ private struct Sidebar: View {
     private func badge(_ page: Page) -> some View {
         if page == .meetings, app.meetings.ownsCapture {
             Text(app.meetings.capture == .paused ? "Paused" : "Recording").font(.caption2.weight(.medium)).foregroundStyle(selectedColor(page))
-        } else if page == .vault, !app.vault.settings.isConfigured {
-            Text("Set up").font(.caption2.weight(.medium)).foregroundStyle(.secondary)
-        } else if page == .settings, app.needsSetup {
+        } else if page == .settings, app.needsSetup || !app.vault.settings.isConfigured {
             Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
         }
     }
@@ -208,8 +216,7 @@ private struct Sidebar: View {
     /// Rails have no room for text: a dot says something needs attention.
     @ViewBuilder
     private func railBadge(_ page: Page) -> some View {
-        let needsAttention = (page == .vault && !app.vault.settings.isConfigured)
-            || (page == .settings && app.needsSetup)
+        let needsAttention = (page == .settings && (app.needsSetup || !app.vault.settings.isConfigured))
             || (page == .meetings && app.meetings.ownsCapture)
         if needsAttention {
             Circle()

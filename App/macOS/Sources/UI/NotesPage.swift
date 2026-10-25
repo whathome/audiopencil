@@ -22,7 +22,8 @@ struct NotesPage: View {
 
                 if !app.vault.settings.isConfigured {
                     Banner(symbol: "externaldrive.badge.exclamationmark", message: "Choose where notes go. Until then they wait on this Mac.", actionTitle: "Set up storage") {
-                        app.page = .vault
+                        app.settingsTab = .storage
+                        app.page = .settings
                     }
                 }
 

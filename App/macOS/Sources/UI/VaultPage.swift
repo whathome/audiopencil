@@ -4,24 +4,29 @@ import SwiftUI
 
 /// Where notes and settings live: Nextcloud, any WebDAV server, or a folder on this Mac (e.g. iCloud Drive).
 /// An Obsidian vault gets the extras (board, guide); any other folder gets plain Markdown.
-struct VaultPage: View {
-    @Bindable var vault: VaultController
-    let sync: SyncController
+struct StorageSettingsView: View {
+    @Bindable var app: AppModel
+    var embedded = false
 
     var body: some View {
+        @Bindable var vault = app.vault
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Storage", subtitle: "Where notes and Audio Pencil's settings live: an Obsidian vault, or any folder.")
+                if embedded {
+                    SettingsHeader(app: app, inForm: false)
+                }
+                Text("Where notes and Audio Pencil's settings live: an Obsidian vault, or any folder.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
 
                 Card(title: "Where") {
-                    Picker("", selection: $vault.settings.kind) {
-                        Label("Nextcloud", systemImage: "cloud").tag(VaultSettings.Kind.nextcloud)
-                        Label("WebDAV", systemImage: "server.rack").tag(VaultSettings.Kind.webdav)
-                        Label("Folder on this Mac", systemImage: "folder").tag(VaultSettings.Kind.localFolder)
+                    ViewThatFits(in: .horizontal) {
+                        providerPicker
+                            .pickerStyle(.segmented)
+                            .fixedSize()
+                        providerPicker
+                            .pickerStyle(.menu)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize() // a short choice, not a tab bar across the card
                     .onChange(of: vault.settings.kind) { vault.locationChanged() }
                     Text(kindDescription)
                         .font(.callout)
@@ -31,16 +36,28 @@ struct VaultPage: View {
                 StorageLocationCards(vault: vault)
 
                 if vault.settings.isConfigured {
-                    SyncCard(sync: sync)
+                    SyncCard(sync: app.sync)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: 980, alignment: .leading)
+            .frame(maxWidth: embedded ? SettingsLayout.contentWidth : .infinity, alignment: .leading)
+            .padding(embedded ? 24 : 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
+    @ViewBuilder
+    private var providerPicker: some View {
+        @Bindable var vault = app.vault
+        Picker("Where", selection: $vault.settings.kind) {
+            Label("Nextcloud", systemImage: "cloud").tag(VaultSettings.Kind.nextcloud)
+            Label("WebDAV", systemImage: "server.rack").tag(VaultSettings.Kind.webdav)
+            Label("Folder on this Mac", systemImage: "folder").tag(VaultSettings.Kind.localFolder)
+        }
+        .labelsHidden()
+    }
+
     private var kindDescription: LocalizedStringResource {
-        switch vault.settings.kind {
+        switch app.vault.settings.kind {
         case .nextcloud: "Notes go to your Nextcloud over WebDAV, from any network. Nothing else leaves this Mac."
         case .webdav: "Any server that speaks WebDAV: a Synology, ownCloud, a hosting provider. Nothing else leaves this Mac."
         case .localFolder: "A folder on this Mac, or one synced to it such as iCloud Drive. Your sync service does the syncing."
@@ -48,7 +65,7 @@ struct VaultPage: View {
     }
 }
 
-/// The account and folder cards for the chosen kind of storage: the Storage page and setup share them.
+/// The account and folder cards for the chosen kind of storage: Settings and setup share them.
 struct StorageLocationCards: View {
     @Bindable var vault: VaultController
 
