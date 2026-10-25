@@ -33,6 +33,14 @@ extension AppModel {
         if !applyingSync { sync?.syncSoon() }
     }
 
+    func saveStyle(_ style: Style) {
+        if let index = styles.firstIndex(where: { $0.id == style.id }) {
+            styles[index] = style
+        } else {
+            styles.append(style)
+        }
+    }
+
     // MARK: Vault settings file
 
     /// The app's side of the settings file, built on the last agreed version so fields the app

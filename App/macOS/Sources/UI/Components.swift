@@ -169,18 +169,46 @@ struct Banner: View {
     let symbol: String
     let message: LocalizedStringResource
     let actionTitle: LocalizedStringResource
+    var color: Color = .orange
     let action: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: symbol).foregroundStyle(.orange)
-            Text(message).font(.callout)
+            Image(systemName: symbol).foregroundStyle(color)
+            Text(message)
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer()
             Button(action: action) { Text(actionTitle) }
+                .fixedSize()
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.orange.opacity(0.12)))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.orange.opacity(0.35), lineWidth: 0.5))
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(color.opacity(0.12)))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(color.opacity(0.35), lineWidth: 0.5))
     }
 }
 
+struct MeetingProcessingStatus: View {
+    let app: AppModel
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Label("Processing meeting…", systemImage: "waveform")
+                    .font(.callout.weight(.semibold))
+                Text("Dictation and model changes will be available when processing finishes.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Button("View progress") {
+                app.meetings.selectedID = app.meetings.processingID
+                app.openMeetings()
+            }
+            .fixedSize()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+    }
+}

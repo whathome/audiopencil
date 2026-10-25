@@ -27,9 +27,7 @@ struct StylesPage: View {
 
                 HStack {
                     Button {
-                        let style = newStyle()
-                        app.styles.append(style)
-                        editing = style
+                        editing = newStyle()
                     } label: {
                         Label("New style", systemImage: "plus")
                     }
@@ -47,7 +45,8 @@ struct StylesPage: View {
                 style: style,
                 takenShortcuts: Set(app.styles.filter { $0.id != style.id }.compactMap(\.shortcut)),
                 isPreset: Style.presets.contains { $0.id == style.id },
-                save: { edited in update(style.id) { $0 = edited } },
+                isSaved: app.styles.contains { $0.id == style.id },
+                save: { app.saveStyle($0) },
                 reset: { app.resetStyle(style.id) },
                 delete: { app.styles.removeAll { $0.id == style.id } }
             )
@@ -157,6 +156,7 @@ private struct StyleEditor: View {
     @State var style: Style
     let takenShortcuts: Set<Int>
     let isPreset: Bool
+    let isSaved: Bool
     let save: (Style) -> Void
     let reset: () -> Void
     let delete: () -> Void
@@ -210,7 +210,7 @@ private struct StyleEditor: View {
             HStack {
                 if isPreset {
                     Button("Reset to default") { reset(); dismiss() }
-                } else {
+                } else if isSaved {
                     Button("Delete style", role: .destructive) { delete(); dismiss() }
                 }
                 Spacer()

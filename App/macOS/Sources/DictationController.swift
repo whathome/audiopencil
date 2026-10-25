@@ -67,7 +67,7 @@ final class DictationController {
     /// The last delivered dictation in full, for "Copy Last Dictation". Memory only.
     private(set) var lastText: String?
     let paster = Paster()
-    private(set) var lastError: String?
+    private(set) var lastIssue: DictationIssue?
     /// Style the current recording will be delivered in. Number keys change it while recording.
     private(set) var style: Style = .raw
     /// Language of the current recording. One per recording; switching restarts transcription.
@@ -225,6 +225,7 @@ final class DictationController {
     func start(microphoneGranted: Bool, deviceID: UInt32?, style: Style, language: SpokenLanguage = .english, targetApp: String?, remembersStyle: Bool = true) {
         guard phase == .idle else { return }
         guard microphoneGranted else {
+            lastIssue = .microphonePermission
             cues.play(.cancel)
             indicator.showError(String(localized: "Audio Pencil needs microphone access. Click to open Privacy & Security.")) {
                 NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
@@ -232,6 +233,7 @@ final class DictationController {
             return
         }
 
+        lastIssue = nil
         generation += 1
         let generation = self.generation
         stopWhenStarted = false
@@ -262,7 +264,7 @@ final class DictationController {
                 )
             } catch {
                 if generation == self.generation {
-                    fail(String(localized: "Couldn't start the microphone: \(error.localizedDescription)"))
+                    fail(.microphone(error.localizedDescription))
                 }
                 return
             }
@@ -434,13 +436,13 @@ final class DictationController {
                     do {
                         text = try await rewrite(transcript, style) { progress in indicator.rewriteProgress = progress }
                         rewriteDuration = ContinuousClock.now - rewriteStart
-                        if text.isEmpty { text = transcript; fallbackNote = String(localized: "Rewrite came back empty; pasted raw") }
+                        if text.isEmpty { text = transcript; fallbackNote = String(localized: "The writing model returned no text.") }
                     } catch is CancellationError {
                         return
                     } catch {
                         guard generation == self.generation else { return }
                         Log.dictation.error("Rewrite failed: \(error.localizedDescription, privacy: .public)")
-                        fallbackNote = String(localized: "\(error.localizedDescription); pasted raw")
+                        fallbackNote = error.localizedDescription
                     }
                     guard generation == self.generation else { return }
                 }
@@ -465,7 +467,7 @@ final class DictationController {
                         onQuickNote?(QuickCapture(text: text, transcript: transcript, style: style, language: language, recorded: recorded, duration: audioSeconds))
                     }
                     if let fallbackNote {
-                        indicator.showError(fallbackNote)
+                        indicator.showError(DictationIssue.rewriteFallback(fallbackNote).message)
                     } else if result != .pasted {
                         indicator.flash(.clipboard, seconds: 3)
                     }
@@ -489,11 +491,11 @@ final class DictationController {
                     characters: text.count,
                     preview: String(text.prefix(600))
                 )
-                lastError = fallbackNote
+                lastIssue = dryRun ? nil : fallbackNote.map(DictationIssue.rewriteFallback)
                 Log.dictation.notice("Dictation \(outcome, privacy: .public) [\(style.name, privacy: .public)]: \(audioSeconds, format: .fixed(precision: 1))s audio, stop→text \(textReady - stoppedAt, privacy: .public), rewrite \(rewriteDuration.map { "\($0)" } ?? "–", privacy: .public), stop→paste \(delivered - stoppedAt, privacy: .public)")
             } catch {
                 if generation == self.generation {
-                    fail(String(localized: "Transcription failed: \(error.localizedDescription)"))
+                    fail(.transcription(error.localizedDescription))
                 }
             }
             if generation == self.generation {
@@ -544,7 +546,7 @@ final class DictationController {
                 if TranscriptCleaner.hasSpeech(transcript) { onLanguageUsed?(language, targetApp) }
                 Log.dictation.notice("Long-form recording handed off: \(audioSeconds, format: .fixed(precision: 0))s")
             } catch {
-                if generation == self.generation { fail(String(localized: "Transcription failed: \(error.localizedDescription)")) }
+                if generation == self.generation { fail(.transcription(error.localizedDescription)) }
             }
             if generation == self.generation {
                 phase = .idle
@@ -587,12 +589,15 @@ final class DictationController {
         Log.dictation.info("Dictation cancelled")
     }
 
-    private func fail(_ message: String) {
+    func dismissIssue() { lastIssue = nil }
+
+    private func fail(_ issue: DictationIssue) {
+        let message = issue.message
         indicator.currentStyle = nil
         recorder.stop()
         streamer = nil
         phase = .idle
-        lastError = message
+        lastIssue = issue
         cues.play(.cancel)
         indicator.showError(message)
         Log.dictation.error("\(message, privacy: .public)")

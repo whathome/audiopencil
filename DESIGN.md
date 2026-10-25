@@ -249,6 +249,7 @@ Native and restrained: the macOS button styles, tinted by the accent.
 - **Inline:** link style for in-flow navigation, such as Change…, Edit or Note saving and audio retention…
 - **Icon-only:** borderless SF Symbols (chevrons, minus, an `xmark.circle.fill` dismiss in tertiary). Each one has a VoiceOver label.
 - Keyboard: the default action is bound to Return and cancel to Escape on every sheet.
+- New styles stay drafts until Save; Cancel never adds an entry. Deleting a saved writing sample requires a confirmation showing an excerpt and explaining the local/synced consequence.
 
 ### Chips
 - **Hotkey chip:** 8 pt radius, callout medium. When on, it has Pencil Amber at 18% fill with an 80% amber hairline. When off, it's clear with a 35% secondary hairline and secondary text.
@@ -270,10 +271,12 @@ Settings uses six categories in both the main page and the standalone window: **
 ### Navigation
 - **Sidebar:** 30 pt rows with an SF Symbol fitted into a shared 16 × 16 pt icon slot and a title. The selected row fills Pencil Amber with white text and icon.
 - **Grouping:** work pages, then Settings, separated by 14 pt. Storage lives inside Settings, not in the sidebar.
-- **Badges:** a count capsule for pending reviews and an orange exclamation on Settings for missing permissions or unconfigured storage.
+- **Badges:** a count capsule for pending reviews and an orange exclamation on Settings for missing permissions or unconfigured storage. Over an amber selection, the attention symbol uses black and white rather than orange; selected rail dots use the same contrast treatment.
 - **Rail mode:** 40 × 34 pt icon targets with an 8 pt dot for attention; every rail item has a VoiceOver label and a tooltip.
 - **Shortcuts:** ⌘1–⌘6 follow the sidebar order: Dictation, Meetings, Styles, My writing, Notes, Settings.
 - **Meetings:** a task-focused recording and review page, not a second library. Setup uses native fields and pickers; recording leads with source names, separate meters and Pause/Stop. Review uses a segmented Summary / Actions / Transcript control, serif written content and timestamped speaker turns. A recording badge appears in the sidebar and its collapsed rail.
+- **Processing:** a compact status strip links back to the processing meeting when another page or meeting is selected, including the standalone Settings window. Only conflicting actions are disabled; writing, style editing and unrelated settings stay available. Disabled meeting start explains its missing prerequisite.
+- **Recovery:** dictation issues lead to the relevant Permissions, microphone or Models category. Rewrite fallback is an informational, dismissible notice; the delivered raw text stays available to copy.
 
 ### Keycap (signature)
 How the app teaches its hotkeys. A rounded label (SF Rounded, callout medium) on the window ground, with a 6 pt radius, a separator hairline and a 1 pt bottom edge. It's at least 30 × 24 pt and never wraps. Gestures pair keycaps with a title and a one-line detail.

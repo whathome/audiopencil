@@ -87,7 +87,8 @@ struct WritingPage: View {
             .frame(maxWidth: 980, alignment: .leading)
         }
         .sheet(item: $editing) { sample in
-            SampleEditor(sample: sample, prompt: editingPrompt, languages: app.isMultilingual ? app.offeredLanguages : []) { saved in
+            SampleEditor(sample: sample, prompt: editingPrompt, languages: app.isMultilingual ? app.offeredLanguages : [],
+                         isSaved: app.writingSamples.contains { $0.id == sample.id }) { saved in
                 app.saveSample(saved)
             } delete: {
                 app.writingSamples.removeAll { $0.id == sample.id }
@@ -108,8 +109,10 @@ private struct SampleEditor: View {
     let prompt: InterviewPrompt?
     /// Languages to choose from; empty when only English is in use (no picker).
     var languages: [SpokenLanguage] = []
+    let isSaved: Bool
     let save: (WritingSample) -> Void
     let delete: () -> Void
+    @State private var confirmingDeletion = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -151,8 +154,8 @@ private struct SampleEditor: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                if !sample.text.isEmpty {
-                    Button("Delete", role: .destructive) { delete(); dismiss() }
+                if isSaved {
+                    Button("Delete…", role: .destructive) { confirmingDeletion = true }
                 }
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Save") { save(sample); dismiss() }
@@ -162,5 +165,11 @@ private struct SampleEditor: View {
         }
         .padding(24)
         .frame(width: 620, height: 480)
+        .confirmationDialog("Delete this writing sample?", isPresented: $confirmingDeletion) {
+            Button("Delete Sample", role: .destructive) { delete(); dismiss() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("“\(String(sample.text.prefix(80)))” will be removed from Audio Pencil and your synced settings. This cannot be undone.")
+        }
     }
 }

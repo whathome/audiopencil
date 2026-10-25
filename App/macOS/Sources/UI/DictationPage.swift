@@ -236,7 +236,7 @@ struct TryItCard: View {
                 if text.isEmpty {
                     Text(hint)
                         .font(.system(.title3, design: .serif))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 13)
                         .padding(.vertical, 10)
                         .allowsHitTesting(false)
@@ -299,8 +299,26 @@ private struct LastDictationCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        if let error = app.dictation.lastError {
-            Banner(symbol: "exclamationmark.triangle.fill", message: "\(error)", actionTitle: "Open settings") { app.openPermissions() }
+        if let issue = app.dictation.lastIssue {
+            Banner(symbol: issue.isNotice ? "info.circle" : "exclamationmark.triangle.fill",
+                   message: "\(issue.message)", actionTitle: recoveryTitle(issue.recovery),
+                   color: issue.isNotice ? .secondary : .orange) {
+                switch issue.recovery {
+                case .permissions: app.openPermissions()
+                case .microphone: app.settingsTab = .dictation; app.page = .settings
+                case .models: app.settingsTab = .models; app.page = .settings
+                case .dismiss: app.dictation.dismissIssue()
+                }
+            }
+        }
+    }
+
+    private func recoveryTitle(_ recovery: DictationIssue.Recovery) -> LocalizedStringResource {
+        switch recovery {
+        case .permissions: "Open permissions"
+        case .microphone: "Check microphone"
+        case .models: "Open models"
+        case .dismiss: "Dismiss"
         }
     }
 

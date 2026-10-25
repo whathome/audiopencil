@@ -172,6 +172,18 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         APPLICATION_EXTENSION_API_ONLY: YES
 
+  AudioPencilDesktopTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests/DesktopTests
+      - App/macOS/Sources/DictationIssue.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.desktoptests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO
+
   AudioPencilMobileUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -196,6 +208,7 @@ schemes:
     test:
       config: Debug
       targets:
+        - AudioPencilDesktopTests
         - package: AudioPencilKit/APCoreTests
         - package: AudioPencilKit/APAudioTests
         - package: AudioPencilKit/APTranscriptionTests

@@ -51,9 +51,18 @@ struct MainWindow: View {
                     .frame(width: rail ? Self.railWidth : Self.sidebarWidth)
                     .background(SidebarMaterial().ignoresSafeArea())
                 Divider().ignoresSafeArea()
-                detail
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .background(.background)
+                VStack(spacing: 0) {
+                    if app.meetings.isProcessing,
+                       app.page != .meetings || app.meetings.selectedID != app.meetings.processingID {
+                        MeetingProcessingStatus(app: app)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                        Divider()
+                    }
+                    detail
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(.background)
             }
             .animation(.easeInOut(duration: 0.18), value: rail)
         }
@@ -76,12 +85,12 @@ struct MainWindow: View {
     @ViewBuilder
     private var detail: some View {
         switch app.page {
-        case .dictation: DictationPage(app: app).disabled(app.meetings.isProcessing)
+        case .dictation: DictationPage(app: app)
         case .meetings: MeetingsPage(app: app, meetings: app.meetings)
-        case .styles: StylesPage(app: app).disabled(app.meetings.isProcessing)
-        case .writing: WritingPage(app: app).disabled(app.meetings.isProcessing)
+        case .styles: StylesPage(app: app)
+        case .writing: WritingPage(app: app)
         case .notes: NotesPage(app: app, notes: app.notes)
-        case .settings: SettingsView(app: app, embedded: true).disabled(app.meetings.isProcessing)
+        case .settings: SettingsView(app: app, embedded: true)
         }
     }
 }
@@ -209,7 +218,11 @@ private struct Sidebar: View {
         if page == .meetings, app.meetings.ownsCapture {
             Text(app.meetings.capture == .paused ? "Paused" : "Recording").font(.caption2.weight(.medium)).foregroundStyle(selectedColor(page))
         } else if page == .settings, app.needsSetup || !app.vault.settings.isConfigured {
-            Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(app.page == page ? Color.black : Color.orange)
+                .background {
+                    if app.page == page { Circle().fill(.white) }
+                }
         }
     }
 
@@ -220,8 +233,11 @@ private struct Sidebar: View {
             || (page == .meetings && app.meetings.ownsCapture)
         if needsAttention {
             Circle()
-                .fill(page == .settings ? Color.orange : Color.pencil)
+                .fill(app.page == page ? Color.black : page == .settings ? Color.orange : Color.pencil)
                 .frame(width: 8, height: 8)
+                .overlay {
+                    if app.page == page { Circle().strokeBorder(.white, lineWidth: 1) }
+                }
                 .offset(x: -3, y: 3)
         }
 

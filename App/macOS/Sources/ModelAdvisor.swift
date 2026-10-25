@@ -99,7 +99,10 @@ final class ModelAdvisor {
 
     /// Downloads the suggestion and runs it next to the current model on the same material.
     func tryOut(_ suggestion: ModelSuggestion) {
-        guard app.dictation.phase == .idle else { return }
+        guard app.dictation.phase == .idle, !app.meetings.isProcessing else {
+            Log.models.notice("Model trial deferred while dictation or meeting processing is active")
+            return
+        }
         trials[suggestion.id] = .downloading(0)
         Task {
             do {

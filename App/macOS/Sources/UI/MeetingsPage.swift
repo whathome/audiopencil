@@ -182,16 +182,31 @@ struct MeetingsPage: View {
             Text("Make sure everyone knows this meeting is being recorded. Audio Pencil does not notify participants.")
                 .font(.callout).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            HStack {
+            VStack(alignment: .leading, spacing: 8) {
                 Button("Start Meeting", systemImage: "record.circle") { Task { await meetings.start() } }
                     .buttonStyle(.borderedProminent)
-                    .disabled(app.dictation.isActive || meetings.previewStarting || meetings.resolvedMicrophone == nil || (meetings.kind == .videoCall && (!CallAudioCapture.isAvailable || meetings.applicationID == nil)))
-                if app.dictation.isActive {
-                    Text("Finish dictation first.").font(.callout).foregroundStyle(.secondary)
+                    .disabled(startBlocker != nil)
+                if let startBlocker {
+                    Text(startBlocker)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
         .onChange(of: meetings.microphoneUID) { _, _ in meetings.endPreview() }
+    }
+
+    private var startBlocker: LocalizedStringResource? {
+        if meetings.isProcessing { return "Wait for meeting processing to finish." }
+        if app.dictation.isActive { return "Finish dictation first." }
+        if meetings.previewStarting { return "Wait for the microphone test to start." }
+        if meetings.resolvedMicrophone == nil { return "Connect a microphone to start a meeting." }
+        if meetings.kind == .videoCall {
+            if !CallAudioCapture.isAvailable { return "Choose In person for microphone-only recording." }
+            if meetings.applicationID == nil { return "Choose a call app to start a video meeting." }
+        }
+        return nil
     }
 
     private var callAudioPreview: some View {

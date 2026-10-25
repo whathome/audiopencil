@@ -1564,6 +1564,22 @@
         }
       }
     },
+    "Audio Pencil needs microphone access. Allow it in Settings › Permissions.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil necesita acceso al micrófono. Permítelo en Ajustes › Permisos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio Pencil a besoin d’accéder au microphone. Autorisez-le dans Réglages › Autorisations."
+          }
+        }
+      }
+    },
     "Audio Pencil needs microphone access. Click to open Privacy & Security.": {
       "localizations": {
         "es": {
@@ -1794,6 +1810,22 @@
         }
       }
     },
+    "Check microphone": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar micrófono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier le microphone"
+          }
+        }
+      }
+    },
     "Check now": {
       "localizations": {
         "es": {
@@ -1826,6 +1858,22 @@
         }
       }
     },
+    "Choose In person for microphone-only recording.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige Presencial para grabar solo con el micrófono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez En personne pour enregistrer uniquement le microphone."
+          }
+        }
+      }
+    },
     "Choose a Folder…": {
       "localizations": {
         "es": {
@@ -1838,6 +1886,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choisir un dossier…"
+          }
+        }
+      }
+    },
+    "Choose a call app to start a video meeting.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una aplicación de llamadas para iniciar una videoreunión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez une application d’appel pour démarrer une réunion vidéo."
           }
         }
       }
@@ -2078,6 +2142,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connecter"
+          }
+        }
+      }
+    },
+    "Connect a microphone to start a meeting.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta un micrófono para iniciar una reunión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Branchez un microphone pour démarrer une réunion."
           }
         }
       }
@@ -2350,6 +2430,22 @@
         }
       }
     },
+    "Delete Sample": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar muestra"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l’exemple"
+          }
+        }
+      }
+    },
     "Delete style": {
       "localizations": {
         "es": {
@@ -2378,6 +2474,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Supprimer cette note et son enregistrement ?"
+          }
+        }
+      }
+    },
+    "Delete this writing sample?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar esta muestra de escritura?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer cet exemple d’écriture ?"
           }
         }
       }
@@ -2480,6 +2592,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dictée"
+          }
+        }
+      }
+    },
+    "Dictation and model changes will be available when processing finishes.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado y los cambios de modelo estarán disponibles cuando termine el procesamiento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée et les changements de modèle seront disponibles à la fin du traitement."
           }
         }
       }
@@ -5284,22 +5412,6 @@
         }
       }
     },
-    "Online meeting audio": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio de reuniones en línea"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio des réunions en ligne"
-          }
-        }
-      }
-    },
     "On this Mac": {
       "localizations": {
         "es": {
@@ -5360,6 +5472,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Une expression par ligne. Une dictée qui commence par l’une d’elles est collée comme tâche Obsidian : « New task: call the landlord by Friday » devient « - [ ] Call the landlord by Friday 📅 date », avec les dates d’échéance et de début au format du plugin Tasks. Partagé avec vos autres appareils."
+          }
+        }
+      }
+    },
+    "Online meeting audio": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio de reuniones en línea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio des réunions en ligne"
           }
         }
       }
@@ -5456,6 +5584,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrir dans Obsidian"
+          }
+        }
+      }
+    },
+    "Open models": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir modelos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les modèles"
+          }
+        }
+      }
+    },
+    "Open permissions": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir permisos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les autorisations"
           }
         }
       }
@@ -6086,6 +6246,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Privé, sur l’appareil"
+          }
+        }
+      }
+    },
+    "Processing meeting…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procesando reunión…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traitement de la réunion…"
           }
         }
       }
@@ -8052,6 +8228,22 @@
         }
       }
     },
+    "The rewrite failed. Your raw transcript is available in Last dictation. %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reescritura falló. La transcripción sin editar está disponible en Último dictado. %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La réécriture a échoué. Votre transcription brute est disponible dans Dernière dictée. %@"
+          }
+        }
+      }
+    },
     "The speech model is almost ready. Keep talking; your text arrives when it's ready.": {
       "localizations": {
         "es": {
@@ -8176,6 +8368,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Le modèle de rédaction n’est pas encore téléchargé"
+          }
+        }
+      }
+    },
+    "The writing model returned no text.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El modelo de escritura no devolvió texto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle d’écriture n’a renvoyé aucun texte."
           }
         }
       }
@@ -8804,6 +9012,22 @@
         }
       }
     },
+    "View progress": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver progreso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir la progression"
+          }
+        }
+      }
+    },
     "Volume": {
       "localizations": {
         "es": {
@@ -8816,6 +9040,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volume"
+          }
+        }
+      }
+    },
+    "Wait for meeting processing to finish.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera a que termine el procesamiento de la reunión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attendez la fin du traitement de la réunion."
+          }
+        }
+      }
+    },
+    "Wait for the microphone test to start.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera a que empiece la prueba del micrófono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attendez le démarrage du test du microphone."
           }
         }
       }
@@ -9958,6 +10214,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "« %@ » et son audio partent à la corbeille à la prochaine vérification."
+          }
+        }
+      }
+    },
+    "“%@” will be removed from Audio Pencil and your synced settings. This cannot be undone.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«%@» se eliminará de Audio Pencil y de tus ajustes sincronizados. Esta acción no se puede deshacer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %@ » sera supprimé d’Audio Pencil et de vos réglages synchronisés. Cette action est irréversible."
           }
         }
       }

@@ -47,6 +47,11 @@ struct SettingsView: View {
             content(app.settingsTab)
         } else {
             VStack(spacing: 0) {
+                if app.meetings.isProcessing {
+                    MeetingProcessingStatus(app: app)
+                        .padding(16)
+                    Divider()
+                }
                 SettingsCategoryControl(selection: $app.settingsTab, needsPermissions: app.needsSetup, needsStorage: !app.vault.settings.isConfigured)
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -225,6 +230,7 @@ private struct GeneralSettings: View {
                 }
                 LabeledContent {
                     Button("Run Setup Again…") { app.showSetup(hidingMainWindow: false) }
+                        .disabled(app.meetings.isProcessing)
                 } label: {
                     Text("Setup")
                     Text("Walks through the dictation key, permissions, languages, storage and models. Nothing is reset.")
@@ -459,6 +465,7 @@ private struct DictationLanguagesSection: View {
                 Text("Start new apps in")
                 Text("Each app starts in the language you last spoke there.")
             }
+            .disabled(app.meetings.isProcessing)
             ForEach(app.offeredLanguages) { language in
                 HStack {
                     Text(language.name())
@@ -475,7 +482,7 @@ private struct DictationLanguagesSection: View {
                         Image(systemName: "minus.circle")
                     }
                     .buttonStyle(.borderless)
-                    .disabled(app.offeredLanguages.count == 1)
+                    .disabled(app.offeredLanguages.count == 1 || app.meetings.isProcessing)
                     .accessibilityLabel("Remove \(language.name())")
                 }
             }
@@ -490,6 +497,7 @@ private struct DictationLanguagesSection: View {
                 Text("Choose…").tag("")
                 ForEach(SpokenLanguage.all().filter { !app.offeredLanguages.contains($0) }) { Text($0.name()).tag($0.code) }
             }
+            .disabled(app.meetings.isProcessing)
         } header: {
             Text("Dictation languages")
         } footer: {
@@ -600,6 +608,7 @@ private struct VocabularySection: View {
                 .font(.body)
                 .frame(minHeight: 70)
                 .onChange(of: text) { _, text in save(text) }
+                .disabled(app.meetings.isProcessing)
         } header: {
             Text("Custom vocabulary")
         } footer: {
@@ -640,7 +649,7 @@ private struct ModelSettings: View {
                         Text("\(app.settings.writingModel.replacingOccurrences(of: "mlx-community/", with: "")) – from discovery").tag(app.settings.writingModel)
                     }
                 }
-                .disabled(app.dictation.isActive)
+                .disabled(app.dictation.isActive || app.meetings.isProcessing)
                 LabeledContent("Status") {
                     switch app.writingModelState {
                     case .downloading(let fraction): ProgressView(value: fraction).frame(width: 160)
@@ -668,7 +677,7 @@ private struct ModelSettings: View {
                         Text("\(app.settings.transcriptionModel) – from discovery").tag(app.settings.transcriptionModel)
                     }
                 }
-                .disabled(app.dictation.isActive || app.usesPhonon)
+                .disabled(app.dictation.isActive || app.meetings.isProcessing || app.usesPhonon)
                 Toggle(isOn: $app.phononTrial) {
                     Text("Try Phonon-2 for English")
                     if app.phononTrial, !app.usesPhonon {
@@ -677,7 +686,7 @@ private struct ModelSettings: View {
                         Text("Fewer mistakes and faster than Whisper Small in tests. English only. A 370 MB download, then about 5 minutes preparing for this Mac the first time.")
                     }
                 }
-                .disabled(app.dictation.isActive)
+                .disabled(app.dictation.isActive || app.meetings.isProcessing)
                 Picker("Other languages", selection: $app.settings.multilingualTranscriptionModel) {
                     ForEach(TranscriptionModelOption.multilingualCatalogue) { option in
                         Text("\(option.name) – \(option.note)").tag(option.id)
@@ -686,10 +695,10 @@ private struct ModelSettings: View {
                         Text("\(app.settings.multilingualTranscriptionModel) – from discovery").tag(app.settings.multilingualTranscriptionModel)
                     }
                 }
-                .disabled(app.dictation.isActive)
+                .disabled(app.dictation.isActive || app.meetings.isProcessing)
             }
 
-            ModelSuggestionsSection(advisor: app.advisor)
+            ModelSuggestionsSection(advisor: app.advisor, modelChangesDisabled: app.dictation.isActive || app.meetings.isProcessing)
         }
         .formStyle(.grouped)
         .pageAligned(embedded)
@@ -768,6 +777,7 @@ private struct MicrophonePriorityList: View {
 /// Discovery results: what fits this machine, with Try / Switch / Dismiss.
 private struct ModelSuggestionsSection: View {
     let advisor: ModelAdvisor
+    let modelChangesDisabled: Bool
 
     var body: some View {
         Section {
@@ -793,7 +803,7 @@ private struct ModelSuggestionsSection: View {
                 Text(error).foregroundStyle(.orange).font(.callout)
             }
             ForEach(advisor.suggestions) { suggestion in
-                SuggestionRow(advisor: advisor, suggestion: suggestion)
+                SuggestionRow(advisor: advisor, suggestion: suggestion, modelChangesDisabled: modelChangesDisabled)
             }
             if advisor.suggestions.isEmpty, advisor.lastChecked != nil, !advisor.checking {
                 Text("Nothing better that fits right now.").foregroundStyle(.secondary)
@@ -811,6 +821,7 @@ private struct ModelSuggestionsSection: View {
 private struct SuggestionRow: View {
     let advisor: ModelAdvisor
     let suggestion: ModelSuggestion
+    let modelChangesDisabled: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -830,8 +841,10 @@ private struct SuggestionRow: View {
                     ProgressView().controlSize(.small)
                 case .done:
                     Button("Switch") { advisor.adopt(suggestion) }.buttonStyle(.borderedProminent)
+                        .disabled(modelChangesDisabled)
                 default:
                     Button("Try") { advisor.tryOut(suggestion) }
+                        .disabled(modelChangesDisabled)
                 }
                 Button { advisor.dismiss(suggestion) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
                     .buttonStyle(.borderless)
