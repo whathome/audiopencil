@@ -96,7 +96,7 @@ struct DailyNoteSettingsView: View {
                 .disabled(!editable)
             } footer: {
                 switch app.sync.dailyNotes {
-                case .on: Text("Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the Daily note button above the clock.")
+                case .on: Text("Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the switch under Make Note, or choose Add to Daily Note to put the text itself there.")
                 case .off: Text("Turn on Daily notes in Obsidian (Settings › Core plugins) first. Daily notes need your storage to be an Obsidian vault.")
                 case .unknown: Text("Connect your storage first; Audio Pencil checks whether Obsidian's Daily notes is on.")
                 }

@@ -112,6 +112,14 @@ enum DailyNoteEntry {
         return "- \(clock(note.recorded)) [[\(target)|\(note.title)]]"
     }
 
+    /// Text added to a daily note: "- 14:32 The text", continuing lines indented so they stay with it. A task
+    /// line ("- [ ] …") goes in as it is, with no time: it's a to-do, not a log entry.
+    static func timed(_ text: String, at date: Date) -> String {
+        let lines = text.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: "\n")
+        guard let first = lines.first, !first.hasPrefix(TaskLine.checkbox) else { return text.trimmingCharacters(in: .whitespacesAndNewlines) }
+        return (["- \(clock(date)) \(first)"] + lines.dropFirst().map { $0.isEmpty ? "" : "\t" + $0 }).joined(separator: "\n")
+    }
+
     /// "14:32", always 24-hour.
     static func clock(_ date: Date) -> String {
         let formatter = DateFormatter()

@@ -292,6 +292,38 @@
         }
       }
     },
+    "Add to Daily Note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir a la nota diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter à la note quotidienne"
+          }
+        }
+      }
+    },
+    "Added to the daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadido a la nota diaria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouté à la note quotidienne"
+          }
+        }
+      }
+    },
     "Allow Microphone": {
       "localizations": {
         "es": {
@@ -666,6 +698,22 @@
         }
       }
     },
+    "Copy": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier"
+          }
+        }
+      }
+    },
     "Copy the note": {
       "localizations": {
         "es": {
@@ -1020,18 +1068,18 @@
         }
       }
     },
-    "Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the Daily note button above the clock.": {
+    "Each note is linked in the daily note for the day it was recorded, created if it isn't there yet. Change it for one recording with the switch under Make Note, or choose Add to Daily Note to put the text itself there.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada nota se enlaza en la nota diaria del día en que se grabó, que se crea si aún no existe. Cámbialo para una grabación con el botón Nota diaria encima del reloj."
+            "value": "Cada nota se enlaza en la nota diaria del día en que se grabó, que se crea si aún no existe. Cámbialo para una grabación con el interruptor bajo Crear la nota, o elige Añadir a la nota diaria para poner allí el propio texto."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chaque note est liée dans la note quotidienne du jour de l'enregistrement, créée si elle n'existe pas encore. Changez-le pour un enregistrement avec le bouton Note quotidienne au-dessus du chrono."
+            "value": "Chaque note est liée dans la note quotidienne du jour de l'enregistrement, créée si elle n'existe pas encore. Changez-le pour un enregistrement avec l'interrupteur sous Créer la note, ou choisissez Ajouter à la note quotidienne pour y mettre le texte lui-même."
           }
         }
       }
@@ -1388,22 +1436,6 @@
         }
       }
     },
-    "Labels who said what in the note.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Indica quién dijo qué en la nota."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Indique qui a dit quoi dans la note."
-          }
-        }
-      }
-    },
     "Language: %@": {
       "localizations": {
         "es": {
@@ -1452,6 +1484,22 @@
         }
       }
     },
+    "Link it in today's daily note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazarla en la nota diaria de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lier dans la note quotidienne du jour"
+          }
+        }
+      }
+    },
     "Link notes in the daily note": {
       "localizations": {
         "es": {
@@ -1464,22 +1512,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lier les notes dans la note quotidienne"
-          }
-        }
-      }
-    },
-    "Links the note in today's daily note.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enlaza la nota en la nota diaria de hoy."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lie la note dans la note quotidienne du jour."
           }
         }
       }
@@ -1852,22 +1884,6 @@
         }
       }
     },
-    "Number of speakers": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número de interlocutores"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nombre d’intervenants"
-          }
-        }
-      }
-    },
     "Obsidian vault · can write": {
       "localizations": {
         "es": {
@@ -2028,6 +2044,22 @@
         }
       }
     },
+    "Open Audio Pencil to write it as %@ and add it to the daily note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Audio Pencil para escribirlo como %@ y añadirlo a la nota diaria."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Audio Pencil pour l'écrire en %@ et l'ajouter à la note quotidienne."
+          }
+        }
+      }
+    },
     "Open Audio Pencil to write it as %@ and copy it.": {
       "localizations": {
         "es": {
@@ -2184,22 +2216,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Met l’enregistrement en pause ; reprenez-le pour continuer dans la même note."
-          }
-        }
-      }
-    },
-    "People: auto": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personas: auto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personnes : auto"
           }
         }
       }
@@ -3894,6 +3910,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Les rédiger maintenant"
+          }
+        }
+      }
+    },
+    "Writes it in this style and adds it to today's daily note, without filing a note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo escribe en este estilo y lo añade a la nota diaria de hoy, sin archivar una nota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'écrit dans ce style et l'ajoute à la note quotidienne du jour, sans classer de note."
           }
         }
       }

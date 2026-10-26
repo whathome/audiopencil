@@ -24,7 +24,6 @@ struct RecordView: View {
                     .padding(.top, 8)
                 transcript
                 VStack(spacing: 18) {
-                    meetingRow
                     clock
                     controls
                 }
@@ -57,8 +56,8 @@ struct RecordView: View {
             StatusRow(symbol: nil, text: app.meetings.progress)
         } else if let reason = recorder.pauseReason, recorder.phase == .paused {
             StatusRow(symbol: "pause.circle.fill", text: reason, tint: .orange)
-        } else if app.notes.justCopied {
-            StatusRow(symbol: "doc.on.clipboard", text: String(localized: "Copied to the clipboard"), tint: Color.pencil)
+        } else if let message = app.notes.justFinished {
+            StatusRow(symbol: "checkmark.circle.fill", text: message, tint: Color.pencil)
         } else if recorder.isActive, !app.notes.queue.isEmpty {
             // Writing stops while recording (one model at a time); say so rather than let it vanish.
             StatusRow(symbol: "hourglass", text: String(localized: "\(app.notes.queue.count) waiting to be written: carries on when you stop"))
@@ -123,60 +122,6 @@ struct RecordView: View {
         }
         .opacity(recorder.isActive ? 1 : 0.35)
         .accessibilityLabel(Text("Recorded time"))
-    }
-
-    /// Meeting mode, chosen before or during a recording: the note labels who said what. Off again after
-    /// each recording, since most are one person talking.
-    private var meetingRow: some View {
-        HStack(spacing: 8) {
-            Button {
-                recorder.meeting.toggle()
-            } label: {
-                Label("Meeting", systemImage: "person.2")
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .foregroundStyle(recorder.meeting ? Color.white : Color.primary)
-                    .background(Capsule().fill(recorder.meeting ? Color.pencil : Color(.secondarySystemFill)))
-            }
-            .buttonStyle(.plain)
-            .accessibilityValue(Text(recorder.meeting ? "On" : "Off"))
-            .accessibilityHint(Text("Labels who said what in the note."))
-            if recorder.meeting {
-                Menu {
-                    Picker("Speakers", selection: Binding(get: { recorder.speakerCount }, set: { recorder.speakerCount = $0 })) {
-                        Text("Work it out").tag(Int?.none)
-                        ForEach(2...6, id: \.self) { Text("\($0) people").tag(Int?.some($0)) }
-                    }
-                } label: {
-                    Text(recorder.speakerCount.map { "\($0) people" as LocalizedStringResource } ?? "People: auto")
-                        .font(.subheadline)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(Capsule().fill(Color(.secondarySystemFill)))
-                }
-                .accessibilityLabel(Text("Number of speakers"))
-            }
-            // Only offered when the vault has Obsidian's Daily notes on (Settings explains otherwise).
-            if app.sync.dailyNotes == .on {
-                let on = recorder.linksDailyNote
-                Button {
-                    recorder.dailyNoteOverride = !on
-                } label: {
-                    Label("Daily note", systemImage: "calendar")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .foregroundStyle(on ? Color.white : Color.primary)
-                        .background(Capsule().fill(on ? Color.pencil : Color(.secondarySystemFill)))
-                }
-                .buttonStyle(.plain)
-                .accessibilityValue(Text(on ? "On" : "Off"))
-                .accessibilityHint(Text("Links the note in today's daily note."))
-            }
-        }
-        .disabled(recorder.phase == .finishing)
-        .animation(.snappy, value: recorder.meeting)
     }
 
     private var controls: some View {
@@ -358,13 +303,18 @@ struct LanguageMenu: View {
     }
 }
 
-/// After stopping: which style the note is written in. Starts on the last one used.
+/// After stopping: which style it's written in (starting on the last one used), and where it goes: a note
+/// (linked in the daily note if wanted), the daily note itself, or the clipboard.
 struct StyleSheet: View {
     let app: PhoneModel
     let capture: PhoneCapture
     @Environment(\.dismiss) private var dismiss
     @State private var selection: String = ""
     @State private var confirmingDiscard = false
+    /// For Make Note only; starts on the Settings choice.
+    @State private var linksDailyNote = false
+
+    private var dailyNotesOn: Bool { app.sync.dailyNotes == .on }
 
     var body: some View {
         NavigationStack {
@@ -396,25 +346,38 @@ struct StyleSheet: View {
                             .font(.footnote)
                     }
                     Button {
-                        guard let style = chooseStyle() else { return }
-                        app.notes.make(capture, style: style)
-                        dismiss()
+                        var capture = capture
+                        capture.dailyNote = dailyNotesOn && linksDailyNote
+                        deliver(capture, as: .note)
                     } label: {
-                        Text("Make Note").frame(maxWidth: .infinity)
+                        Label("Make Note", systemImage: "doc.text").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    // Same writing, but only onto the clipboard: no note is filed.
-                    Button {
-                        guard let style = chooseStyle() else { return }
-                        app.notes.copy(capture, style: style)
-                        dismiss()
-                    } label: {
-                        Label("Copy to Clipboard", systemImage: "doc.on.doc").frame(maxWidth: .infinity)
+                    if dailyNotesOn {
+                        Toggle("Link it in today's daily note", isOn: $linksDailyNote)
+                            .font(.subheadline)
+                            .padding(.horizontal, 4)
+                    }
+                    // Same writing, somewhere other than a note of its own.
+                    HStack(spacing: 8) {
+                        if dailyNotesOn {
+                            Button {
+                                deliver(capture, as: .dailyNote)
+                            } label: {
+                                Label("Add to Daily Note", systemImage: "calendar.badge.plus").frame(maxWidth: .infinity)
+                            }
+                            .accessibilityHint(Text("Writes it in this style and adds it to today's daily note, without filing a note."))
+                        }
+                        Button {
+                            deliver(capture, as: .copy)
+                        } label: {
+                            Label(dailyNotesOn ? "Copy" : "Copy to Clipboard", systemImage: "doc.on.doc").frame(maxWidth: .infinity)
+                        }
+                        .accessibilityHint(Text("Writes it in this style and copies it, without filing a note."))
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.large)
-                    .accessibilityHint(Text("Writes it in this style and copies it, without filing a note."))
                 }
                 .padding()
                 .background(.bar)
@@ -439,14 +402,18 @@ struct StyleSheet: View {
                 }
             }
         }
-        .onAppear { selection = app.lastStyle.id }
+        .onAppear {
+            selection = app.lastStyle.id
+            linksDailyNote = app.settings.dailyNoteLinks
+        }
         .interactiveDismissDisabled()
     }
 
-    /// The selected style, remembered as the last one used.
-    private func chooseStyle() -> Style? {
-        guard let style = app.enabledStyles.first(where: { $0.id == selection }) else { return nil }
+    /// Queues it in the selected style, which is remembered as the last one used.
+    private func deliver(_ capture: PhoneCapture, as outcome: PhoneNotes.Outcome) {
+        guard let style = app.enabledStyles.first(where: { $0.id == selection }) else { return }
         app.lastStyleID = style.id
-        return style
+        app.notes.enqueue(capture, style: style, outcome: outcome)
+        dismiss()
     }
 }
