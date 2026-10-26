@@ -452,6 +452,22 @@
         }
       }
     },
+    "Audio kept forever": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio conservado para siempre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio gardé pour toujours"
+          }
+        }
+      }
+    },
     "Back": {
       "localizations": {
         "es": {
@@ -714,6 +730,22 @@
         }
       }
     },
+    "Copy Meeting Note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar la nota de la reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier la note de réunion"
+          }
+        }
+      }
+    },
     "Copy the note": {
       "localizations": {
         "es": {
@@ -886,6 +918,22 @@
         }
       }
     },
+    "Delete Local Meeting…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la reunión local…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer la réunion locale…"
+          }
+        }
+      }
+    },
     "Diary": {
       "localizations": {
         "es": {
@@ -994,6 +1042,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Déconnecter"
+          }
+        }
+      }
+    },
+    "Dismiss Message": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar el mensaje"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer le message"
           }
         }
       }
@@ -1196,6 +1260,22 @@
         }
       }
     },
+    "File Note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivar la nota"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classer la note"
+          }
+        }
+      }
+    },
     "Filed": {
       "localizations": {
         "es": {
@@ -1324,6 +1404,22 @@
         }
       }
     },
+    "Get the speech and writing models": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener los modelos de voz y redacción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtenir les modèles de parole et de rédaction"
+          }
+        }
+      }
+    },
     "Heartbeat": {
       "localizations": {
         "es": {
@@ -1352,6 +1448,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utilisé"
+          }
+        }
+      }
+    },
+    "In-person conversation": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversación en persona"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversation en personne"
           }
         }
       }
@@ -1388,6 +1500,22 @@
         }
       }
     },
+    "Keep Audio Forever": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar el audio para siempre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder l'audio pour toujours"
+          }
+        }
+      }
+    },
     "Keep Recording": {
       "localizations": {
         "es": {
@@ -1400,6 +1528,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Garder l'enregistrement"
+          }
+        }
+      }
+    },
+    "Keeps recording with the device locked or the app in the background. A call or a disconnected microphone pauses it; resume here.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue grabando con el dispositivo bloqueado o la app en segundo plano. Una llamada o un micrófono desconectado lo pausa; reanuda aquí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'enregistrement continue avec l'appareil verrouillé ou l'app en arrière-plan. Un appel ou un micro déconnecté le met en pause ; reprenez ici."
           }
         }
       }
@@ -1564,6 +1708,22 @@
         }
       }
     },
+    "Loud": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuerte"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fort"
+          }
+        }
+      }
+    },
     "Make Note": {
       "localizations": {
         "es": {
@@ -1576,6 +1736,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Créer la note"
+          }
+        }
+      }
+    },
+    "Make sure everyone knows they're being recorded. Audio Pencil doesn't tell them.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asegúrate de que todos sepan que se les está grabando. Audio Pencil no les avisa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assurez-vous que tout le monde sait être enregistré. Audio Pencil ne les prévient pas."
+          }
+        }
+      }
+    },
+    "Mark Reviewed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar como revisada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer comme relue"
+          }
+        }
+      }
+    },
+    "Marking it reviewed also updates the filed note.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcarla como revisada también actualiza la nota archivada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La marquer comme relue met aussi à jour la note classée."
           }
         }
       }
@@ -1628,6 +1836,22 @@
         }
       }
     },
+    "Microphone level": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nivel del micrófono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niveau du micro"
+          }
+        }
+      }
+    },
     "Model": {
       "localizations": {
         "es": {
@@ -1656,6 +1880,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modèles"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus"
           }
         }
       }
@@ -2092,6 +2332,38 @@
         }
       }
     },
+    "Open in Obsidian": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir en Obsidian"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir dans Obsidian"
+          }
+        }
+      }
+    },
+    "Opens the meeting's review.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la revisión de la reunión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre la relecture de la réunion."
+          }
+        }
+      }
+    },
     "Opens the note in Obsidian.": {
       "localizations": {
         "es": {
@@ -2172,6 +2444,22 @@
         }
       }
     },
+    "Paused": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pause"
+          }
+        }
+      }
+    },
     "Paused while you record. Writing carries on when you stop.": {
       "localizations": {
         "es": {
@@ -2232,6 +2520,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dossier simple · écriture possible"
+          }
+        }
+      }
+    },
+    "Play Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reproducir la grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écouter l'enregistrement"
           }
         }
       }
@@ -2328,6 +2632,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Professionnel"
+          }
+        }
+      }
+    },
+    "Quiet": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silencio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silencieux"
           }
         }
       }
@@ -2492,6 +2812,22 @@
         }
       }
     },
+    "Records the people in the room through the current microphone (a headset or USB input too), not audio from another app. Processing transcribes it, labels who spoke and writes a summary, on this device, while Audio Pencil is open.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graba a las personas presentes con el micrófono actual (también auriculares o entrada USB), no el audio de otra app. El procesamiento transcribe, identifica quién habla y redacta un resumen, en este dispositivo, mientras Audio Pencil está abierto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistre les personnes présentes avec le micro actuel (casque ou entrée USB aussi), pas l'audio d'une autre app. Le traitement transcrit, identifie qui parle et rédige un résumé, sur cet appareil, pendant qu'Audio Pencil est ouvert."
+          }
+        }
+      }
+    },
     "Reduce wind and traffic noise": {
       "localizations": {
         "es": {
@@ -2556,6 +2892,22 @@
         }
       }
     },
+    "Reviewed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relue"
+          }
+        }
+      }
+    },
     "Rewrites it as clear, natural written text: no filler or false starts, grammar fixed, meaning, details, voice and length kept. No headings or bullets.": {
       "localizations": {
         "es": {
@@ -2616,6 +2968,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enregistrement de l’audio…"
+          }
+        }
+      }
+    },
+    "Saving…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement…"
           }
         }
       }
@@ -2798,6 +3166,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Intervenants"
+          }
+        }
+      }
+    },
+    "Speaking": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hablando"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parole"
           }
         }
       }
@@ -3040,6 +3424,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arrêter et créer une note"
+          }
+        }
+      }
+    },
+    "Stop and save the meeting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener y guardar la reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter et enregistrer la réunion"
           }
         }
       }
@@ -3402,6 +3802,22 @@
         }
       }
     },
+    "Transcribe Again": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribir de nuevo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcrire à nouveau"
+          }
+        }
+      }
+    },
     "Transcribed as you talk": {
       "localizations": {
         "es": {
@@ -3542,6 +3958,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "À jour, %@"
+          }
+        }
+      }
+    },
+    "Update Filed Note": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar la nota archivada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre à jour la note classée"
           }
         }
       }
@@ -4044,6 +4476,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rédigé pendant qu'Audio Pencil est ouvert."
+          }
+        }
+      }
+    },
+    "You can record now and process once they're on this device.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes grabar ahora y procesar cuando estén en este dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez enregistrer maintenant et traiter une fois qu'ils sont sur cet appareil."
           }
         }
       }

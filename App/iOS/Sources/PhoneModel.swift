@@ -56,6 +56,9 @@ final class PhoneModel: WritingHost {
     var lastStyleID: String = UserDefaults.standard.string(forKey: PhoneModel.lastStyleKey) ?? Style.polished.id {
         didSet { UserDefaults.standard.set(lastStyleID, forKey: Self.lastStyleKey) }
     }
+    /// A meeting to show in the Meetings tab, asked for from elsewhere (a filed meeting tapped in Notes).
+    var meetingToOpen: UUID?
+
     var setupCompleted: Bool = UserDefaults.standard.bool(forKey: PhoneModel.setupCompletedKey) {
         didSet { UserDefaults.standard.set(setupCompleted, forKey: Self.setupCompletedKey) }
     }

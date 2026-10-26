@@ -61,6 +61,12 @@ struct RootView: View {
         .onChange(of: app.meetings.ownsCapture) { _, recording in
             if recording { tab = .meetings }
         }
+        .onChange(of: app.meetingToOpen) { _, id in
+            guard let id else { return }
+            app.meetings.selectedID = id
+            tab = .meetings
+            app.meetingToOpen = nil
+        }
         .fullScreenCover(isPresented: Binding(get: { !app.setupCompleted }, set: { _ in })) {
             PhoneSetupView(app: app)
                 .tint(Color.pencil) // presented views don't pick up the app's accent on their own

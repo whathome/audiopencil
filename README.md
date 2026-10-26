@@ -103,7 +103,7 @@ While a meeting processes on Mac, writing samples, styles and unrelated settings
 
 After processing, review **Summary**, **Actions** and the timestamped **Transcript**. Rename speakers, edit Markdown action items, click a timestamp for playback, and mark the meeting reviewed. Notes file through the existing offline queue as `mode: meeting`; local recordings remain available for playback and processing retries. Use **Update Filed Note** after editing. An externally changed note is never silently overwritten: review changes stay local for manual merging. **Delete local meeting** removes the local review/recovery files; filed notes must be deleted in their storage separately. Audio follows regular one-year retention or **Keep Audio Forever**.
 
-The older microphone-only meeting toggle remains available during dictation on the Mac. On iPhone, meetings are recorded from the **Meetings** tab; the Record tab is for one person talking. Every ordinary dictation still starts in single-speaker mode.
+The older microphone-only meeting toggle remains available during dictation on the Mac. On iPhone, meetings are recorded from the **Meetings** tab, with the same round controls, clock and level as the Record tab (which is for one person talking). A meeting's review has one main action, **File Note** (then **Update Filed Note**), with Transcribe Again, Keep Audio Forever and Delete in its ··· menu; filed meetings also appear in Notes › Filed, marked with a people icon. Every ordinary dictation still starts in single-speaker mode.
 
 Labelling 18 s of two voices takes about 2.5 s on an M1 once the models are prepared. Very short turns (a lone "Good morning") are the hardest to attribute.
 

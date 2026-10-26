@@ -71,10 +71,10 @@ struct NotesView: View {
                 }
                 if !notes.queue.isEmpty { waiting }
                 if !notes.copiedNotes.isEmpty { copied }
-                if !notes.recent.isEmpty { filed }
+                if !notes.recent.isEmpty || !filedMeetings.isEmpty { filed }
             }
             .overlay {
-                if notes.recent.isEmpty, notes.queue.isEmpty, notes.copiedNotes.isEmpty, notes.processing == nil {
+                if notes.recent.isEmpty, filedMeetings.isEmpty, notes.queue.isEmpty, notes.copiedNotes.isEmpty, notes.processing == nil {
                     ContentUnavailableView {
                         Label("No notes yet", systemImage: "doc.text")
                     } description: {
@@ -198,12 +198,62 @@ struct NotesView: View {
         }
     }
 
+    /// Meetings that are in storage, so every filed note is in one list whichever tab recorded it.
+    private var filedMeetings: [MeetingSession] {
+        app.meetings.recent.filter { $0.notePath != nil }
+    }
+
+    private enum FiledItem: Identifiable {
+        case note(RecentNote)
+        case meeting(MeetingSession)
+
+        var id: UUID {
+            switch self {
+            case .note(let note): note.id
+            case .meeting(let meeting): meeting.id
+            }
+        }
+
+        var recorded: Date {
+            switch self {
+            case .note(let note): note.recorded
+            case .meeting(let meeting): meeting.recorded
+            }
+        }
+    }
+
+    private var filedItems: [FiledItem] {
+        (notes.recent.map(FiledItem.note) + filedMeetings.map(FiledItem.meeting)).sorted { $0.recorded > $1.recorded }
+    }
+
     private var filed: some View {
         Section {
-            ForEach(notes.recent) { note in
-                rowLayout {
-                    filedRow(note)
-                    CopyButton(label: "Copy the note", failed: reportCopyProblem) { await notes.text(of: note) }
+            ForEach(filedItems) { item in
+                switch item {
+                case .note(let note):
+                    rowLayout {
+                        filedRow(note)
+                        CopyButton(label: "Copy the note", failed: reportCopyProblem) { await notes.text(of: note) }
+                    }
+                case .meeting(let meeting):
+                    rowLayout {
+                        // Opens its review on the Meetings tab, where it can be edited and filed again.
+                        Button {
+                            app.meetingToOpen = meeting.id
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "person.2").foregroundStyle(Color.pencil).accessibilityHidden(true)
+                                NoteRow(title: meeting.title, detail: details(meeting.duration, meeting.recorded, style: String(localized: "Meeting")))
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(Text("Opens the meeting's review."))
+                        CopyButton(label: "Copy the note", failed: reportCopyProblem) {
+                            meeting.displayingSpeakerNames(in: meeting.body) + "\n\n" + meeting.transcript
+                        }
+                    }
                 }
             }
         } header: {
