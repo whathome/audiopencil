@@ -40,7 +40,11 @@ final class PhoneNotes {
         self.app = app
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         #if DEBUG && targetEnvironment(simulator)
-        let name = ProcessInfo.processInfo.arguments.contains("--ui-testing") ? "Pending-UITests" : "Pending"
+        let arguments = ProcessInfo.processInfo.arguments
+        let testID = arguments.firstIndex(of: "--notes-test-id").flatMap { index in
+            arguments.indices.contains(index + 1) ? UUID(uuidString: arguments[index + 1]) : nil
+        }
+        let name = arguments.contains("--ui-testing") ? "Pending-UITests/\(testID?.uuidString ?? "Shared")" : "Pending"
         #else
         let name = "Pending"
         #endif
@@ -50,12 +54,28 @@ final class PhoneNotes {
         queue = (try? JSONDecoder().decode([QueuedRecording].self, from: Data(contentsOf: folder.appending(path: "queue.json")))) ?? []
         copiedNotes = (try? JSONDecoder().decode([CopiedNote].self, from: Data(contentsOf: folder.appending(path: "copied.json")))) ?? []
         #if DEBUG && targetEnvironment(simulator)
-        if ProcessInfo.processInfo.arguments.contains("--ui-testing"),
-           ProcessInfo.processInfo.arguments.contains("--notes-review-fixture"), copiedNotes.isEmpty {
-            let note = Note(title: "Tablet note fixture", styleID: "raw", status: .needsReview,
-                            recorded: .now, duration: 10, device: "ipad", mode: .longForm,
-                            folder: NoteFiling.defaultFolder, body: "A private tablet note.")
-            copiedNotes = [.init(note: note, styleName: "Raw", dailyNote: false)]
+        let marker = folder.appending(path: "fixtures-installed")
+        if arguments.contains("--ui-testing"), !FileManager.default.fileExists(atPath: marker.path) {
+            if arguments.contains("--notes-review-fixture") {
+                let note = Note(title: "Tablet note fixture", styleID: "raw", status: .needsReview,
+                                recorded: .now, duration: 10, device: "ipad", mode: .longForm,
+                                folder: NoteFiling.defaultFolder, body: "A private tablet note.")
+                copiedNotes = [.init(note: note, styleName: "Raw", dailyNote: false)]
+            }
+            if arguments.contains("--queued-recordings-fixture") {
+                queue = (1...3).map { number in
+                    QueuedRecording(id: UUID(), transcript: "Queued recording \(number)", language: "en",
+                                    recorded: .now, duration: 45, styleID: "raw", copyOnly: true,
+                                    isSkipped: arguments.contains("--queue-processing-fixture") && number == 1 ? nil : true)
+                }
+            }
+            do {
+                try persistQueue(queue)
+                try JSONEncoder().encode(copiedNotes).write(to: folder.appending(path: "copied.json"), options: .atomic)
+                try Data().write(to: marker)
+            } catch {
+                preconditionFailure("Couldn't install Notes UI-test fixtures: \(error)")
+            }
         }
         #endif
         fileLeftoverReviews()
@@ -92,6 +112,7 @@ final class PhoneNotes {
         var copyOnly: Bool?
         /// Written in the style and added to that day's daily note, not filed.
         var appendsToDailyNote: Bool?
+        var isSkipped: Bool?
     }
 
     /// What happens once a recording is written: filed as a note, copied, or added to the daily note.
@@ -101,6 +122,9 @@ final class PhoneNotes {
 
     /// Recordings waiting to be written up, oldest first.
     private(set) var queue: [QueuedRecording] = []
+    private(set) var processingID: UUID?
+    var isBusy: Bool { processingID != nil || processing != nil }
+    var hasRunnableRecordings: Bool { queue.contains { $0.isSkipped != true } }
     @ObservationIgnored private var processTask: Task<Void, Never>?
     /// Meeting mode's speaker labels (small models, loaded only while labelling).
     @ObservationIgnored private let speakerLabeler = SpeakerLabeler()
@@ -155,19 +179,23 @@ final class PhoneNotes {
 
     /// Writes and files queued recordings one at a time, while the app is open and not recording.
     func processQueue() {
-        guard processTask == nil, !queue.isEmpty, !app.recorder.isActive,
+        guard processTask == nil, hasRunnableRecordings, !app.recorder.isActive,
               app.meetings?.ownsCapture != true, app.meetings?.isProcessing != true,
               UIApplication.shared.applicationState == .active
         else { return }
+        processingID = queue.first { $0.isSkipped != true }?.id
         processTask = Task {
-            while let item = queue.first, !Task.isCancelled {
+            while let item = queue.first(where: { $0.isSkipped != true }), !Task.isCancelled {
+                processingID = item.id
                 guard await process(item) else { break } // stopped part-way: stays queued
-                queue.removeFirst()
+                queue.removeAll { $0.id == item.id }
                 saveQueue()
             }
             processing = nil
             processingSince = nil
             processTask = nil
+            processingID = nil
+            app.restoreWhisper()
             // Stopped part-way while it could carry on (a recording started and ended during a slow step):
             // pick up again rather than wait for the app to be reopened.
             processQueue()
@@ -181,12 +209,51 @@ final class PhoneNotes {
         Log.dictation.notice("Note writing paused: \(reason, privacy: .public)")
     }
 
+    func pauseAndWait(because reason: String) async {
+        let pending = processTask
+        pauseProcessing(because: reason)
+        await pending?.value
+    }
+
+    func setSkipped(_ item: QueuedRecording, to skipped: Bool) throws {
+        guard let index = queue.firstIndex(where: { $0.id == item.id }) else {
+            throw QueueError.noLongerAvailable
+        }
+        var updated = queue
+        updated[index].isSkipped = skipped ? true : nil
+        try persistQueue(updated)
+        queue = updated
+        if processingID == item.id, skipped { pauseProcessing(because: "the recording was skipped") }
+        else { processQueue() }
+    }
+
+    func delete(_ item: QueuedRecording) throws {
+        guard processingID != item.id else { throw QueueError.stillProcessing }
+        guard queue.contains(where: { $0.id == item.id }) else { throw QueueError.noLongerAvailable }
+        try removeAudio(item.audioFile)
+        let updated = queue.filter { $0.id != item.id }
+        try persistQueue(updated)
+        queue = updated
+    }
+
+    private enum QueueError: LocalizedError {
+        case stillProcessing, noLongerAvailable
+
+        var errorDescription: String? {
+            switch self {
+            case .stillProcessing: String(localized: "Skip this recording and wait for writing to stop before deleting it.")
+            case .noLongerAvailable: String(localized: "This recording has already been processed or removed.")
+            }
+        }
+    }
+
     /// Why queued recordings aren't being written right now, if they aren't.
     var waitingReason: String? {
         guard !queue.isEmpty, processTask == nil || app.recorder.isActive else { return nil }
         if app.recorder.isActive { return String(localized: "Paused while you record. Writing carries on when you stop.") }
         if app.meetings.ownsCapture { return String(localized: "Waiting until the meeting recording stops.") }
         if app.meetings.isProcessing { return String(localized: "Waiting for meeting processing to finish.") }
+        if !hasRunnableRecordings { return String(localized: "All recordings are skipped. Resume one in Notes to write it.") }
         if UIApplication.shared.applicationState != .active { return String(localized: "Written while Audio Pencil is open.") }
         return String(localized: "Not started yet.")
     }
@@ -194,6 +261,15 @@ final class PhoneNotes {
     /// True once the note is filed; false if writing was stopped part-way.
     private func process(_ item: QueuedRecording) async -> Bool {
         processingSince = Date()
+        #if DEBUG && targetEnvironment(simulator)
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--ui-testing"), arguments.contains("--queue-processing-fixture") {
+            processing = String(localized: "Writing the note…")
+            if arguments.contains("--deferred-model-fixture") { app.applySyncedModelFixture() }
+            do { try await Task.sleep(for: .seconds(60)) }
+            catch { return false }
+        }
+        #endif
         // "New task: book the dentist" → a one-line task note, as said (no writing model needed).
         if item.meeting != true, let task = TaskKeywords.remainder(of: item.transcript, keywords: app.taskKeywords) {
             let style = app.styles.first { $0.id == item.styleID } ?? app.lastStyle
@@ -297,10 +373,18 @@ final class PhoneNotes {
         Task { await file(copied.note, audio: copied.audioFile.map { folder.appending(path: $0) }, dailyNote: copied.dailyNote) }
     }
 
-    func delete(_ copied: CopiedNote) {
-        copiedNotes.removeAll { $0.id == copied.id }
-        saveCopied()
-        if let audio = copied.audioFile { try? FileManager.default.removeItem(at: folder.appending(path: audio)) }
+    func delete(_ copied: CopiedNote) throws {
+        guard copiedNotes.contains(where: { $0.id == copied.id }) else { throw QueueError.noLongerAvailable }
+        try removeAudio(copied.audioFile)
+        let updated = copiedNotes.filter { $0.id != copied.id }
+        try JSONEncoder().encode(updated).write(to: folder.appending(path: "copied.json"), options: .atomic)
+        copiedNotes = updated
+    }
+
+    private func removeAudio(_ name: String?) throws {
+        guard let name else { return }
+        let url = folder.appending(path: name)
+        if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
     }
 
     private func saveCopied() {
@@ -361,6 +445,10 @@ final class PhoneNotes {
 
     private func saveQueue() {
         if let data = try? JSONEncoder().encode(queue) { try? data.write(to: folder.appending(path: "queue.json"), options: .atomic) }
+    }
+
+    private func persistQueue(_ recordings: [QueuedRecording]) throws {
+        try JSONEncoder().encode(recordings).write(to: folder.appending(path: "queue.json"), options: .atomic)
     }
 
     /// A local notification (the app asks for permission when the first recording starts).

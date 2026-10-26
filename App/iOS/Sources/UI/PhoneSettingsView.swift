@@ -363,7 +363,10 @@ struct LanguagesForm: View {
                     }
                 }
                 .contentShape(Rectangle())
-                .onTapGesture { app.useLanguage(language) }
+                .onTapGesture {
+                    guard !app.modelChangesBlocked else { return }
+                    app.useLanguage(language)
+                }
             }
             .onDelete { offsets in
                 let codes = app.offeredLanguages.map(\.code)
@@ -379,8 +382,12 @@ struct LanguagesForm: View {
         } header: {
             Text("Dictation languages")
         } footer: {
-            Text("One language per recording: tap one to start the next recording in it, or switch with the language button while recording. English uses the English model; other languages use the multilingual one.")
+            VStack(alignment: .leading, spacing: 6) {
+                if app.modelChangesBlocked { ModelSettingsNotice(app: app) }
+                Text("One language per recording: tap one to start the next recording in it, or switch with the language button while recording. English uses the English model; other languages use the multilingual one.")
+            }
         }
+        .disabled(app.modelChangesBlocked)
     }
 
     private func add(_ code: String) {
@@ -404,19 +411,26 @@ struct ModelsSettingsView: View {
                 Picker("English", selection: $app.settings.transcriptionModel) {
                     ForEach(TranscriptionModelOption.catalogue) { Text($0.name).tag($0.id) }
                 }
+                .disabled(app.modelChangesBlocked)
                 Picker("Other languages", selection: $app.settings.multilingualTranscriptionModel) {
                     ForEach(TranscriptionModelOption.multilingualCatalogue) { Text($0.name).tag($0.id) }
                 }
+                .disabled(app.modelChangesBlocked)
             } header: {
                 Text("Speech")
             } footer: {
-                Text("Each model downloads once and is prepared for this device's chip the first time it's used.")
+                VStack(alignment: .leading, spacing: 6) {
+                    if app.modelChangesBlocked { ModelSettingsNotice(app: app) }
+                    Text("Each model downloads once and is prepared for this device's chip the first time it's used.")
+                }
             }
             Section {
                 Picker("Model", selection: $app.settings.writingModel) {
                     ForEach(WritingModelOption.catalogue) { Text($0.name).tag($0.id) }
                 }
+                .disabled(app.modelChangesBlocked)
                 WritingModelRow(app: app)
+                    .disabled(app.modelChangesBlocked)
             } header: {
                 Text("Writing")
             } footer: {
@@ -425,6 +439,16 @@ struct ModelsSettingsView: View {
         }
         .navigationTitle("Models")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct ModelSettingsNotice: View {
+    let app: PhoneModel
+
+    var body: some View {
+        Text(app.hasPendingModelChanges
+             ? String(localized: "Synced model changes will apply when recording and processing finish.")
+             : String(localized: "Finish recording and processing before changing models or languages. You can still switch language from the recording screen while you record."))
     }
 }
 

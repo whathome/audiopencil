@@ -14,6 +14,27 @@ struct NotesView: View {
     @State private var retry = UUID()
     /// Why the last copy didn't happen, shown for a moment at the bottom.
     @State private var copyProblem: String?
+    @State private var deletion: Deletion?
+    @State private var actionProblem: String?
+
+    private enum Deletion: Identifiable {
+        case queued(PhoneNotes.QueuedRecording)
+        case copied(PhoneNotes.CopiedNote)
+
+        var id: UUID {
+            switch self {
+            case .queued(let item): item.id
+            case .copied(let item): item.id
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .queued(let item): NoteRenderer.fallbackTitle(from: item.transcript)
+            case .copied(let item): item.note.title
+            }
+        }
+    }
 
     private var notes: PhoneNotes { app.notes }
     private var rowLayout: AnyLayout {
@@ -33,6 +54,29 @@ struct NotesView: View {
             } else {
                 NavigationStack { contents }
             }
+        }
+        .confirmationDialog("Delete this recording?", isPresented: Binding(
+            get: { deletion != nil }, set: { if !$0 { deletion = nil } }
+        ), titleVisibility: .visible, presenting: deletion) { item in
+            Button("Delete Recording", role: .destructive) {
+                perform {
+                    switch item {
+                    case .queued(let recording): try notes.delete(recording)
+                    case .copied(let recording): try notes.delete(recording)
+                    }
+                    if selected == item.id { selected = nil }
+                }
+            }
+            Button("Keep Recording", role: .cancel) {}
+        } message: { item in
+            Text("“\(item.title)” and its audio will be removed from this device. This can't be undone. Text already copied elsewhere is not removed.")
+        }
+        .alert("Couldn't update recordings", isPresented: Binding(
+            get: { actionProblem != nil }, set: { if !$0 { actionProblem = nil } }
+        )) {
+            Button("OK", role: .cancel) { actionProblem = nil }
+        } message: {
+            Text(verbatim: actionProblem ?? "")
         }
         .task(id: [selected?.uuidString ?? "", retry.uuidString]) {
             noteText = nil
@@ -151,13 +195,36 @@ struct NotesView: View {
         Section {
             ForEach(notes.queue) { item in
                 rowLayout {
-                    selectableRow(item.id, title: NoteRenderer.fallbackTitle(from: item.transcript), detail: details(item.duration, item.recorded))
+                    VStack(alignment: .leading, spacing: 4) {
+                        selectableRow(item.id, title: NoteRenderer.fallbackTitle(from: item.transcript), detail: details(item.duration, item.recorded))
+                        if item.isSkipped == true {
+                            Text("Skipped").font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
                     if !typeSize.isAccessibilitySize { Spacer() }
-                    CopyButton(label: "Copy the transcript", failed: reportCopyProblem) { item.transcript }
+                    HStack(spacing: 12) {
+                        CopyButton(label: "Copy the transcript", failed: reportCopyProblem) { item.transcript }
+                        Menu {
+                            Button(item.isSkipped == true ? "Resume Writing" : "Skip for Now",
+                                   systemImage: item.isSkipped == true ? "play" : "pause") {
+                                perform { try notes.setSkipped(item, to: item.isSkipped != true) }
+                            }
+                            Button("Delete", systemImage: "trash", role: .destructive) { deletion = .queued(item) }
+                                .disabled(notes.processingID == item.id)
+                        } label: {
+                            Image(systemName: "ellipsis.circle").frame(minWidth: 44, minHeight: 44)
+                        }
+                        .accessibilityLabel(Text("Actions for \(NoteRenderer.fallbackTitle(from: item.transcript))"))
+                    }
+                }
+                .swipeActions(allowsFullSwipe: false) {
+                    Button("Delete", role: .destructive) { deletion = .queued(item) }
+                        .disabled(notes.processingID == item.id)
                 }
             }
             // Nothing is running and nothing stops it: let it be started by hand.
-            if let reason = notes.waitingReason, !app.recorder.isActive, UIApplication.shared.applicationState == .active {
+            if let reason = notes.waitingReason, notes.hasRunnableRecordings,
+               !app.recorder.isActive, UIApplication.shared.applicationState == .active {
                 Button {
                     notes.processQueue()
                 } label: {
@@ -185,10 +252,16 @@ struct NotesView: View {
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .accessibilityHint(Text("Files it in your notes folder with its audio, as Make Note would have."))
+                        Menu {
+                            Button("Delete", systemImage: "trash", role: .destructive) { deletion = .copied(item) }
+                        } label: {
+                            Image(systemName: "ellipsis.circle").frame(minWidth: 44, minHeight: 44)
+                        }
+                        .accessibilityLabel(Text("Actions for \(item.note.title)"))
                     }
                 }
-                .swipeActions {
-                    Button("Delete", role: .destructive) { notes.delete(item) }
+                .swipeActions(allowsFullSwipe: false) {
+                    Button("Delete", role: .destructive) { deletion = .copied(item) }
                 }
             }
         } header: {
@@ -281,6 +354,15 @@ struct NotesView: View {
         Task {
             try? await Task.sleep(for: .seconds(4))
             if copyProblem == message { copyProblem = nil }
+        }
+    }
+
+    private func perform(_ action: () throws -> Void) {
+        do { try action() }
+        catch {
+            actionProblem = error.localizedDescription
+            Log.dictation.error("Couldn't update recordings: \(error.localizedDescription, privacy: .public)")
+            AccessibilityNotification.Announcement(error.localizedDescription).post()
         }
     }
 

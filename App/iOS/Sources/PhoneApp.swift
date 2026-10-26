@@ -19,9 +19,28 @@ struct PhoneApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(app: app)
+                .modifier(CompactLayoutTestHarness())
                 .tint(Color.pencil)
                 .preferredColorScheme(testAppearance)
                 .task { app.bootstrap() }
+        }
+    }
+
+    private struct CompactLayoutTestHarness: ViewModifier {
+        @ViewBuilder func body(content: Content) -> some View {
+            #if DEBUG && targetEnvironment(simulator)
+            if ProcessInfo.processInfo.arguments.contains("--ui-testing"),
+               ProcessInfo.processInfo.arguments.contains("--compact-layout-fixture") {
+                content
+                    .environment(\.horizontalSizeClass, .compact)
+                    .frame(width: 390)
+                    .frame(maxWidth: .infinity)
+            } else {
+                content
+            }
+            #else
+            content
+            #endif
         }
     }
 

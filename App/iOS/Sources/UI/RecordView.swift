@@ -69,9 +69,13 @@ struct RecordView: View {
                 Image(systemName: "tray.full").foregroundStyle(Color.pencil)
                 Text("\(app.notes.queue.count) waiting to be written").font(.callout).foregroundStyle(.secondary)
                 Spacer()
-                Button("Write Now") { app.notes.processQueue() }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                if app.notes.hasRunnableRecordings {
+                    Button("Write Now") { app.notes.processQueue() }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                } else {
+                    Text("Resume in Notes").font(.callout).foregroundStyle(.secondary)
+                }
             }
         } else if let error = recorder.lastError, !recorder.isActive {
             StatusRow(symbol: "exclamationmark.triangle.fill", text: error, tint: .orange)
@@ -299,7 +303,8 @@ struct LanguageMenu: View {
                 .background(Capsule().fill(Color.pencil.opacity(0.18)))
         }
         .accessibilityLabel(Text("Language: \(current.name())"))
-        .disabled(app.offeredLanguages.count < 2 || app.recorder.phase == .finishing)
+        .disabled(app.offeredLanguages.count < 2 || app.recorder.phase == .finishing
+                  || (!app.recorder.isActive && app.modelChangesBlocked))
     }
 }
 

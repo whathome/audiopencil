@@ -2,6 +2,214 @@
   "sourceLanguage": "en",
   "strings": {
     "": {},
+    "Actions for %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acciones para %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions pour %@"
+          }
+        }
+      }
+    },
+    "All recordings are skipped. Resume one in Notes to write it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas las grabaciones se han pospuesto. Reanuda una en Notas para redactarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les enregistrements sont mis de côté. Reprenez-en un dans Notes pour le rédiger."
+          }
+        }
+      }
+    },
+    "Couldn't update recordings": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron actualizar las grabaciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de mettre à jour les enregistrements"
+          }
+        }
+      }
+    },
+    "Delete Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar grabación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l'enregistrement"
+          }
+        }
+      }
+    },
+    "Delete this recording?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar esta grabación?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer cet enregistrement ?"
+          }
+        }
+      }
+    },
+    "Finish recording and processing before changing models or languages. You can still switch language from the recording screen while you record.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termina la grabación y el procesamiento antes de cambiar los modelos o los idiomas. Puedes cambiar de idioma desde la pantalla de grabación mientras grabas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminez l'enregistrement et le traitement avant de changer de modèle ou de langue. Vous pouvez toujours changer de langue depuis l'écran d'enregistrement pendant que vous enregistrez."
+          }
+        }
+      }
+    },
+    "Resume in Notes": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar en Notas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre dans Notes"
+          }
+        }
+      }
+    },
+    "Resume Writing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar redacción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre la rédaction"
+          }
+        }
+      }
+    },
+    "Skip this recording and wait for writing to stop before deleting it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pospón esta grabación y espera a que se detenga la redacción antes de eliminarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettez cet enregistrement de côté et attendez l'arrêt de la rédaction avant de le supprimer."
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pospuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis de côté"
+          }
+        }
+      }
+    },
+    "Synced model changes will apply when recording and processing finish.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cambios de modelo sincronizados se aplicarán cuando terminen la grabación y el procesamiento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les changements de modèle synchronisés s'appliqueront à la fin de l'enregistrement et du traitement."
+          }
+        }
+      }
+    },
+    "This recording has already been processed or removed.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta grabación ya se ha procesado o eliminado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet enregistrement a déjà été traité ou supprimé."
+          }
+        }
+      }
+    },
+    "“%@” and its audio will be removed from this device. This can't be undone. Text already copied elsewhere is not removed.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminarán «%@» y su audio de este dispositivo. Esta acción no se puede deshacer. El texto ya copiado en otro lugar no se eliminará."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %@ » et son audio seront supprimés de cet appareil. Cette action est irréversible. Le texte déjà copié ailleurs ne sera pas supprimé."
+          }
+        }
+      }
+    },
     "%@ (%lld more waiting)": {
       "localizations": {
         "en": {

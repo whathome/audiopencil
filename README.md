@@ -18,6 +18,8 @@ xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencil -derivedDataPath b
 
 ### Signing (do this once)
 
+Quit the running development app before rebuilding into the same product path, then reopen the rebuilt app. Replacing a live app's signed executable can disrupt its existing keyboard event tap.
+
 Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new app: you'd have to grant Accessibility again after each build. To fix that for free:
 
 1. Xcode › Settings › Accounts › add your Apple ID (a free Personal Team is fine). If no "(Personal Team)" appears, accept the agreement at developer.apple.com/account, then sign out and back in.
@@ -168,6 +170,12 @@ With the setting off, each dictation stays on the clipboard after pasting, as be
 
 The hotkey doesn't work while macOS Secure Input is on: password fields, Terminal with Secure Keyboard Entry, some password managers.
 
+The macOS keyboard event tap runs on a dedicated input thread. Its synchronous callback only classifies events and checks a small capture-policy snapshot; UI, audio and model actions are delivered asynchronously on the main actor. Ordinary typing is not forwarded to the UI, so a busy main window cannot stall the system keyboard. Escape, Return, style digits and the backup shortcut still suppress their matching key-up events when captured.
+
+If macOS disables the tap for a timeout, Audio Pencil removes it immediately and does not automatically re-enable it. An in-progress dictation stops normally, the window and menu bar report that shortcuts are paused, and menu-bar dictation remains available. Quit and reopen the app to restore shortcuts.
+
+The sidebar button restores the full sidebar and widens a narrowed window to fit it, without exceeding the page's useful width or the current screen. Manually narrowing the window still switches to the icon rail automatically.
+
 ## iPhone and iPad
 
 The universal app (`AudioPencilPhone`, iOS/iPadOS 26) records on iPhone and iPad. Every recording becomes a note, filed through the same settings file and upload queue as the Mac.
@@ -177,6 +185,10 @@ On iPad, native adaptive navigation provides Record, Meetings, Notes and Setting
 **Meetings** records in-person conversations through the current system microphone, including connected USB inputs and headsets. Audio goes directly to bounded five-second disk segments, not an ever-growing in-memory recording. Pause, resume, stop/save and destructive discard are available in-app; Live Activity controls route to the current meeting. The saved meeting can be processed later, played back, and reviewed in Summary / Actions / Transcript, with editable titles, speaker names and Markdown tasks, review status, copying and conflict-safe filing. Ordinary Record keeps its existing Meeting toggle.
 
 iPad does **not** capture audio directly from another app. Meeting processing runs only while the app is active, pauses on leaving, and retries saved work on return. Download speech and writing models in Settings; without a writing model, the transcript remains available and the summary can be retried later. Recording itself continues in the background; audio interruptions and disconnected inputs pause it and require an explicit resume. Recovery retains completed audio segments after termination (up to the last five seconds may be lost). The Simulator cannot run the MLX writing model: validate summary quality, real microphone routes, Bluetooth, lock-screen recording and interruption recovery on physical iPad hardware.
+
+Model and language settings wait while recording, saving or processing is active; unrelated settings remain usable. Synced model and vocabulary changes are saved immediately but applied to the engines only when active work finishes. The recording screen still supports deliberate language switching mid-recording. Starting a recording waits for interrupted note writing to stop before loading its speech model.
+
+In Notes, each waiting recording's actions offer **Skip for Now**, **Resume Writing** and **Delete**. Skipping preserves the transcript and audio across relaunches and lets later recordings proceed; an active recording must finish stopping before it can be deleted. Queued and copied recordings both require deletion confirmation, and local deletion leaves text already copied elsewhere alone. Actions are available without swiping; full swipes never delete immediately.
 
 - **Record:** live transcript as you talk, pause and resume, a language switch, then pick a style (it starts on the last one used). **Make Note** files it; If the writing model isn't on the iPhone yet, the sheet offers to download it. Discarding anything longer than 30 s asks first, with its length, both while recording and on this sheet. **Copy to Clipboard** writes it in the same style and only copies it; it waits under Notes › Copied, not filed, with its audio, where **File** files it as Make Note would have (or swipe to delete it).
 - **Locked in a pocket:** recording carries on with the phone locked (background audio). A Live Activity on the Lock Screen and in the Dynamic Island shows the clock with Pause, Resume and Stop.
@@ -213,6 +225,16 @@ Memory rule: every model load goes through `ModelCoordinator.ensureLoaded`, whic
 ```bash
 xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencil -derivedDataPath build/DerivedData test
 ```
+
+Mobile navigation and recovery tests run on either device class:
+
+```bash
+xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencilPhone \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath build/MobileDerivedData CODE_SIGNING_ALLOWED=NO test
+```
+
+Repeat with an available iPad destination. Simulator-only fixtures exercise model-setting locks, deferred synced changes, recording rotation, confirmed deletion, skipped-queue persistence and background interruption without downloading models or accessing a microphone. A 390-point compact-size-class harness covers large-text queue actions; it does not emulate actual OS Split View or window resizing.
 
 There's also an opt-in end-to-end WhisperKit test. It synthesises speech with `say`, streams it through the real model, and prints stop-to-text latency:
 

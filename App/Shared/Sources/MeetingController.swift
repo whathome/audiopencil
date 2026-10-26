@@ -44,7 +44,15 @@ final class MeetingController {
     #if os(macOS)
     private(set) var applications: [CallApplication] = []
     #endif
-    private(set) var capture: CaptureState = .idle
+    private(set) var capture: CaptureState = .idle {
+        didSet {
+            #if os(iOS)
+            if capture == .idle {
+                app.applyPendingModelSettings(prepareSpeech: false)
+            }
+            #endif
+        }
+    }
     private(set) var microphoneLevel: Float = 0
     private(set) var callLevel: Float = 0
     let callPreview = AudioLevelPreview()
@@ -228,10 +236,11 @@ final class MeetingController {
             return
         }
         endPreview()
-        #else
-        app.notes.pauseProcessing(because: "a meeting started")
         #endif
         capture = .starting
+        #if os(iOS)
+        await app.notes.pauseAndWait(because: "a meeting started")
+        #endif
         startingFailure = nil
         error = nil
         guard await callPreview.stop().value else {

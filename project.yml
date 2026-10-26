@@ -178,11 +178,17 @@ targets:
     sources:
       - Tests/DesktopTests
       - App/macOS/Sources/DictationIssue.swift
+      - App/macOS/Sources/HotkeyEventProcessor.swift
+      - App/macOS/Sources/HotkeyMonitor.swift
+      - App/macOS/Sources/SidebarWindowLayout.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.desktoptests
         GENERATE_INFOPLIST_FILE: YES
         CODE_SIGNING_ALLOWED: NO
+    dependencies:
+      - package: AudioPencilKit
+        product: APCore
 
   AudioPencilMobileUITests:
     type: bundle.ui-testing

@@ -8,6 +8,7 @@
 #   debug-dictation.sh settings:dictation snapshot      # general, dictation, notes, storage, models, permissions
 #   debug-dictation.sh scroll:end | scroll:top | scroll:<points> | appearance:light|dark|system
 #   debug-dictation.sh window:report                  # current width and native resize limits
+#   debug-dictation.sh hotkey:report | hotkey:timeout # inspect monitoring or simulate fail-open recovery
 #   debug-dictation.sh languages:en,fr,es | language:fr | report:language
 set -euo pipefail
 cd "$(dirname "$0")/.."

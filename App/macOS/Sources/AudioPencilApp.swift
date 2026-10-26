@@ -76,6 +76,9 @@ private struct MenuBarContent: View {
     }
 
     private var statusText: LocalizedStringResource {
+        if app.hotkeyTimedOut && app.dictation.phase == .idle && !app.meetings.ownsCapture {
+            return "Keyboard shortcuts paused"
+        }
         if app.meetings.ownsCapture {
             return app.meetings.capture == .paused ? "Meeting paused" : "Recording a meeting"
         }

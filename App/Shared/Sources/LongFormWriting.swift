@@ -53,7 +53,7 @@ protocol WritingHost: AnyObject {
 extension WritingHost {
     /// Whether the current writing model can write `language`; if not, styles keep the raw transcript.
     func canStyle(in language: SpokenLanguage) -> Bool {
-        WritingLanguages.canWrite(language.code, withModel: settings.writingModel)
+        WritingLanguages.canWrite(language.code, withModel: writing.modelID)
     }
 
     /// Style prompt, with the closest writing samples for "Like me". `speakerLabel`: a meeting transcript
@@ -88,7 +88,7 @@ extension WritingHost {
         }
         guard memoryPressure != .critical else { return fallback }
         guard canStyle(in: language) else {
-            Log.dictation.notice("Long-form: \(self.settings.writingModel, privacy: .public) can't write \(language.code, privacy: .public); keeping the transcript")
+            Log.dictation.notice("Long-form: \(self.writing.modelID, privacy: .public) can't write \(language.code, privacy: .public); keeping the transcript")
             return fallback
         }
         defer { restoreWhisper() }

@@ -3796,6 +3796,38 @@
         }
       }
     },
+    "Keyboard shortcuts paused": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atajos de teclado en pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccourcis clavier en pause"
+          }
+        }
+      }
+    },
+    "Keyboard shortcuts were paused to protect typing. Quit and reopen Audio Pencil to restore them. You can still dictate from the menu bar.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los atajos de teclado se han pausado para no ralentizar la escritura. Cierra y vuelve a abrir Audio Pencil para restablecerlos. Puedes seguir dictando desde la barra de menús."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les raccourcis clavier ont été suspendus pour préserver la réactivité de la saisie. Quittez et rouvrez Audio Pencil pour les rétablir. Vous pouvez toujours dicter depuis la barre des menus."
+          }
+        }
+      }
+    },
     "Keyboard Settings…": {
       "localizations": {
         "es": {

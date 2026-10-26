@@ -33,25 +33,33 @@ struct MainWindow: View {
     @Bindable var app: AppModel
     @AppStorage("sidebarCollapsed") private var collapsed = false
 
-    /// Below this window width the sidebar becomes a rail regardless of the toggle.
-    private static let railBelowWidth: CGFloat = 760
-    private static let sidebarWidth: CGFloat = 220
-    private static let railWidth: CGFloat = 64
+    private var expandedMaximumWidth: CGFloat {
+        let contentWidth = app.page == .settings ? SettingsLayout.contentWidth + 48 : 980
+        return SidebarWindowLayout.sidebarWidth + 1 + contentWidth
+    }
 
     private var maximumWidth: CGFloat {
-        let contentWidth = app.page == .settings ? SettingsLayout.contentWidth + 48 : 980
-        return (collapsed ? Self.railWidth : Self.sidebarWidth) + 1 + contentWidth
+        expandedMaximumWidth - (collapsed ? SidebarWindowLayout.sidebarWidth - SidebarWindowLayout.railWidth : 0)
     }
 
     var body: some View {
         GeometryReader { geometry in
-            let rail = collapsed || geometry.size.width < Self.railBelowWidth
+            let rail = collapsed || geometry.size.width < SidebarWindowLayout.railBelowWidth
             HStack(spacing: 0) {
                 Sidebar(app: app, rail: rail)
-                    .frame(width: rail ? Self.railWidth : Self.sidebarWidth)
+                    .frame(width: rail ? SidebarWindowLayout.railWidth : SidebarWindowLayout.sidebarWidth)
                     .background(SidebarMaterial().ignoresSafeArea())
                 Divider().ignoresSafeArea()
                 VStack(spacing: 0) {
+                    if app.hotkeyTimedOut {
+                        Label("Keyboard shortcuts were paused to protect typing. Quit and reopen Audio Pencil to restore them. You can still dictate from the menu bar.", systemImage: "exclamationmark.triangle")
+                            .font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                        Divider()
+                    }
                     if app.meetings.isProcessing,
                        app.page != .meetings || app.meetings.selectedID != app.meetings.processingID {
                         MeetingProcessingStatus(app: app)
@@ -65,21 +73,36 @@ struct MainWindow: View {
                 .background(.background)
             }
             .animation(.easeInOut(duration: 0.18), value: rail)
-        }
-        .frame(minWidth: 520, maxWidth: maximumWidth, minHeight: 560, maxHeight: .infinity)
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button {
-                    collapsed.toggle()
-                } label: {
-                    Image(systemName: "sidebar.left")
+            #if DEBUG
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AudioPencil.toggleSidebar"))) { _ in
+                toggleSidebar(rail: rail)
+            }
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        toggleSidebar(rail: rail)
+                    } label: {
+                        Image(systemName: "sidebar.left")
+                    }
+                    .help(rail ? "Show sidebar" : "Collapse sidebar to icons")
+                    .accessibilityLabel(rail ? "Show sidebar" : "Collapse sidebar")
                 }
-                .help(collapsed ? "Show sidebar" : "Collapse sidebar to icons")
-                .accessibilityLabel(collapsed ? "Show sidebar" : "Collapse sidebar")
             }
         }
+        .frame(minWidth: 520, maxWidth: maximumWidth, minHeight: 560, maxHeight: .infinity)
         .toolbar(removing: .title)
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+    }
+
+    private func toggleSidebar(rail: Bool) {
+        collapsed = !rail
+        guard rail, let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" }) ?? NSApp.keyWindow else { return }
+        let maximum = expandedMaximumWidth
+        DispatchQueue.main.async {
+            guard !collapsed else { return }
+            SidebarWindowLayout.expand(window, maximumContentWidth: maximum)
+        }
     }
 
     @ViewBuilder

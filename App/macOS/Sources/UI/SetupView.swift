@@ -57,8 +57,8 @@ struct SetupView: View {
             Section("Hotkey") {
                 LabeledContent("Status") {
                     Label(
-                        app.hotkeyActive ? "Listening" : "Waiting for Accessibility",
-                        systemImage: app.hotkeyActive ? "checkmark.circle.fill" : "hourglass"
+                        app.hotkeyActive ? "Listening" : app.hotkeyTimedOut ? "Keyboard shortcuts paused" : "Waiting for Accessibility",
+                        systemImage: app.hotkeyActive ? "checkmark.circle.fill" : app.hotkeyTimedOut ? "pause.circle" : "hourglass"
                     )
                     .foregroundStyle(app.hotkeyActive ? .green : .orange)
                 }

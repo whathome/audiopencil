@@ -35,7 +35,13 @@ final class PhoneRecorder: RecordingControlling {
         case finishing
     }
 
-    private(set) var phase: Phase = .idle
+    private(set) var phase: Phase = .idle {
+        didSet {
+            if phase == .idle {
+                app.applyPendingModelSettings(prepareSpeech: app.notes?.hasRunnableRecordings != true)
+            }
+        }
+    }
     /// What's been heard so far, confirmed and still settling.
     private(set) var liveText = ""
     /// 0…1 loudness, for the level meter.
@@ -75,6 +81,14 @@ final class PhoneRecorder: RecordingControlling {
 
     init(app: PhoneModel) {
         self.app = app
+        #if DEBUG && targetEnvironment(simulator)
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--ui-testing"), arguments.contains("--recording-fixture") {
+            accumulated = 45
+            liveText = "Recording fixture transcript."
+            phase = .recording
+        }
+        #endif
     }
 
     func elapsed(at date: Date = .now) -> TimeInterval {
@@ -120,7 +134,7 @@ final class PhoneRecorder: RecordingControlling {
         pauseReason = nil
         phase = .starting
         // One model in memory at a time: a note being written waits until this recording is done.
-        app.notes.pauseProcessing(because: "a recording started")
+        await app.notes.pauseAndWait(because: "a recording started")
         guard await AVAudioApplication.requestRecordPermission() else {
             lastError = String(localized: "Audio Pencil needs the microphone. Allow it in Settings › Privacy & Security › Microphone.")
             phase = .idle

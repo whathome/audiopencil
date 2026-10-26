@@ -30,7 +30,7 @@ final class AppModel: WritingHost {
 
     /// Something the hotkey needs is missing.
     var needsSetup: Bool {
-        !permissions.allRequiredGranted || !hotkeyActive || (settings.gestureKey == .fn && !permissions.fnKeyIsFree)
+        !permissions.allRequiredGranted || (!hotkeyActive && !hotkeyTimedOut) || (settings.gestureKey == .fn && !permissions.fnKeyIsFree)
     }
 
     /// How to start a dictation, e.g. "Double-tap Fn", for hints and status lines.
@@ -76,6 +76,7 @@ final class AppModel: WritingHost {
     @ObservationIgnored var debugLongFormThreshold: Double?
     var modelState: TranscriptionModelState = .idle
     private(set) var hotkeyActive = false
+    private(set) var hotkeyTimedOut = false
     /// Recent Fn events and gesture decisions, newest last.
     private(set) var hotkeyTrace: [String] = []
     @ObservationIgnored private var traceOrigin: TimeInterval?
@@ -228,9 +229,21 @@ final class AppModel: WritingHost {
 
     func bootstrap() {
         indicatorPanel = IndicatorPanelController(model: indicator)
-        hotkeys.handler = { [unowned self] event, time in handle(event, at: time) }
+        hotkeys.handler = { [unowned self] event, time in
+            _ = handle(event, at: time)
+            updateHotkeyPolicy()
+        }
         applyHotkeySettings()
+        observeHotkeyPolicy()
         hotkeys.onDiagnostic = { [unowned self] text in trace(text) }
+        hotkeys.onTimeout = { [unowned self] in
+            hotkeyTimedOut = true
+            hotkeyActive = false
+            holdTask?.cancel()
+            holdRecording = false
+            detector.reset()
+            dictation.stop()
+        }
         memoryMonitor = MemoryPressureMonitor { level in
             Task { @MainActor [weak self] in self?.memoryPressure = level }
         }
@@ -281,6 +294,9 @@ final class AppModel: WritingHost {
                     }
                 case "stop": dictation.stop()
                 case "cancel": dictation.cancel()
+                case "hotkey:timeout": hotkeys.simulateTimeout()
+                case "hotkey:report":
+                    Log.hotkey.notice("Keyboard monitoring: active \(self.hotkeys.isActive), timed out \(self.hotkeys.hasTimedOut)")
                 case "phonon:on", "phonon:off", "phonon:force":
                     Self.debugPhononIgnoresVocabulary = command == "phonon:force"
                     phononTrial = command != "phonon:off"
@@ -346,7 +362,7 @@ final class AppModel: WritingHost {
                     default: nil
                     }
                 case "sidebar:toggle":
-                    UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: "sidebarCollapsed"), forKey: "sidebarCollapsed")
+                    NotificationCenter.default.post(name: Notification.Name("AudioPencil.toggleSidebar"), object: nil)
                 case let command where command == "vault:read" || command.hasPrefix("vault:read:"):
                     // Logs the vault settings file (or vault:read:<vault-relative path>) as the app sees it.
                     Task {
@@ -687,6 +703,31 @@ final class AppModel: WritingHost {
     private func applyHotkeySettings() {
         hotkeys.gestureKey = settings.gestureKey
         hotkeys.shortcut = settings.fallbackShortcut
+    }
+
+    private func observeHotkeyPolicy() {
+        withObservationTracking {
+            updateHotkeyPolicy()
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in self?.observeHotkeyPolicy() }
+        }
+    }
+
+    private func updateHotkeyPolicy() {
+        let blocked = meetings.ownsCapture || meetings.isProcessing
+        let menuOpen = indicator.isMenuOpen
+        hotkeys.policy = HotkeyMonitor.Policy(
+            isEnabled: !blocked,
+            swallowEscape: !menuOpen && dictation.isActive,
+            swallowReturn: !menuOpen && (dictation.isPicking || (dictation.phase == .recording && settings.returnStops)),
+            swallowDigits: !menuOpen && (dictation.isPicking || dictation.phase == .recording || dictation.phase == .starting),
+            swallowShortcut: settings.fallbackShortcutEnabled
+        )
+        if blocked {
+            holdTask?.cancel()
+            holdRecording = false
+            detector.reset()
+        }
     }
 
     /// Settings is recording a new shortcut: the event tap stands aside until it's done.

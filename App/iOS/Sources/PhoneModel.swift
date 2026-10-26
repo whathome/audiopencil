@@ -19,8 +19,9 @@ final class PhoneModel: WritingHost {
     static let setupCompletedKey = "setupCompleted"
 
     var settings: DictationSettings {
-        didSet { settingsChanged(from: oldValue) }
+        didSet { settingsChanged() }
     }
+    private var appliedModelSettings: DictationSettings
     var styles: [Style] {
         didSet { saveStyles(from: oldValue) }
     }
@@ -111,6 +112,7 @@ final class PhoneModel: WritingHost {
     init() {
         let settings = Self.load(DictationSettings.self, key: Self.settingsKey) ?? DictationSettings()
         self.settings = settings
+        self.appliedModelSettings = settings
         let memory = Self.load(LanguageMemory.self, key: Self.languageMemoryKey) ?? LanguageMemory()
         self.languageMemory = memory
         self.styles = Self.loadStyles()
@@ -169,17 +171,31 @@ final class PhoneModel: WritingHost {
 
     var currentLanguage: SpokenLanguage { languageMemory.language(forApp: nil) }
 
-    func useLanguage(_ language: SpokenLanguage) {
+    var modelChangesBlocked: Bool {
+        recorder?.isActive == true || notes?.isBusy == true
+            || meetings?.ownsCapture == true || meetings?.isProcessing == true
+    }
+
+    var hasPendingModelChanges: Bool {
+        settings.writingModel != appliedModelSettings.writingModel
+            || settings.transcriptionModel != appliedModelSettings.transcriptionModel
+            || settings.multilingualTranscriptionModel != appliedModelSettings.multilingualTranscriptionModel
+            || settings.vocabulary(for: currentLanguage) != appliedModelSettings.vocabulary(for: currentLanguage)
+    }
+
+    func useLanguage(_ language: SpokenLanguage, prepareSpeech: Bool = true) {
         languageMemory.remember(language, forApp: nil)
-        let variant = SpeechModels.bestVariant(for: language, settings: settings)
+        let variant = SpeechModels.bestVariant(for: language, settings: appliedModelSettings)
         if whisper.variant != variant {
             let old = whisper
+            modelTask?.cancel()
             whisper = WhisperEngine(variant: variant)
             modelState = .idle
-            prepareModel(unloading: old)
+            modelTask = nil
+            if prepareSpeech { prepareModel(unloading: old) }
         } else {
             let engine = whisper
-            let vocabulary = settings.vocabulary(for: language)
+            let vocabulary = appliedModelSettings.vocabulary(for: language)
             Task {
                 await engine.setLanguage(language.code)
                 await engine.setVocabulary(vocabulary)
@@ -189,10 +205,14 @@ final class PhoneModel: WritingHost {
 
     /// Downloads (if needed), prepares and loads the current Whisper model.
     func prepareModel(unloading old: WhisperEngine? = nil) {
-        guard meetings?.isProcessing != true else { return }
+        guard meetings?.isProcessing != true, notes?.isBusy != true else { return }
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") { return }
+        #endif
+        modelTask?.cancel()
         let engine = whisper
         let language = currentLanguage
-        let vocabulary = settings.vocabulary(for: language)
+        let vocabulary = appliedModelSettings.vocabulary(for: language)
         modelTask = Task {
             if let old { await coordinator.unload(old) }
             await engine.setPreparationHandler { [weak self] preparation in
@@ -210,11 +230,13 @@ final class PhoneModel: WritingHost {
                         }
                     }
                 }
+                try Task.checkCancellation()
                 modelState = .loading(firstTime: engine.needsFirstTimePreparation)
                 try await coordinator.ensureLoaded(engine)
+                try Task.checkCancellation()
                 if engine === whisper { modelState = .ready }
             } catch {
-                if engine === whisper { modelState = .failed(error.localizedDescription) }
+                if engine === whisper, !Task.isCancelled { modelState = .failed(error.localizedDescription) }
                 throw error
             }
         }
@@ -240,7 +262,7 @@ final class PhoneModel: WritingHost {
 
     // MARK: Writing model (WritingHost)
 
-    var writingModelOption: WritingModelOption? { WritingModelOption.option(for: settings.writingModel) }
+    var writingModelOption: WritingModelOption? { WritingModelOption.option(for: writing.modelID) }
     var writingModelDownloaded: Bool { Self.canRunWritingModel && writing.isDownloaded }
 
     func downloadWritingModel() {
@@ -263,18 +285,33 @@ final class PhoneModel: WritingHost {
     }
 
     func speechModelWillUnload() {
+        modelTask?.cancel()
+        modelTask = nil
         modelState = .idle
     }
 
     func restoreWhisper() {
         writingModelState = .idle
-        prepareModel()
+        guard !modelChangesBlocked else { return }
+        applyPendingModelSettings(prepareSpeech: false)
+        if notes?.hasRunnableRecordings != true { prepareModel() }
     }
 
     // MARK: Settings
 
-    private func settingsChanged(from old: DictationSettings) {
+    private func settingsChanged() {
         save(settings, as: Self.settingsKey)
+        applyPendingModelSettings()
+        if !applyingSync { sync?.syncSoon() }
+    }
+
+    func applyPendingModelSettings(prepareSpeech: Bool = true) {
+        guard !modelChangesBlocked else {
+            if hasPendingModelChanges { Log.models.notice("Model settings deferred until recording and processing finish") }
+            return
+        }
+        let old = appliedModelSettings
+        appliedModelSettings = settings
         if settings.writingModel != old.writingModel {
             let previous = writing
             writing = SummaryEngine(modelID: settings.writingModel)
@@ -284,14 +321,25 @@ final class PhoneModel: WritingHost {
         let language = currentLanguage
         if settings.transcriptionVariant(for: language) != old.transcriptionVariant(for: language)
             || settings.multilingualTranscriptionModel != old.multilingualTranscriptionModel {
-            useLanguage(language)
+            useLanguage(language, prepareSpeech: prepareSpeech)
         } else if settings.vocabulary(for: language) != old.vocabulary(for: language) {
             let engine = whisper
             let vocabulary = settings.vocabulary(for: language)
             Task { await engine.setVocabulary(vocabulary) }
         }
-        if !applyingSync { sync?.syncSoon() }
     }
+
+    #if DEBUG && targetEnvironment(simulator)
+    func applySyncedModelFixture() {
+        guard !hasPendingModelChanges,
+              let option = WritingModelOption.catalogue.first(where: { $0.id != settings.writingModel }) else { return }
+        var changed = settings
+        changed.writingModel = option.id
+        var config = localConfig(from: nil)
+        config.devices[sync.deviceName] = DeviceSection(changed)
+        apply(config)
+    }
+    #endif
 
     // MARK: Styles
 
