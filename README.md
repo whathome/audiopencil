@@ -8,8 +8,10 @@ Talk instead of type. Private, on-device dictation and notes for Mac, iPhone and
 
 No cloud AI. Interface in English, French and Spanish.
 
-**Get started:** [Build and setup](docs/reference.md#build-and-run) (Xcode required). [Using another Xcode account?](docs/reference.md#using-another-xcode-account)
+**Get started:** [Download the Mac preview](https://github.com/whathome/audiopencil/releases/tag/v0.1.0-preview.1) or [build from source](docs/reference.md#build-and-run).
+
+The download is unnotarized; see [installation instructions](docs/reference.md#install-the-mac-preview).
 
 Mac video-call capture is a Debug-only preview.
 
-[Full reference](docs/reference.md) · [Product requirements](docs/PRD.md)
+[Full reference](docs/reference.md) · [Xcode account setup](docs/reference.md#using-another-xcode-account) · [Product requirements](docs/PRD.md)
