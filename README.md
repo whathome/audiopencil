@@ -2,7 +2,7 @@
 
 Private, fully on-device dictation and summarisation for Mac, iPhone and iPad. See [docs/PRD.md](docs/PRD.md).
 
-**Status:** phases 1 (Mac) and 2 (iPhone) are done, in English, French and Spanish; phase 3, the iPhone keyboard, is next. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or this Mac, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
+**Status:** Mac, iPhone and iPad apps are implemented, in English, French and Spanish. Mac video-call capture remains a Debug preview pending live-call validation. Double-tap Fn (or your chosen key) and talk: the text lands where you're typing, transcribed by Whisper and optionally rewritten in a style by a small MLX model, all on this Mac. Long recordings become Markdown notes with their audio in an Obsidian vault or any folder, on Nextcloud, WebDAV or a local/iCloud folder, and styles, vocabulary and per-device settings sync through `Audio Pencil/Settings.md` there.
 
 ## Build and run
 
@@ -27,6 +27,27 @@ Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new
 3. Run `scripts/set-team.sh <TEAMID>`. It writes the gitignored `Config/Signing.local.xcconfig`, which survives `xcodegen generate`.
 4. `xcodegen generate`, then build with `-allowProvisioningUpdates` (Xcode creates the Apple Development certificate on the first build).
 5. Remove the old Audio Pencil entry under Accessibility and grant it one last time.
+
+#### Using another Xcode account
+
+The checked-in bundle identifiers use `com.weshopkins.audiopencil`. Selecting your own team may be enough, but if Xcode says an identifier **cannot be registered** or **is not available**, choose a unique bundle identifier for your team, especially for physical iPhone/iPad builds:
+
+1. Run `scripts/set-team.sh <YOUR_TEAM_ID>` with the new account's team ID. Pass it explicitly when you have certificates for multiple teams; automatic detection uses the first matching Apple Development certificate.
+2. In **`project.yml`**, replace `com.weshopkins` with your own unique reverse-DNS prefix everywhere it appears. This changes `options.bundleIdPrefix` **and** the explicit `PRODUCT_BUNDLE_IDENTIFIER` settings; changing the prefix option alone does not override those settings.
+
+   | Target | Example identifier |
+   | --- | --- |
+   | `AudioPencil` and `AudioPencilPhone` | `com.yourname.audiopencil` |
+   | `AudioPencilWidgets` | `com.yourname.audiopencil.widgets` |
+   | `AudioPencilDesktopTests` | `com.yourname.audiopencil.desktoptests` |
+   | `AudioPencilMobileUITests` | `com.yourname.audiopencil.uitests` |
+
+3. Run `xcodegen generate` again, reopen the project, and build with automatic signing and `-allowProvisioningUpdates`. Select your physical device when running the phone scheme; Xcode may need to register that device and create new provisioning profiles.
+4. Recheck macOS privacy permissions after changing the signing team or bundle identifier; remove an obsolete Accessibility entry and allow the rebuilt app if needed.
+
+Keep the widget identifier prefixed by the iOS app's identifier. Do not set one shared `PRODUCT_BUNDLE_IDENTIFIER` in `Signing.local.xcconfig`: the app and embedded widget need distinct identifiers. Make identifier changes in `project.yml`, not just Xcode's generated project, or regeneration will discard them. These are personal signing changes; keep the prefix edit out of shared commits unless intentionally changing the project's identity.
+
+Other `com.weshopkins.audiopencil` strings used for logs, debug notifications and control kinds are not provisioning identifiers and do not need changing to use another account. Never delete existing app data to resolve an identifier-registration error.
 
 ### First run
 
@@ -55,7 +76,7 @@ Settings › Permissions offers **Allow…** for Microphone, Accessibility and *
 | Stop and paste | Single tap **Fn** or **Return** (configurable: double-tap Fn; Return can be turned off) |
 | Cancel | **Esc**, at any point, including during a rewrite; nothing is pasted |
 
-Styles (Styles page): **Raw** (0), **Polished** (1, the default: cleaned-up text in your words), **Diary** (2, filler removed, wording kept), **Professional** (3, summary plus key points), and **Like me** (4, milestone 6). Edit their instructions, renumber them, or add your own. Optionally (Settings), a picker appears after stop with this app's style preselected; it picks automatically after a second unless you press a number.
+Styles (Styles page): **Raw** (0), **Polished** (1, the default: cleaned-up text in your words), **Diary** (2, filler removed, wording kept), **Professional** (3, summary plus key points), and **Like me** (4, available after adding three writing samples). Edit their instructions, renumber them, or add your own. Optionally (Settings), a picker appears after stop with this app's style preselected; it picks automatically after a second unless you press a number.
 
 On Mac, a new style is saved only when you choose **Save**; **Cancel** or Escape leaves no entry behind. Deleting a saved writing sample asks for confirmation before removing it locally and from synced settings. Dictation errors offer the relevant Permissions, microphone or Models settings; a failed rewrite keeps the raw transcript in **Last dictation** with a dismissible notice.
 
@@ -180,13 +201,13 @@ The sidebar button restores the full sidebar and widens a narrowed window to fit
 
 ## iPhone and iPad
 
-The universal app (`AudioPencilPhone`, iOS/iPadOS 26) records on iPhone and iPad. Every recording becomes a note, filed through the same settings file and upload queue as the Mac.
+The universal app (`AudioPencilPhone`, iOS/iPadOS 26) records on iPhone and iPad. Recordings can become notes, be added to the daily note, or be copied without filing. Filed notes use the same settings file and upload queue as the Mac.
 
 On iPad, native adaptive navigation provides Record, Meetings, Notes and Settings in a sidebar or tab bar as the window changes size. Notes has a list-and-reading split view at regular widths; compact windows retain the phone layout. iPad supports portrait, landscape and resizable multitasking windows; iPhone remains portrait-first.
 
-**Meetings** records in-person conversations through the current system microphone, including connected USB inputs and headsets. Audio goes directly to bounded five-second disk segments, not an ever-growing in-memory recording. Pause, resume, stop/save and destructive discard are available in-app; Live Activity controls route to the current meeting. The saved meeting can be processed later, played back, and reviewed in Summary / Actions / Transcript, with editable titles, speaker names and Markdown tasks, review status, copying and conflict-safe filing. Ordinary Record keeps its existing Meeting toggle.
+**Meetings** records in-person conversations through the current system microphone, including connected USB inputs and headsets. Enter a required title beside **Start Meeting**; at accessibility text sizes or compact height, these controls scroll with the setup form. Audio goes directly to bounded five-second disk segments, not an ever-growing in-memory recording. Pause, resume, stop/save and destructive discard are available in-app; Live Activity controls route to the current meeting. The saved meeting can be processed later, played back, and reviewed in Summary / Actions / Transcript, with editable titles, speaker names and Markdown tasks, review status, copying and conflict-safe filing. **Record** is the separate single-speaker workflow.
 
-iPad does **not** capture audio directly from another app. Meeting processing runs only while the app is active, pauses on leaving, and retries saved work on return. Download speech and writing models in Settings; without a writing model, the transcript remains available and the summary can be retried later. Recording itself continues in the background; audio interruptions and disconnected inputs pause it and require an explicit resume. Recovery retains completed audio segments after termination (up to the last five seconds may be lost). The Simulator cannot run the MLX writing model: validate summary quality, real microphone routes, Bluetooth, lock-screen recording and interruption recovery on physical iPad hardware.
+iPhone and iPad do **not** capture audio directly from another app. Meeting processing runs only while the app is active, pauses on leaving, and retries saved work on return. Download speech and writing models in Settings; without a writing model, the transcript remains available and the summary can be retried later. Recording itself continues in the background; audio interruptions and disconnected inputs pause it and require an explicit resume. Recovery retains completed audio segments after termination (up to the last five seconds may be lost). The Simulator cannot run the MLX writing model: validate summary quality, real microphone routes, Bluetooth, lock-screen recording and interruption recovery on physical devices.
 
 Model and language settings wait while recording, saving or processing is active; unrelated settings remain usable. Synced model and vocabulary changes are saved immediately but applied to the engines only when active work finishes. The recording screen still supports deliberate language switching mid-recording. Starting a recording waits for interrupted note writing to stop before loading its speech model.
 
@@ -206,10 +227,13 @@ Recording settings are on this iPhone only (Settings › Recording); sounds use 
 ## Layout
 
 ```
-project.yml                   XcodeGen definition (app target, signing, schemes)
+project.yml                   XcodeGen definition (app, widget and test targets, signing, schemes)
 Config/Signing.xcconfig       ad-hoc by default; includes Signing.local.xcconfig if present
+App/Shared/Sources            shared speech, writing, meetings, filing and sync controllers
 App/macOS/Sources             thin macOS app: event tap, paste, indicator panel, windows
-Packages/AudioPencilKit       shared Swift package (reused by iOS in phase 2)
+App/iOS/Sources               universal iPhone/iPad app: recording, meetings, notes and settings
+App/iOSWidgets/Sources        Live Activity and recording controls
+Packages/AudioPencilKit       shared Swift package used by both apps
   APCore                      settings, Fn tap/hold detection, styles, prompt builder, per-app memory, stats
   APAudio                     16 kHz mono capture (off the main thread), mic catalogue, levels, cues
   APModels                    ModelCoordinator (one large model resident at a time), catalogue
@@ -236,7 +260,7 @@ xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencilPhone \
   -derivedDataPath build/MobileDerivedData CODE_SIGNING_ALLOWED=NO test
 ```
 
-Repeat with an available iPad destination. Simulator-only fixtures exercise model-setting locks, deferred synced changes, recording rotation, confirmed deletion, skipped-queue persistence and background interruption without downloading models or accessing a microphone. A 390-point compact-size-class harness covers large-text queue actions; it does not emulate actual OS Split View or window resizing.
+Repeat with an available iPad destination. Simulator-only fixtures exercise required meeting titles, landscape and accessibility layouts, model-setting locks, deferred synced changes, recording rotation, confirmed deletion, skipped-queue persistence and background interruption without downloading models or accessing a microphone. A 390-point compact-size-class harness covers large-text queue actions; it does not emulate actual OS Split View or window resizing. Desktop regressions cover native call-app picker refresh/selection, required-title validation, keyboard event handling and timeout fail-open behavior, and sidebar/window restoration.
 
 There's also an opt-in end-to-end WhisperKit test. It synthesises speech with `say`, streams it through the real model, and prints stop-to-text latency:
 
@@ -276,4 +300,5 @@ Logs: `log stream --predicate 'subsystem == "com.weshopkins.audiopencil"'`. Each
 6. **Like me, discovery, retention** (done): My writing page and interview, machine-aware model suggestions with on-device trials, Retention board (regular / archive / delete) with one-year audio expiry, board and settings-file repair, sound themes.
 7. **Multilingual** (done): 7a spoken languages (per-app language memory, language badge and menu in the indicator, English and multilingual Whisper models, prompts and notes in the spoken language, per-language vocabulary, Like me samples by language, layout-aware paste); 7b the interface in French and Spanish (String Catalogs in the app and each package target; the vault guide and sample notes are written in the interface language when a vault is first set up; board view names and properties stay English).
 8. **Setup and storage** (done): 8a models prepared in the background (dictation never waits; Small first for other languages, then Large v3 Turbo), configurable dictation key (Fn, Right ⌥ or Right ⌘; double-tap or single tap; a recordable shortcut) and a Try it here box; 8b storage without Obsidian (plain Markdown in any folder, any WebDAV server, Keep forever and Delete on the Notes page, Vault renamed Storage); 8c the six-step setup window.
-9. **iPhone** (phase 2): 9a recorder and notes (done); 9b walk-and-talk: background recording, Live Activity, Control Centre / Action Button / Siri controls, cues and heartbeat, disconnect and silence handling, noise reduction, a queue for writing notes (done); 9d meeting mode with speaker labels (done). The keyboard moves to phase 3.
+9. **iPhone and iPad** (done): recorder and notes; walk-and-talk background recording, Live Activity, Control Centre / Action Button / Siri controls, cues and heartbeat, disconnect and silence handling, noise reduction and a recoverable writing queue; dedicated in-person Meetings with speaker labels; adaptive iPad navigation and note reading.
+10. **Desktop Meetings** (implemented; call-capture release gate outstanding): disk-backed capture, recovery, source-aware processing, playback, speaker/action review and conflict-safe filing. Selected-app call audio is Debug-only pending the [live-call acceptance checks](docs/meeting-mode-macos.md).

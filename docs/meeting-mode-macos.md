@@ -1,7 +1,7 @@
 # macOS Meetings
 
 Status: implementation specification; live-call release matrix remains to be verified  
-Date: 2026-10-22
+Updated: 2026-10-27
 
 ## Implementation status
 
@@ -9,7 +9,9 @@ The macOS workspace, disk-backed capture, source-aware processing, review and fi
 
 Choosing a call app starts a level-only preview in setup. Startup, switching and shutdown are serialized so a slow or cancelled start cannot leak an older stream; stale callbacks cannot update the current meter. Meeting recording waits for preview teardown. The preview saves no audio, plays nothing back and does not request microphone capture. It stops when leaving setup or starting dictation; source/permission errors stay visible with retry. The existing ScreenCaptureKit permission/indicator still applies while monitoring.
 
-Interactive verification is incomplete: the debug-driving helper requires approval unavailable in the current session, so layout screenshots and the synthetic model-processing run could not be completed. Teams/Slack/browser calls, macOS 15 permission behavior, source drift, VoiceOver and the two-hour 8 GB benchmark remain release checks, not verified claims.
+The native call-app picker and shared required-title validation have regression coverage, along with desktop keyboard/sidebar recovery and iPhone/iPad meeting setup, landscape and accessibility-size layouts. Debug-driving controls can inspect app state without sending keystrokes. Teams/Slack/browser calls, macOS 15 permission behavior, source drift, VoiceOver and the two-hour 8 GB benchmark remain release checks, not verified claims.
+
+Call-app choices refresh when setup loads and whenever the native dropdown opens, including keyboard and accessibility activation. Enumeration and level previews require existing **Online meeting audio** access. When access is missing, setup labels it as not allowed and links to **Settings › Permissions**; only that page's **Allow…** button requests access. Meeting titles are required on Mac, iPhone and iPad, with shared trimmed-title validation before capture.
 
 ### Speaker echo reduction
 
@@ -29,25 +31,25 @@ The defining requirement for calls: **capture both the selected microphone and t
 
 This is a recording-and-review workspace, not a meeting bot or a live collaboration tool. It inherits the existing macOS design: native controls, Pencil Amber for selection and primary actions, SF for controls, New York for written content, flat surfaces and the shared page alignment.
 
-This proposal deliberately extends the PRD's current boundaries in two places: Mac call-audio capture and a bounded in-app meeting review. Obsidian or the user's notes folder remains the permanent library; there is no general-purpose in-app library, vault search or note editor.
+This workspace extends quick dictation with Mac call-audio capture and bounded in-app meeting review. Obsidian or the user's notes folder remains the permanent library; there is no general-purpose in-app library, vault search or note editor.
 
 ## What already exists
 
 | Existing capability | Reuse or limitation |
 | --- | --- |
-| Menu bar **Record a Meeting**, pill delivery toggle | Currently starts microphone-only dictation and marks its output as a meeting. |
+| Menu bar **Record a Meeting**, pill delivery toggle | Menu bar opens Meetings setup; the older pill toggle retains microphone-only dictation marked as a meeting. |
 | `SpeakerLabeler` and timed speech transcription | Reuse for speaker turns; labels do not identify real people. |
 | `NoteMaker`, `Note`, Markdown rendering and storage outbox | Reuse filing, `mode: meeting`, review status, retention and offline delivery. |
 | Microphone preference order and multichannel capture | Reuse device selection; unused interface inputs must not dilute the selected speech signal. |
 | Model coordinator | Preserve sequential speech/writing model residency on 8 GB Macs. |
 | Recent notes | Currently a small metadata list, not enough to reconstruct meeting detail or resume processing. |
 
-The current recorder accumulates samples in memory. It is not the proposed durable long-meeting recording architecture. Meeting processing also currently falls back to an ordinary long-form note when labelling fails; the new flow must retain meeting identity and expose the failed stage.
+The dedicated meeting recorder writes bounded disk segments instead of accumulating an entire meeting in memory. Meeting processing retains meeting identity and exposes failed stages; the older dictation workflow is separate.
 
 ## Navigation
 
-- Add **Meetings**, using `person.2.wave.2`, immediately after **Dictation**.
-- Sidebar order: Dictation, Meetings, Styles, My writing, Notes; then Storage and Settings.
+- **Meetings**, using `person.2.wave.2`, sits immediately after **Dictation**.
+- Sidebar order: Dictation, Meetings, Styles, My writing, Notes; then Settings. Storage is a category within Settings.
 - Keep the existing full sidebar and collapsed icon rail. A recording shows a labelled **Recording** status; the rail exposes the same state through its tooltip and VoiceOver value.
 - Command-number navigation follows the new sidebar order, as it does today. Update menu commands and shortcut documentation together.
 - The Meetings page is a persistent destination, never a button that starts recording merely because it is selected.
@@ -61,17 +63,17 @@ Use the existing page-header and leading-edge layout. The first screen has one c
 
 | Field | Behavior |
 | --- | --- |
-| Meeting title | Optional; defaults to a dated placeholder and can be renamed after recording. |
-| Meeting type | **Video call** or **In person**. Remember the last choice on this Mac. |
+| Meeting title | Required beside **Start Meeting** on every platform; trim surrounding whitespace and reject empty/whitespace-only titles. Can be renamed after recording. |
+| Meeting type | **In person** or **Video call (preview)**. Remember the last choice on this Mac; video calls remain unavailable in Release builds pending acceptance. |
 | Microphone | Show the resolved device by name and an input meter. Allow a session-only override without changing global priority. |
-| Call audio | Video call only: choose a running app, such as Teams, Slack or a browser. Show a separate meter and the precise capture scope. |
+| Call audio | Video call only: choose a running app, such as Teams, Slack or a browser. Refresh automatically when setup loads and whenever the dropdown opens; retain choices by process ID, not app name. Show a separate meter and the precise capture scope. If access is missing, label it and link to Settings › Permissions. |
 | Language | One language per meeting, using existing supported language choices. |
 | Speakers | **Automatic** by default; optionally choose 2-6. This is a hint, not a claim of perfect speaker separation. |
 | Note output | Use a meeting-specific summary format by default, not the frontmost app's dictation style. Show the filing destination and existing daily-note option. |
 
-Readiness checks cover microphone access, call-audio access when applicable, source availability, writable local recording storage, and model availability. Model downloads happen before recording unless the user explicitly chooses **Record now, process later**. Missing vault configuration does not block recording: show **Saved on this Mac until storage is set up**.
+Setup exposes source availability, call-audio access and model readiness, and explains disabled start prerequisites. Capture startup validates the title, permissions, source and writable local recording storage. Missing models do not prevent capture: explain how to download them in Settings, and offer **Process after recording** so the user can record first and process later. Missing vault configuration does not block recording: show **Saved on this Mac until storage is set up**.
 
-Preflight meters run only while the setup view is visible and the user has granted the relevant access; they retain no audio. Stop them when leaving setup. Request call-audio permission only after the user chooses video-call capture.
+The microphone meter starts through **Test Microphone**; selecting a call app starts its level-only preview after call-audio access is granted. Previews retain no audio and stop on leaving setup or starting capture. Call-app enumeration, preview and start never request call-audio access automatically. **Settings › Permissions › Online meeting audio › Allow…** owns that request; setup's **Open Permissions** link leads there.
 
 Show a concise reminder: **Make sure everyone knows this meeting is being recorded.** Audio Pencil does not notify remote participants or satisfy a platform's recording-consent flow.
 
@@ -114,7 +116,7 @@ For calls, transcription and speaker analysis operate on the separate sources as
 
 The capture state machine is `ready -> starting -> recording <-> paused -> stopping -> saved`; processing is a separate persisted job with queued, running, failed and complete stages. The recording device is released at `saved`, not held until writing or upload finishes.
 
-A new meeting may be recorded while an earlier one waits for processing. Only one processing job uses the large models at a time. Recording takes priority over inference if the target Mac cannot sustain both safely.
+A new meeting may be recorded while an earlier one waits in the queue, but not while a meeting is actively processing. Only one processing job uses the large models at a time. Active recording and ordinary note processing also defer queued meeting work.
 
 ### 4. Review
 
@@ -138,7 +140,7 @@ Review edits are limited to the title, speaker names and extracted actions. The 
 
 - **In person:** selected microphone, with existing device-priority behavior. V1 supports one resolved microphone signal, not simultaneous independently labelled microphones from every soundcard input.
 - **Video call:** microphone and selected-app audio as two independent timestamped sources. Do not feed them into the recorder's strongest-channel selector: that would discard one participant when both speak.
-- Use Apple's public macOS audio-capture APIs, with ScreenCaptureKit as the initial implementation candidate for selected-app capture. No loopback-driver installation, accessibility scraping, meeting login or call-platform API integration.
+- Selected-app capture uses ScreenCaptureKit. No loopback-driver installation, accessibility scraping, meeting login or call-platform API integration.
 - Explicitly exclude Audio Pencil's own playback from call capture. Do not retain screen frames.
 - App capture must account for helper processes, app restarts and browser process ownership. A browser source may include other tabs; disclose that before capture. Do not promise per-tab isolation in v1.
 - Do not silently broaden a selected-app filter to whole-system audio. If selected-app capture is unsupported for an app, report that limitation.
@@ -146,7 +148,7 @@ Review edits are limited to the title, speaker names and extracted actions. The 
 
 ### Durable session
 
-Introduce a disk-backed meeting session, not another growing `[Float]` recording:
+The disk-backed meeting session replaces an unbounded in-memory recording:
 
 - Stable session UUID, title, language, source identifiers, timestamps, pause/gap markers, speaker hints, processing stage, errors and final note path.
 - Write source audio incrementally to recoverable local segments. Use a shared monotonic timeline, record source offsets and gaps, and handle drift before aligning turns or mixing playback.
@@ -183,7 +185,7 @@ No cloud inference or new telemetry. Audio and text leave the Mac only through t
 
 | Situation | Required response |
 | --- | --- |
-| Permission denied | Identify microphone vs call-audio access, provide the correct system-settings action, and preserve setup. |
+| Permission denied | Identify microphone vs call-audio access and preserve setup. Call-audio setup links to Audio Pencil Settings › Permissions; the Allow… action there opens the system permission flow. |
 | Selected source unavailable | Prevent a misleading start or pause the active session; let the user explicitly replace the source. |
 | No speech detected | Preserve the recorded meeting, show the input status and offer playback or retry; do not generate fictional notes. |
 | Model missing, download unavailable or inference fails | Keep audio; show the failed stage and retry/process-later actions. |
@@ -210,7 +212,9 @@ No cloud inference or new telemetry. Audio and text leave the Mac only through t
 12. A failed processing stage can be retried without recapture, duplicate notes, or replacement of user edits.
 13. Offline recordings are reviewable locally and file once storage returns. Local-save and remote-file states remain distinguishable.
 14. VoiceOver exposes sources, recording state and controls; keyboard focus, narrow-window rail mode, Dark Mode, Increase Contrast and Reduce Motion remain usable.
-15. Quick dictation and iPhone recording retain their existing behavior.
+15. Quick dictation and iPhone/iPad recording retain their existing behavior.
+16. Call apps refresh on setup/dropdown presentation without requesting missing access; missing access is labelled and links to Permissions.
+17. Mac, iPhone and iPad reject empty/whitespace-only meeting titles before capture and save trimmed titles; title/start controls remain reachable at accessibility sizes and compact heights.
 
 ## Delivery sequence and gates
 

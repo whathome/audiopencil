@@ -203,7 +203,7 @@ The main window is a two-column split: a sidebar of 220 pt, which becomes a 64 p
 
 Pages use a 24 pt margin and a 980 pt maximum content width, aligned to the leading edge, never centred. The stack rhythm is 18 pt between page sections and 16 pt between cards. Inside a card it's 16 pt of padding and 10 pt between elements. Grids of cards use 14 pt gutters.
 
-Settings pages use grouped forms, pinned to the same 24 pt leading edge as every other page, with the page title in the first section header. Content pages (Dictation, Styles, My writing, Notes, Vault) use cards.
+Settings pages use grouped forms, pinned to the same 24 pt leading edge as every other page, with the page title in the first section header. Content pages (Dictation, Meetings, Styles, My writing, Notes) use cards and task-specific native controls; Storage is a Settings category.
 
 Responsive behaviour is content-driven:
 - The Dictation page puts stats beside the cards when there's room and moves them underneath in a two-column grid when narrow (`ViewThatFits`).
@@ -213,7 +213,7 @@ Responsive behaviour is content-driven:
 ### Named Rules
 **The One Edge Rule.** Every page title, card and form section starts at the same 24 pt leading edge. A centred form or a page that starts elsewhere breaks the window into separate apps.
 
-**The Two Containers Rule.** Preferences live in grouped forms; status and content live in cards. A toggle inside a card is a sign the setting belongs in Settings. The one exception is Settings › Storage's connection steps (storage, account, folder), which form a setup flow and stay in cards.
+**The Two Containers Rule.** Preferences live in grouped forms; status and content live in cards. General preferences belong in Settings, not content cards. Task-specific meeting setup controls and Settings › Storage's connection steps (storage, account, folder) are the exceptions.
 
 ## Elevation & Depth
 
@@ -274,7 +274,7 @@ Settings uses six categories in both the main page and the standalone window: **
 - **Badges:** a count capsule for pending reviews and an orange exclamation on Settings for missing permissions or unconfigured storage. Over an amber selection, the attention symbol uses black and white rather than orange; selected rail dots use the same contrast treatment.
 - **Rail mode:** 40 × 34 pt icon targets with an 8 pt dot for attention; every rail item has a VoiceOver label and a tooltip.
 - **Shortcuts:** ⌘1–⌘6 follow the sidebar order: Dictation, Meetings, Styles, My writing, Notes, Settings.
-- **Meetings:** a task-focused recording and review page, not a second library. Setup uses native fields and pickers; recording leads with source names, separate meters and Pause/Stop. Review uses a segmented Summary / Actions / Transcript control, serif written content and timestamped speaker turns. A recording badge appears in the sidebar and its collapsed rail.
+- **Meetings:** a task-focused recording and review page, not a second library. Setup uses native fields and pickers; the required title sits beside Start Meeting on every platform. On iOS, title/start controls scroll inside the form at accessibility sizes or compact height, rather than consuming the viewport as a fixed footer. The Mac call-app menu refreshes when opened; missing access is labelled with an Open Permissions link, while Allow… stays in Settings › Permissions. Recording leads with source names, separate meters and Pause/Stop. Review uses a segmented Summary / Actions / Transcript control, serif written content and timestamped speaker turns. A recording badge appears in the sidebar and its collapsed rail.
 - **Processing:** a compact status strip links back to the processing meeting when another page or meeting is selected, including the standalone Settings window. Only conflicting actions are disabled; writing, style editing and unrelated settings stay available. Disabled meeting start explains its missing prerequisite.
 - **Recovery:** dictation issues lead to the relevant Permissions, microphone or Models category. Rewrite fallback is an informational, dismissible notice; the delivered raw text stays available to copy.
 
@@ -306,6 +306,6 @@ The product's main interface, floating 20 pt above the bottom of the screen, cen
 - **Don't** make it look like a SaaS dashboard: no rows of identical metric tiles, charts or KPI hero numbers leading a page. Figures support; they never headline.
 - **Don't** make it look like a web app on a Mac: no custom-drawn buttons, made-up navigation, hover-only actions or web-style link colours for primary actions.
 - **Don't** add shadows to window content; use a tonal step and a hairline.
-- **Don't** put toggles or settings inside content cards; they belong in Settings (the Vault connection flow is the one exception).
+- **Don't** put general preferences inside content cards; they belong in Settings. Task-specific meeting setup controls and Settings › Storage's connection flow are the exceptions.
 - **Don't** centre forms or start a page anywhere but the shared leading edge.
 - **Don't** use Pencil Amber as a background wash, gradient or decorative fill.
