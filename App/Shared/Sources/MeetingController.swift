@@ -94,6 +94,7 @@ final class MeetingController {
     #endif
 
     var ownsCapture: Bool { capture != .idle }
+    var recordingTitle: String? { MeetingSession.recordingTitle(from: title) }
     var isProcessing: Bool { processingID != nil }
     var selected: MeetingSession? { sessions.first { $0.id == selectedID } }
     var recent: [MeetingSession] { Array(sessions.prefix(50)) }
@@ -167,15 +168,35 @@ final class MeetingController {
 
     #if os(macOS)
     func refreshApplications() async {
-        guard !ownsCapture else { return }
+        guard !ownsCapture, !loadingApplications, kind == .videoCall, CallAudioCapture.isAvailable else { return }
+        app.permissions.refresh()
+        guard app.permissions.onlineMeetingAudio else {
+            applications = []
+            applicationID = nil
+            callPreview.stop()
+            return
+        }
         loadingApplications = true
         defer { loadingApplications = false }
         do {
-            applications = try await CallAudioCapture.applications()
+            let refreshed = try await CallAudioCapture.applications()
+            guard !ownsCapture else { return }
+            app.permissions.refresh()
+            guard app.permissions.onlineMeetingAudio else {
+                applications = []
+                applicationID = nil
+                callPreview.stop()
+                return
+            }
+            applications = refreshed
             if !applications.contains(where: { $0.id == applicationID }) { applicationID = nil }
             error = nil
         } catch {
-            report(MeetingCaptureError.unavailable(String(localized: "Call audio access failed: \(error.localizedDescription). Allow Audio Pencil in System Settings > Privacy & Security > Screen & System Audio Recording, then refresh the app list.")))
+            app.permissions.refresh()
+            applications = []
+            applicationID = nil
+            callPreview.stop()
+            report(MeetingCaptureError.unavailable(String(localized: "Couldn't load call apps: \(error.localizedDescription). Check call audio access in Settings › Permissions, then reopen the Call app menu.")))
         }
     }
 
@@ -201,6 +222,7 @@ final class MeetingController {
 
     func previewCallAudio() {
         guard !ownsCapture, selectedID == nil, kind == .videoCall, CallAudioCapture.isAvailable,
+              app.permissions.onlineMeetingAudio,
               !app.dictation.isActive, let applicationID,
               applications.contains(where: { $0.id == applicationID }) else {
             callPreview.stop()
@@ -230,9 +252,18 @@ final class MeetingController {
 
     func start() async {
         guard !ownsCapture, !dictationActive, !isProcessing, !previewStarting else { return }
+        guard let title = recordingTitle else {
+            report(MeetingCaptureError.unavailable(String(localized: "Enter a meeting title to start recording.")))
+            return
+        }
         #if os(macOS)
         guard kind != .videoCall || CallAudioCapture.isAvailable else {
             report(MeetingCaptureError.unavailable(String(localized: "Video-call recording is not available in this build while call capture is being verified. Choose In person for microphone-only recording.")))
+            return
+        }
+        app.permissions.refresh()
+        guard kind != .videoCall || app.permissions.onlineMeetingAudio else {
+            report(MeetingCaptureError.unavailable(String(localized: "Allow call audio in Settings › Permissions before starting a video meeting.")))
             return
         }
         endPreview()
@@ -261,14 +292,12 @@ final class MeetingController {
             capture = .idle
             return
         }
-        var session = MeetingSession(title: title.trimmingCharacters(in: .whitespacesAndNewlines), kind: kind, microphoneUID: device.id, microphoneName: device.name, language: language.code)
-        if session.title.isEmpty { session.title = String(localized: "Meeting \(Date().formatted(date: .abbreviated, time: .shortened))") }
+        var session = MeetingSession(title: title, kind: kind, microphoneUID: device.id, microphoneName: device.name, language: language.code)
         session.applicationName = application?.name
         session.applicationBundleID = application?.bundleID
         #else
-        var session = MeetingSession(title: title.trimmingCharacters(in: .whitespacesAndNewlines), kind: .inPerson,
+        var session = MeetingSession(title: title, kind: .inPerson,
                                      microphoneUID: "", microphoneName: String(localized: "System microphone"), language: language.code)
-        if session.title.isEmpty { session.title = String(localized: "Meeting \(Date().formatted(date: .abbreviated, time: .shortened))") }
         #endif
         session.speakerHint = speakerHint
         session.dailyNote = dailyNote

@@ -5,12 +5,6 @@ import CoreMedia
 import ScreenCaptureKit
 import os
 
-struct CallApplication: Identifiable, Hashable {
-    let id: Int32
-    let name: String
-    let bundleID: String
-}
-
 /// ScreenCaptureKit's audio output only. No screen output or image is installed or retained.
 nonisolated final class CallAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
     #if DEBUG
@@ -52,7 +46,7 @@ nonisolated final class CallAudioCapture: NSObject, SCStreamOutput, SCStreamDele
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         guard let display = content.displays.first,
               let application = content.applications.first(where: { $0.processID == applicationID }) else {
-            throw MeetingCaptureError.unavailable(String(localized: "The selected call app is no longer running. Refresh the app list and choose it again."))
+            throw MeetingCaptureError.unavailable(String(localized: "The selected call app is no longer running. Reopen the Call app menu and choose it again."))
         }
         let filter = SCContentFilter(display: display, including: [application], exceptingWindows: [])
         let configuration = SCStreamConfiguration()

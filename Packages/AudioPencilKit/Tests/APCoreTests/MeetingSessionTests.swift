@@ -3,6 +3,16 @@ import Foundation
 import Testing
 
 struct MeetingSessionTests {
+    @Test(arguments: ["", " ", "\t\n", "\u{00a0}\n"])
+    func blankRecordingTitlesAreRejected(_ title: String) {
+        #expect(MeetingSession.recordingTitle(from: title) == nil)
+    }
+
+    @Test func recordingTitlesAreTrimmedWithoutChangingTheirContents() {
+        #expect(MeetingSession.recordingTitle(from: " \nPlanning  /  Design\t ") == "Planning  /  Design")
+        #expect(MeetingSession.recordingTitle(from: "Réunion d’équipe") == "Réunion d’équipe")
+    }
+
     @Test(arguments: [MeetingSession.Stage.recording, .paused, .transcribing, .writing])
     func interruptedMeetingsRecoverWithoutLosingReview(_ stage: MeetingSession.Stage) {
         var meeting = MeetingSession(title: "Planning", kind: .inPerson, microphoneUID: "", microphoneName: "iPad", language: "en")

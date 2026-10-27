@@ -181,6 +181,8 @@ targets:
       - App/macOS/Sources/HotkeyEventProcessor.swift
       - App/macOS/Sources/HotkeyMonitor.swift
       - App/macOS/Sources/SidebarWindowLayout.swift
+      - App/macOS/Sources/CallApplication.swift
+      - App/macOS/Sources/UI/CallApplicationPicker.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.desktoptests

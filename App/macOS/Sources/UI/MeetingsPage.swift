@@ -76,9 +76,6 @@ struct MeetingsPage: View {
 
     private var setup: some View {
         VStack(alignment: .leading, spacing: 18) {
-            TextField("Meeting title (optional)", text: $meetings.title)
-                .textFieldStyle(.roundedBorder)
-                .accessibilityLabel("Meeting title")
             Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 14) {
                 GridRow {
                     Text("Meeting type")
@@ -115,18 +112,26 @@ struct MeetingsPage: View {
                     GridRow {
                         Text("Call audio")
                         VStack(alignment: .leading, spacing: 8) {
-                            Picker("Call app", selection: $meetings.applicationID) {
-                                Text("Choose a running app").tag(Int32?.none)
-                                ForEach(meetings.applications) { application in
-                                    Text(verbatim: application.name).tag(Optional(application.id))
-                                }
+                            if app.permissions.onlineMeetingAudio {
+                                CallApplicationPicker(
+                                    applications: meetings.applications, selection: $meetings.applicationID,
+                                    isLoading: meetings.loadingApplications,
+                                    refresh: { Task { await meetings.refreshApplications() } }
+                                )
+                                .disabled(!CallAudioCapture.isAvailable)
+                                callAudioPreview
+                            } else {
+                                Label("Call audio access is not allowed.", systemImage: "lock")
+                                    .foregroundStyle(.secondary)
+                                Button("Open Permissions") { app.openPermissions() }
+                                    .buttonStyle(.link)
                             }
-                            .labelsHidden()
-                            Button("Allow Call Audio / Refresh Apps") { Task { await meetings.refreshApplications() } }
-                                .disabled(meetings.loadingApplications || !CallAudioCapture.isAvailable)
-                            callAudioPreview
                         }
+                        .task(id: app.permissions.onlineMeetingAudio) { await meetings.refreshApplications() }
                         .task(id: app.dictation.isActive ? nil : meetings.applicationID) { meetings.previewCallAudio() }
+                        .onChange(of: app.permissions.onlineMeetingAudio) { _, allowed in
+                            if !allowed { meetings.callPreview.stop() }
+                        }
                         .onDisappear { meetings.callPreview.stop() }
                     }
                 }
@@ -183,6 +188,10 @@ struct MeetingsPage: View {
                 .font(.callout).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 8) {
+                TextField("Meeting title (required)", text: $meetings.title)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel("Meeting title (required)")
+                    .accessibilityIdentifier("meetingTitle")
                 Button("Start Meeting", systemImage: "record.circle") { Task { await meetings.start() } }
                     .buttonStyle(.borderedProminent)
                     .disabled(startBlocker != nil)
@@ -204,8 +213,10 @@ struct MeetingsPage: View {
         if meetings.resolvedMicrophone == nil { return "Connect a microphone to start a meeting." }
         if meetings.kind == .videoCall {
             if !CallAudioCapture.isAvailable { return "Choose In person for microphone-only recording." }
+            if !app.permissions.onlineMeetingAudio { return "Allow call audio in Settings › Permissions before starting a video meeting." }
             if meetings.applicationID == nil { return "Choose a call app to start a video meeting." }
         }
+        if meetings.recordingTitle == nil { return "Enter a meeting title to start recording." }
         return nil
     }
 

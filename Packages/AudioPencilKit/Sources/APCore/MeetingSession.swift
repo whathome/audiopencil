@@ -65,6 +65,11 @@ public struct MeetingSession: Codable, Identifiable, Sendable {
         self.language = language
     }
 
+    public static func recordingTitle(from title: String) -> String? {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     public func speakerName(_ id: String) -> String {
         speakerNames[id] ?? (id == "you" ? String(localized: "You", bundle: .module) : id)
     }

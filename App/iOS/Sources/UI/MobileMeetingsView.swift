@@ -7,6 +7,8 @@ import UIKit
 struct MobileMeetingsView: View {
     let app: PhoneModel
     @Bindable var meetings: MeetingController
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var compactColumn = NavigationSplitViewColumn.detail
     @State private var section = ReviewSection.summary
     @State private var discarding = false
@@ -15,6 +17,7 @@ struct MobileMeetingsView: View {
     @State private var playbackError: String?
     @State private var playing = false
     @State private var copiedMeeting = false
+    @FocusState private var titleFocused: Bool
     /// The recording clock follows the text size, as on Record.
     @ScaledMetric(relativeTo: .largeTitle) private var clockSize: CGFloat = 44
 
@@ -109,7 +112,6 @@ struct MobileMeetingsView: View {
         Form {
             errors
             Section {
-                TextField("Meeting title (optional)", text: $meetings.title)
                 Picker("Language", selection: $meetings.language) {
                     ForEach(app.offeredLanguages) { language in
                         Text(verbatim: language.name()).tag(language)
@@ -139,33 +141,53 @@ struct MobileMeetingsView: View {
                     Text("You can record now and process once they're on this device.")
                 }
             }
+            if inlineStartControls {
+                Section { startControls }
+            }
         }
         .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 8) {
-                if app.recorder.isActive { Text("Finish the current recording first.").font(.callout) }
-                if meetings.isProcessing { Text("Wait for meeting processing to finish.").font(.callout) }
-                if let processing = app.notes.processing { Text(verbatim: processing).font(.callout) }
-                // Said where the decision is made, not below the fold.
-                Text("Make sure everyone knows they're being recorded. Audio Pencil doesn't tell them.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Button {
-                    pausePlayback()
-                    Task { await meetings.start() }
-                } label: {
-                    Label("Start Meeting", systemImage: "record.circle").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(app.recorder.isActive || meetings.isProcessing || app.notes.processing != nil)
+            if !inlineStartControls {
+                startControls
+                    .padding()
+                    .background(.bar)
             }
-            .padding()
-            .background(.bar)
         }
         .onAppear {
             meetings.language = app.currentLanguage
             meetings.dailyNote = app.settings.dailyNoteLinks
+        }
+    }
+
+    private var inlineStartControls: Bool {
+        dynamicTypeSize.isAccessibilitySize || verticalSizeClass == .compact
+    }
+
+    private var startControls: some View {
+        VStack(spacing: 8) {
+            if app.recorder.isActive { Text("Finish the current recording first.").font(.callout) }
+            if meetings.isProcessing { Text("Wait for meeting processing to finish.").font(.callout) }
+            if let processing = app.notes.processing { Text(verbatim: processing).font(.callout) }
+            Text("Make sure everyone knows they're being recorded. Audio Pencil doesn't tell them.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            TextField("Meeting title (required)", text: $meetings.title)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel("Meeting title (required)")
+                .accessibilityIdentifier("meetingTitle")
+                .focused($titleFocused)
+                .submitLabel(.done)
+                .onSubmit { titleFocused = false }
+            Button {
+                titleFocused = false
+                pausePlayback()
+                Task { await meetings.start() }
+            } label: {
+                Label("Start Meeting", systemImage: "record.circle").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(meetings.recordingTitle == nil || app.recorder.isActive || meetings.isProcessing || app.notes.processing != nil)
         }
     }
 

@@ -1,6 +1,198 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Allow call audio in Settings › Permissions before starting a video meeting.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permite el audio de llamadas en Ajustes › Permisos antes de iniciar una videollamada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisez l’audio des appels dans Réglages › Autorisations avant de démarrer une réunion vidéo."
+          }
+        }
+      }
+    },
+    "Call app": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App de la llamada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App de l’appel"
+          }
+        }
+      }
+    },
+    "Call audio access is not allowed.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso al audio de llamadas no está permitido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’accès à l’audio des appels n’est pas autorisé."
+          }
+        }
+      }
+    },
+    "Choose a running app": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una app en ejecución"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez une app en cours d’exécution"
+          }
+        }
+      }
+    },
+    "Couldn't load call apps: %@. Check call audio access in Settings › Permissions, then reopen the Call app menu.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar las apps de llamadas: %@. Comprueba el acceso al audio de llamadas en Ajustes › Permisos y vuelve a abrir el menú de apps."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger les apps d’appel : %@. Vérifiez l’accès à l’audio des appels dans Réglages › Autorisations, puis rouvrez le menu des apps."
+          }
+        }
+      }
+    },
+    "Enter a meeting title to start recording.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un título de reunión para empezar a grabar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez un titre de réunion pour commencer l’enregistrement."
+          }
+        }
+      }
+    },
+    "Meeting title": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título de la reunión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titre de la réunion"
+          }
+        }
+      }
+    },
+    "Meeting title (required)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título de la reunión (obligatorio)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titre de la réunion (obligatoire)"
+          }
+        }
+      }
+    },
+    "No running apps found": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontraron apps en ejecución"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune app en cours d’exécution"
+          }
+        }
+      }
+    },
+    "Open Permissions": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir permisos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les autorisations"
+          }
+        }
+      }
+    },
+    "Refreshing apps…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizando apps…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualisation des apps…"
+          }
+        }
+      }
+    },
+    "The selected call app is no longer running. Reopen the Call app menu and choose it again.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app seleccionada ya no está en ejecución. Vuelve a abrir el menú de apps de llamadas y selecciónala de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’app sélectionnée n’est plus en cours d’exécution. Rouvrez le menu des apps d’appel et sélectionnez-la à nouveau."
+          }
+        }
+      }
+    },
     "": {},
     "%@": {
       "localizations": {

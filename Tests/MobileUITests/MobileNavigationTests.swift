@@ -23,7 +23,8 @@ nonisolated final class MobileNavigationTests: XCTestCase {
         capture("Record")
         open("Meetings")
         XCTAssertTrue(app.buttons["Start Meeting"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.textFields["Meeting title (optional)"].exists)
+        XCTAssertTrue(app.textFields["meetingTitle"].exists)
+        XCTAssertFalse(app.buttons["Start Meeting"].isEnabled)
         capture("Meeting setup")
         open("Notes")
         XCTAssertTrue(app.navigationBars["Notes"].waitForExistence(timeout: 5))
@@ -41,12 +42,30 @@ nonisolated final class MobileNavigationTests: XCTestCase {
         }
         XCUIDevice.shared.orientation = .landscapeLeft
         open("Meetings")
-        let title = app.textFields["Meeting title (optional)"]
+        let title = app.textFields["meetingTitle"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         title.tap()
-        title.typeText("Planning")
+        title.typeText("Planning\n")
         XCTAssertEqual(title.value as? String, "Planning")
+        XCTAssertTrue(app.buttons["Start Meeting"].isHittable)
         capture("Landscape meeting setup")
+    }
+
+    @MainActor func testMeetingTitleIsRequired() {
+        launch()
+        defer { app.terminate() }
+        open("Meetings")
+        let title = app.textFields["meetingTitle"]
+        let start = app.buttons["Start Meeting"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertFalse(start.isEnabled)
+        title.tap()
+        title.typeText("   ")
+        XCTAssertFalse(start.isEnabled)
+        title.typeText("Planning\n")
+        XCTAssertTrue(start.isEnabled)
+        XCTAssertTrue(start.isHittable)
+        capture("Required meeting title beside start")
     }
 
     @MainActor func testMeetingReviewEditsPersist() {
@@ -88,8 +107,13 @@ nonisolated final class MobileNavigationTests: XCTestCase {
         defer { app.terminate() }
         open("Meetings")
         let start = app.buttons["Start Meeting"]
+        for _ in 0..<8 {
+            if start.exists && start.isHittable { break }
+            app.swipeUp()
+        }
         XCTAssertTrue(start.waitForExistence(timeout: 5))
         XCTAssertTrue(start.isHittable)
+        XCTAssertTrue(app.textFields["meetingTitle"].isHittable)
         capture("Accessible meeting setup")
         open("Notes")
         let note = app.staticTexts["Tablet note fixture"]
@@ -270,7 +294,7 @@ nonisolated final class MobileNavigationTests: XCTestCase {
     }
 
     @MainActor private func capture(_ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
