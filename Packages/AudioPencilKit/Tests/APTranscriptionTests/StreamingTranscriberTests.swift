@@ -37,7 +37,57 @@ actor FakeEngine: SpeechTranscribing {
     }
 }
 
+private actor ScriptedSegmentsEngine: SpeechTranscribing {
+    let passes: [[TranscriptSegment]]
+    private(set) var calls: [Int] = []
+
+    init(_ passes: [[TranscriptSegment]]) { self.passes = passes }
+
+    func transcribe(_ samples: [Float]) async throws -> [TranscriptSegment] {
+        calls.append(samples.count)
+        return passes[min(calls.count - 1, passes.count - 1)]
+    }
+}
+
 struct StreamingTranscriberTests {
+    @Test(arguments: [0.0, -1.0, Double.nan, Double.infinity, 30.0, 0.00001])
+    func invalidTimestampsDoNotCommitTextOrRepeatTheRecording(end: Double) async throws {
+        let source = TestSource()
+        let text = "Please send the updated meeting notes to the whole team tomorrow."
+        let engine = ScriptedSegmentsEngine([[
+            TranscriptSegment(start: 0, end: end, text: text),
+            TranscriptSegment(start: 0, end: end, text: ""),
+            TranscriptSegment(start: 0, end: end, text: ""),
+        ]])
+        let streamer = StreamingTranscriber(engine: engine, source: source)
+        source.append(seconds: 4, loud: true)
+        #expect(await streamer.passIfNeeded())
+        source.append(seconds: 1, loud: true)
+        #expect(await streamer.passIfNeeded())
+        #expect(try await streamer.finish() == text)
+        #expect(await engine.calls == [64_000, 80_000, 80_000])
+    }
+
+    @Test func repeatedTimestampsOnlyCommitTheAdvancingPrefix() async throws {
+        let source = TestSource()
+        let engine = ScriptedSegmentsEngine([[
+            TranscriptSegment(start: 0, end: 1, text: "First."),
+            TranscriptSegment(start: 1, end: 1, text: "Second."),
+            TranscriptSegment(start: 1, end: 2, text: "Third."),
+            TranscriptSegment(start: 2, end: 3, text: "Fourth."),
+        ], [
+            TranscriptSegment(start: 0, end: 1, text: "Second."),
+            TranscriptSegment(start: 1, end: 2, text: "Third."),
+            TranscriptSegment(start: 2, end: 3, text: "Fourth."),
+        ]])
+        let streamer = StreamingTranscriber(engine: engine, source: source)
+        source.append(seconds: 4, loud: true)
+        #expect(await streamer.passIfNeeded())
+        #expect(try await streamer.finish() == "First. Second. Third. Fourth.")
+        // Only the valid first second was committed; the rest still needs a final pass.
+        #expect(await engine.calls == [64_000, 48_000])
+    }
+
     @Test func confirmsEarlySegmentsAndLeavesShortTail() async throws {
         let source = TestSource()
         let engine = FakeEngine(source: source)
@@ -133,6 +183,15 @@ struct StreamingTranscriberTests {
 }
 
 struct TranscriptCleanerTests {
+    @Test func detectsWholeOutputRepetitionWithoutRemovingWords() {
+        let text = "Please send the updated meeting notes to the whole team tomorrow."
+        #expect(TranscriptCleaner.hasRepeatedWholeText(text + "\n" + text))
+        #expect(!TranscriptCleaner.hasRepeatedWholeText(text))
+        #expect(!TranscriptCleaner.hasRepeatedWholeText("Yes yes"))
+        #expect(!TranscriptCleaner.hasRepeatedWholeText(text + " Please send something else instead."))
+        #expect(TranscriptCleaner.clean(text + " " + text) == text + " " + text)
+    }
+
     @Test func removesAnnotationsAndTidiesSpacing() {
         #expect(TranscriptCleaner.clean(" [BLANK_AUDIO]  Hello there , world. (music) *sigh*") == "Hello there, world.")
     }

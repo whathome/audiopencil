@@ -58,6 +58,7 @@ final class Paster: NSObject, NSPasteboardItemDataProvider {
             pasteboard.setString(text, forType: .string)
             guard AXIsProcessTrusted(), let _ = Self.textFocus() else { return .clipboardOnly }
             Self.postCommandV()
+            Log.dictation.notice("Posted one paste request: \(text.count) characters (clipboard preservation off)")
             posted()
             return .pasted
         }
@@ -71,6 +72,7 @@ final class Paster: NSObject, NSPasteboardItemDataProvider {
         let before = await field?.state()
         Self.postCommandV()
         let sentAt = ContinuousClock.now
+        Log.dictation.notice("Posted one paste request: \(text.count) characters")
         posted()
 
         // Wait for the app to ask for the text, then give the field a moment to show it.
@@ -79,12 +81,15 @@ final class Paster: NSObject, NSPasteboardItemDataProvider {
             try? await Task.sleep(for: .milliseconds(40))
             if offered != text { return .pasted } // a newer dictation took over
             evidence = PasteCheck.evidence(before: before, after: await field?.state(), pasted: text)
-            if evidence == .arrived { break }
+            if evidence == .arrived || evidence == .duplicated { break }
             if let readAt, ContinuousClock.now - readAt > .milliseconds(350) { break }
         }
         let verdict = PasteCheck.verdict(clipboardRead: readAt != nil, evidence: evidence)
         let waited = ContinuousClock.now - sentAt
         Log.dictation.notice("Paste check after \(waited, privacy: .public): read \(self.readAt.map { "\($0 - sentAt)" } ?? "no", privacy: .public), field \(String(describing: evidence), privacy: .public) (readable \(before?.value != nil || before?.length != nil, privacy: .public)), \(String(describing: verdict), privacy: .public)")
+        if evidence == .duplicated {
+            Log.dictation.warning("Focused field gained multiple copies after one paste request; \(text.count) characters per copy")
+        }
         switch verdict {
         case .confirmed:
             restoreSaved()

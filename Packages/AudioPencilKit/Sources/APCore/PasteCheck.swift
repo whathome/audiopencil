@@ -17,6 +17,8 @@ public enum PasteCheck {
     public enum Evidence: Equatable, Sendable {
         /// The text, or something its size, appeared in the field.
         case arrived
+        /// At least two additional copies appeared after a single paste request.
+        case duplicated
         /// The field is readable and didn't change.
         case unchanged
         /// No readable field (many Electron apps and web editors), or a change too small to judge.
@@ -35,6 +37,12 @@ public enum PasteCheck {
             // Apps tidy pasted text (line endings, smart quotes, trailing spaces), so look for a stretch of it.
             let probes = probes(of: pasted)
             let oldText = normalized(old), newText = normalized(new)
+            let fullText = normalized(pasted)
+            if !fullText.isEmpty,
+               newText.count - oldText.count >= fullText.count * 2,
+               occurrences(of: fullText, in: newText) - occurrences(of: fullText, in: oldText) >= 2 {
+                return .duplicated
+            }
             if !probes.isEmpty, probes.allSatisfy({ occurrences(of: $0, in: newText) > occurrences(of: $0, in: oldText) }) {
                 return .arrived
             }
@@ -51,7 +59,7 @@ public enum PasteCheck {
     /// change overrules it, since something else may have asked.
     public static func verdict(clipboardRead: Bool, evidence: Evidence) -> Verdict {
         switch evidence {
-        case .arrived: .confirmed
+        case .arrived, .duplicated: .confirmed
         case .unchanged: .unconfirmed
         case .unknown: clipboardRead ? .confirmed : .unconfirmed
         }

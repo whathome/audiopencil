@@ -32,6 +32,14 @@ public enum TranscriptCleaner {
         text.contains { $0.isLetter || $0.isNumber }
     }
 
+    /// Diagnostic only: a repeated passage can be intentional, so never discard it based on text alone.
+    public static func hasRepeatedWholeText(_ text: String) -> Bool {
+        let words = text.split(whereSeparator: \.isWhitespace)
+        guard words.count >= 16, words.count.isMultiple(of: 2) else { return false }
+        let middle = words.count / 2
+        return words.prefix(middle).elementsEqual(words.suffix(middle))
+    }
+
     public static func clean(_ text: String) -> String {
         var result = text
         // [BLANK_AUDIO], *sigh*, and short lowercase sound tags like (beep) or (keyboard clicking).

@@ -117,6 +117,22 @@ struct PasteCheckTests {
         #expect(PasteCheck.evidence(before: before, after: after, pasted: text) == .arrived)
     }
 
+    @Test func detectsTwoNewCopiesFromOnePaste() {
+        let before = FieldState(value: "Hi Sam, ", length: nil)
+        let after = FieldState(value: "Hi Sam, " + text + text, length: nil)
+        #expect(PasteCheck.evidence(before: before, after: after, pasted: text) == .duplicated)
+        #expect(PasteCheck.verdict(clipboardRead: true, evidence: .duplicated) == .confirmed)
+    }
+
+    @Test func intentionalRepetitionWithinOneDictationIsNotADoublePaste() {
+        let repeated = text + " " + text
+        #expect(PasteCheck.evidence(
+            before: FieldState(value: "", length: nil),
+            after: FieldState(value: repeated, length: nil),
+            pasted: repeated
+        ) == .arrived)
+    }
+
     @Test func unchangedReadableFieldOverrulesAClipboardRead() {
         let field = FieldState(value: "Hi Sam, ", length: nil)
         #expect(PasteCheck.evidence(before: field, after: field, pasted: text) == .unchanged)

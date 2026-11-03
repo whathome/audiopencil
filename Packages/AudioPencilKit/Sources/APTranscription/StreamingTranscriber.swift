@@ -72,13 +72,20 @@ public actor StreamingTranscriber {
             if containsSound(tail) {
                 let segments = try await engine.transcribe(tail)
                 passCount += 1
+                if TranscriptCleaner.hasRepeatedWholeText(TranscriptCleaner.join(segments)) {
+                    Log.transcription.warning("Speech engine repeated the entire final pass: \(tail.count) audio samples, \(segments.count) segments")
+                }
                 confirmed += segments
             } else {
                 Log.transcription.notice("Skipped quiet tail: \(tail.count) samples below RMS threshold \(self.configuration.silenceThreshold, privacy: .public)")
             }
         }
         pendingText = ""
-        return TranscriptCleaner.join(confirmed)
+        let text = TranscriptCleaner.join(confirmed)
+        if TranscriptCleaner.hasRepeatedWholeText(text) {
+            Log.transcription.warning("Final transcript repeats its entire text: \(text.count) characters, \(self.passCount) passes, whole-recording \(self.configuration.wholeRecordingAtStop, privacy: .public)")
+        }
+        return text
     }
 
     public func cancel() async {
@@ -127,14 +134,30 @@ public actor StreamingTranscriber {
         let tailSeconds = Double(tailLength) / configuration.sampleRate
         let keep = tailSeconds > configuration.longTail ? 1 : configuration.heldBackSegments
         if segments.count > keep {
-            let toConfirm = segments.prefix(segments.count - keep)
+            // Text is only final when its timestamps also move the audio cursor forward.
+            // Otherwise the next pass would transcribe the same audio and append it again.
+            var end = 0.0
+            let candidates = segments.prefix(segments.count - keep)
+            let toConfirm = candidates.prefix { segment in
+                guard segment.start.isFinite, segment.end.isFinite,
+                      segment.start >= 0, segment.start <= segment.end,
+                      segment.end > end, segment.end <= tailSeconds,
+                      Int(segment.end * configuration.sampleRate) > Int(end * configuration.sampleRate)
+                else { return false }
+                end = segment.end
+                return true
+            }
+            if toConfirm.count != candidates.count {
+                Log.transcription.warning("Held back \(candidates.count - toConfirm.count) segments with non-advancing or invalid timestamps; tail \(tailLength) samples")
+            }
             confirmed += toConfirm
             if let last = toConfirm.last {
-                let advance = Int(last.end * configuration.sampleRate)
-                confirmedEndSample += min(max(advance, 0), tailLength)
+                confirmedEndSample += Int(last.end * configuration.sampleRate)
             }
+            pendingText = TranscriptCleaner.join(Array(segments.dropFirst(toConfirm.count)))
+        } else {
+            pendingText = TranscriptCleaner.join(segments)
         }
-        pendingText = TranscriptCleaner.join(Array(segments.suffix(min(keep, segments.count))))
         onUpdate(TranscriptCleaner.join(confirmed), pendingText)
     }
 
