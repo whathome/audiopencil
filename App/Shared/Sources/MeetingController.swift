@@ -25,7 +25,7 @@ enum MeetingCaptureError: LocalizedError {
     }
 }
 
-@MainActor @Observable
+@Observable
 final class MeetingController {
     enum CaptureState { case idle, starting, recording, paused, stopping }
 
@@ -211,8 +211,8 @@ final class MeetingController {
         }
         do {
             try await microphone.beginRecording(deviceID: device.deviceID, onLevel: { [weak self] level in
-                Task { @MainActor [weak self] in self?.microphoneLevel = level }
-            }, onInterruption: { [weak self] in Task { @MainActor [weak self] in self?.endPreview() } }, keepsSamples: false)
+                Task { @MainActor in self?.microphoneLevel = level }
+            }, onInterruption: { [weak self] in Task { @MainActor in self?.endPreview() } }, keepsSamples: false)
             if !previewing { microphone.stop() }
         } catch {
             endPreview()
@@ -315,11 +315,11 @@ final class MeetingController {
             pausedAt = nil
             pausedSeconds = 0
             let archive = try MeetingAudioArchive(directory: directory, echoCancellation: echoCancellation, onMicrophoneLevel: { [weak self] level in
-                Task { @MainActor [weak self] in
+                Task { @MainActor in
                     if self?.capture == .recording { self?.microphoneLevel = level }
                 }
             }) { [weak self] message in
-                Task { @MainActor [weak self] in
+                Task { @MainActor in
                     guard let self else { return }
                     self.error = message
                     if self.capture == .starting { self.startingFailure = message }
@@ -333,11 +333,11 @@ final class MeetingController {
                 let audio = CallAudioCapture(onSamples: { [weak self] samples, time in
                     archive.append(samples, source: .call, hostTime: time)
                     let level = Self.level(samples)
-                    Task { @MainActor [weak self] in
+                    Task { @MainActor in
                         if self?.capture == .recording { self?.callLevel = level }
                     }
                 }, onFailure: { [weak self] message in
-                    Task { @MainActor [weak self] in self?.interrupt(String(localized: "Call audio stopped: \(message)")) }
+                    Task { @MainActor in self?.interrupt(String(localized: "Call audio stopped: \(message)")) }
                 })
                 callAudio = audio
                 try await audio.start(applicationID: application.id)
@@ -355,9 +355,9 @@ final class MeetingController {
             #endif
             try await microphone.beginRecording(deviceID: deviceID, onLevel: { [weak self] level in
                 guard !echoCancellation else { return }
-                Task { @MainActor [weak self] in self?.microphoneLevel = level }
+                Task { @MainActor in self?.microphoneLevel = level }
             }, onInterruption: { [weak self] in
-                Task { @MainActor [weak self] in self?.interrupt(String(localized: "The microphone changed. Check the selected input, then resume.")) }
+                Task { @MainActor in self?.interrupt(String(localized: "The microphone changed. Check the selected input, then resume.")) }
             }, keepsSamples: false, onSamples: { samples, time in
                 archive.append(samples, source: .microphone, hostTime: time)
             })
@@ -433,10 +433,10 @@ final class MeetingController {
                     let audio = CallAudioCapture(onSamples: { [weak self] samples, time in
                         archive.append(samples, source: .call, hostTime: time)
                         let level = Self.level(samples)
-                        Task { @MainActor [weak self] in
+                        Task { @MainActor in
                             if self?.capture == .recording { self?.callLevel = level }
                         }
-                    }, onFailure: { [weak self] message in Task { @MainActor [weak self] in self?.interrupt(message) } })
+                    }, onFailure: { [weak self] message in Task { @MainActor in self?.interrupt(message) } })
                     callAudio = audio
                     try await audio.start(applicationID: application.processIdentifier)
                 }
@@ -453,8 +453,8 @@ final class MeetingController {
                 #endif
                 try await microphone.beginRecording(deviceID: deviceID, onLevel: { [weak self] level in
                     guard !echoCancellation else { return }
-                    Task { @MainActor [weak self] in self?.microphoneLevel = level }
-                }, onInterruption: { [weak self] in Task { @MainActor [weak self] in self?.interrupt(String(localized: "Microphone interrupted.")) } }, keepsSamples: false, onSamples: { samples, time in
+                    Task { @MainActor in self?.microphoneLevel = level }
+                }, onInterruption: { [weak self] in Task { @MainActor in self?.interrupt(String(localized: "Microphone interrupted.")) } }, keepsSamples: false, onSamples: { samples, time in
                     archive.append(samples, source: .microphone, hostTime: time)
                 })
                 if let startingFailure { throw MeetingCaptureError.unavailable(startingFailure) }
@@ -848,9 +848,6 @@ extension MeetingController {
                                 var turns: [MeetingSession.Turn]
                                 if session.kind == .videoCall, source != .call {
                                     turns = words.map { MeetingSession.Turn(speaker: "you", start: start + $0.start, end: start + $0.end, text: $0.text) }
-                                } else if !SpeakerLabeler.isAvailable {
-                                    let label = source == .call ? String(localized: "Call audio") : String(localized: "Unidentified speaker")
-                                    turns = words.map { MeetingSession.Turn(speaker: label, start: start + $0.start, end: start + $0.end, text: $0.text) }
                                 } else {
                                     do {
                                         progress = String(localized: "Labelling speakers…")
@@ -904,9 +901,6 @@ extension MeetingController {
                         change(id) {
                             $0.turns = allTurns
                             $0.duration = duration
-                            if !SpeakerLabeler.isAvailable {
-                                $0.warnings.append(SpeakerLabelerError.unsupportedBuild.localizedDescription)
-                            }
                             if uncertain { $0.warnings.append(String(localized: "Some speakers could not be matched across audio sections. Review the labels; separate speaker numbers may refer to the same person.")) }
                             if session.kind == .videoCall, !allTurns.contains(where: { $0.speaker != "you" }) {
                                 $0.warnings.append(String(localized: "No remote speech was recognized. Check the call-audio meter and selected app; this transcript may contain only your microphone."))

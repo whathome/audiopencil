@@ -1,10 +1,10 @@
 import APCore
 import CoreGraphics
 import Foundation
-import os
+import Synchronization
 import Testing
 
-struct HotkeyMonitorTests {
+nonisolated struct HotkeyMonitorTests {
     private func capturingProcessor() -> HotkeyEventProcessor {
         var processor = HotkeyEventProcessor()
         processor.policy = .init(swallowEscape: true, swallowReturn: true, swallowDigits: true, swallowShortcut: true)
@@ -144,7 +144,7 @@ struct HotkeyMonitorTests {
             if decision.tapTimedOut { deliveries.timeouts += 1 }
         }
         let completed = DispatchSemaphore(value: 0)
-        let swallowed = OSAllocatedUnfairLock(initialState: true)
+        let swallowed = Mutex(true)
         DispatchQueue.global(qos: .userInteractive).async {
             context.handleTimeout()
             let event = CGEvent(keyboardEventSource: nil, virtualKey: 36, keyDown: true)!
@@ -163,7 +163,7 @@ struct HotkeyMonitorTests {
             if let event = decision.event { deliveries.events.append(event) }
         }
         let completed = DispatchSemaphore(value: 0)
-        let swallowed = OSAllocatedUnfairLock(initialState: false)
+        let swallowed = Mutex(false)
         DispatchQueue.global(qos: .userInteractive).async {
             let ordinary = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true)!
             ordinary.flags = []

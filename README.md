@@ -12,8 +12,6 @@ No cloud AI. Interface in English, French and Spanish.
 
 The download is unnotarized; see [installation instructions](docs/reference.md#install-the-mac-preview).
 
-Building on macOS Sonoma with Xcode 15.3: use the [legacy Mac project](docs/reference.md#xcode-153--macos-sonoma). Newer Xcode builds retain the full feature set.
-
 Mac video-call capture is a Debug-only preview.
 
 [Full reference](docs/reference.md) · [Xcode account setup](docs/reference.md#using-another-xcode-account) · [Product requirements](docs/PRD.md)

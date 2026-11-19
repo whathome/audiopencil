@@ -36,7 +36,7 @@ enum TranscriptionModelState: Equatable {
 }
 
 /// What writing in styles needs from the app (the Mac's AppModel, the iPhone's PhoneModel).
-@MainActor protocol WritingHost: AnyObject {
+protocol WritingHost: AnyObject {
     var writing: SummaryEngine { get }
     var settings: DictationSettings { get }
     var tags: [String] { get }

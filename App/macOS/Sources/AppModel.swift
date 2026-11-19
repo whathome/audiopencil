@@ -9,7 +9,7 @@ import AppKit
 import ServiceManagement
 
 /// App-wide state and wiring: settings, permissions, the speech model, hotkeys and the dictation loop.
-@MainActor @Observable
+@Observable
 final class AppModel: WritingHost {
     static let settingsKey = "dictationSettings"
     static let statsKey = "usageStats"

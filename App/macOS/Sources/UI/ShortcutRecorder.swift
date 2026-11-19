@@ -49,7 +49,7 @@ extension KeyShortcut {
 }
 
 /// Click, then press a key combination. Escape cancels. The global hotkeys stand aside meanwhile.
-@MainActor struct ShortcutRecorder: View {
+struct ShortcutRecorder: View {
     @Bindable var app: AppModel
     @State private var recording = false
     @State private var monitor: Any?

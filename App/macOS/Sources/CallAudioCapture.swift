@@ -6,7 +6,7 @@ import ScreenCaptureKit
 import os
 
 /// ScreenCaptureKit's audio output only. No screen output or image is installed or retained.
-final class CallAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
+nonisolated final class CallAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
     #if DEBUG
     static let isAvailable = true
     #else

@@ -9,7 +9,7 @@ import UserNotifications
 
 /// Turns recordings into vault notes: audio saved on the iPhone, the transcript written in a style, then
 /// filed straight away as needs-review (reviewing happens on the Obsidian board, as on the Mac).
-@MainActor @Observable
+@Observable
 final class PhoneNotes {
     private(set) var recent: [RecentNote] = []
     /// What processing is doing right now, if anything. A new step drops the last one's progress.

@@ -12,7 +12,7 @@ import Network
 /// Keeps the vault's settings file in step with the app and uploads the offline queue.
 /// Syncs shortly after local changes, every minute, when the app becomes active, and when the
 /// network comes back.
-@MainActor @Observable
+@Observable
 final class SyncController {
     enum Status: Equatable {
         case notConfigured
@@ -94,7 +94,7 @@ final class SyncController {
     func start() {
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
-            Task { @MainActor [weak self] in
+            Task { @MainActor in
                 guard let self else { return }
                 let cameBack = online && !self.isOnline
                 self.isOnline = online

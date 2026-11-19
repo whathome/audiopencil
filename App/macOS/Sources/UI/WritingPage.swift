@@ -2,7 +2,7 @@ import APCore
 import SwiftUI
 
 /// "My writing": samples of the user's own writing for the "Like me" style, via a short interview.
-@MainActor struct WritingPage: View {
+struct WritingPage: View {
     @Bindable var app: AppModel
     @State private var editing: WritingSample?
     @State private var editingPrompt: InterviewPrompt?
@@ -104,7 +104,7 @@ extension WritingPage {
     }
 }
 
-@MainActor private struct SampleEditor: View {
+private struct SampleEditor: View {
     @State var sample: WritingSample
     let prompt: InterviewPrompt?
     /// Languages to choose from; empty when only English is in use (no picker).

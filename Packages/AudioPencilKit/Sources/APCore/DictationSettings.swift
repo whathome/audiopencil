@@ -139,11 +139,7 @@ public struct DictationSettings: Codable, Equatable, Sendable {
     /// Menu bar icon instead of a Dock icon.
     public var menuBarMode: Bool = false
     /// Hugging Face repository of the MLX writing model used for styles.
-    #if AUDIOPENCIL_LEGACY_TOOLCHAIN
-    public var writingModel: String = "mlx-community/Llama-3.2-3B-Instruct-4bit"
-    #else
     public var writingModel: String = "mlx-community/SmolLM3-3B-4bit"
-    #endif
     /// Show a style picker after stopping (PRD flow) instead of delivering straight away.
     public var pickStyleAfterStop: Bool = false
     /// Seconds before the picker accepts the preselected style.

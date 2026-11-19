@@ -1,6 +1,6 @@
 import XCTest
 
-final class MobileNavigationTests: XCTestCase {
+nonisolated final class MobileNavigationTests: XCTestCase {
     @MainActor private var app: XCUIApplication!
 
     @MainActor private func launch(fixture: Bool = false, accessible: Bool = false, arguments: [String] = []) {

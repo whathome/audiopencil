@@ -29,7 +29,7 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
 
 /// Sidebar window. The sidebar collapses to a rail of icons (toolbar button, or automatically when
 /// the window is narrow) instead of disappearing.
-@MainActor struct MainWindow: View {
+struct MainWindow: View {
     @Bindable var app: AppModel
     @AppStorage("sidebarCollapsed") private var collapsed = false
 
@@ -91,8 +91,8 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
             }
         }
         .frame(minWidth: 520, maxWidth: maximumWidth, minHeight: 560, maxHeight: .infinity)
-        .modifier(WindowToolbarTitleVisibility())
-        .toolbarBackground(.hidden, for: .windowToolbar)
+        .toolbar(removing: .title)
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
     }
 
     private func toggleSidebar(rail: Bool) {
@@ -118,21 +118,6 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
-@MainActor private struct WindowToolbarTitleVisibility: ViewModifier {
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        #if compiler(>=6.0)
-        if #available(macOS 15, *) {
-            content.toolbar(removing: .title)
-        } else {
-            content
-        }
-        #else
-        content
-        #endif
-    }
-}
-
 /// The translucent sidebar background macOS uses for source lists.
 private struct SidebarMaterial: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
@@ -146,7 +131,7 @@ private struct SidebarMaterial: NSViewRepresentable {
     func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
 
-@MainActor private struct Sidebar: View {
+private struct Sidebar: View {
     @Bindable var app: AppModel
     let rail: Bool
 

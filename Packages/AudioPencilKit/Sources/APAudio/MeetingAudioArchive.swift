@@ -20,32 +20,9 @@ public final class MeetingAudioArchive: @unchecked Sendable {
         var pausedDuration: Double = 0
         var pending = 0
     }
-    private final class OpenSegment {
-        private var file: AVAudioFile?
+    private struct OpenSegment {
+        var file: AVAudioFile
         var segment: Segment
-
-        init(file: AVAudioFile, segment: Segment) {
-            self.file = file
-            self.segment = segment
-        }
-
-        func append(_ samples: [Float], offset: Int, count: Int) throws {
-            guard let file,
-                  let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(count)),
-                  let channel = buffer.floatChannelData?[0] else { throw CocoaError(.fileWriteUnknown) }
-            buffer.frameLength = AVAudioFrameCount(count)
-            samples.withUnsafeBufferPointer { channel.update(from: $0.baseAddress! + offset, count: count) }
-            try file.write(from: buffer)
-            segment.frames += count
-        }
-
-        func close() {
-            #if compiler(>=6.0)
-            if #available(macOS 15, iOS 18, *) { file?.close() }
-            #endif
-            // Older AVAudioFile versions flush only when the last reference is released.
-            file = nil
-        }
     }
 
     public let directory: URL
@@ -141,9 +118,15 @@ public final class MeetingAudioArchive: @unchecked Sendable {
                 let file = try AVAudioFile(forWriting: directory.appending(path: name), settings: format.settings)
                 open[source] = OpenSegment(file: file, segment: Segment(source: source, start: start, frames: 0, file: name))
             }
-            guard let current = open[source] else { throw CocoaError(.fileWriteUnknown) }
+            guard var current = open[source] else { throw CocoaError(.fileWriteUnknown) }
             let count = min(samples.count - offset, Self.segmentFrames - current.segment.frames)
-            try current.append(samples, offset: offset, count: count)
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: current.file.processingFormat, frameCapacity: AVAudioFrameCount(count)),
+                  let channel = buffer.floatChannelData?[0] else { throw CocoaError(.fileWriteUnknown) }
+            buffer.frameLength = AVAudioFrameCount(count)
+            samples.withUnsafeBufferPointer { channel.update(from: $0.baseAddress! + offset, count: count) }
+            try current.file.write(from: buffer)
+            current.segment.frames += count
+            open[source] = current
             offset += count
             if current.segment.frames >= Self.segmentFrames { try commit(source) }
         }
@@ -152,7 +135,7 @@ public final class MeetingAudioArchive: @unchecked Sendable {
     private func commit(_ source: Source) throws {
         guard let current = open.removeValue(forKey: source) else { return }
         let segment = current.segment
-        current.close()
+        current.file.close()
         committed.append(segment)
         if writesIndex {
             try JSONEncoder().encode(committed).write(to: directory.appending(path: "audio.json"), options: .atomic)
@@ -224,7 +207,7 @@ public final class MeetingAudioArchive: @unchecked Sendable {
             return updated
         } catch {
             let created = writer.committed + writer.open.values.map(\.segment)
-            for current in writer.open.values { current.close() }
+            for current in writer.open.values { current.file.close() }
             writer.open.removeAll()
             for segment in created {
                 do { try FileManager.default.removeItem(at: directory.appending(path: segment.file)) }
@@ -288,8 +271,6 @@ public final class MeetingAudioArchive: @unchecked Sendable {
             try output.write(from: buffer)
             start += duration
         }
-        #if compiler(>=6.0)
-        if #available(macOS 15, iOS 18, *) { output.close() }
-        #endif
+        output.close()
     }
 }

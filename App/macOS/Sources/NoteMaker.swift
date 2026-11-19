@@ -9,7 +9,7 @@ import UserNotifications
 
 /// Turns dictations into vault notes (PRD "Vault layout"). Long recordings are filed straight away as
 /// needs-review; reviewing happens on the Obsidian board.
-@MainActor @Observable
+@Observable
 final class NoteMaker {
     static let defaultFolder = NoteFiling.defaultFolder
     static let recordingsFolder = NoteFiling.recordingsFolder
@@ -223,7 +223,7 @@ final class NoteMaker {
 }
 
 /// Shows banners while the app is active and opens the review when one is clicked.
-@MainActor private final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+private final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     var onOpen: ((String) -> Void)?
     var onOpenMeeting: ((UUID) -> Void)?
 

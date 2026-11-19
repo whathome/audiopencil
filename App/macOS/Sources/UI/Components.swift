@@ -2,7 +2,7 @@ import APTranscription
 import SwiftUI
 
 /// Rounded card used across the main window.
-@MainActor struct Card<Content: View>: View {
+struct Card<Content: View>: View {
     var title: LocalizedStringResource?
     var trailing: LocalizedStringResource?
     @ViewBuilder var content: Content
@@ -28,7 +28,7 @@ import SwiftUI
 }
 
 /// Small uppercase section label, like a card heading.
-@MainActor struct SectionLabel: View {
+struct SectionLabel: View {
     let text: LocalizedStringResource
     init(_ text: LocalizedStringResource) { self.text = text }
 
@@ -41,7 +41,7 @@ import SwiftUI
 }
 
 /// A keyboard key, drawn like a keycap.
-@MainActor struct KeyCap: View {
+struct KeyCap: View {
     let label: LocalizedStringResource
     var symbol: String?
 
@@ -61,7 +61,7 @@ import SwiftUI
 }
 
 /// Selectable chip, e.g. which hotkeys are active.
-@MainActor struct Chip: View {
+struct Chip: View {
     let label: LocalizedStringResource
     var symbol: String?
     var isOn: Bool
@@ -84,7 +84,7 @@ import SwiftUI
 }
 
 /// Small coloured status pill.
-@MainActor struct StatusBadge: View {
+struct StatusBadge: View {
     let text: LocalizedStringResource
     let color: Color
     var showsProgress = false
@@ -107,7 +107,7 @@ import SwiftUI
 }
 
 /// Stat tile for the right-hand column.
-@MainActor struct StatTile<Detail: View>: View {
+struct StatTile<Detail: View>: View {
     let label: LocalizedStringResource
     let value: String
     var unit: LocalizedStringResource?
@@ -143,7 +143,7 @@ extension StatTile where Detail == EmptyView {
 }
 
 /// Five-week activity grid, a column per weekday.
-@MainActor struct ActivityGrid: View {
+struct ActivityGrid: View {
     let days: [(date: Date, count: Int)]
 
     var body: some View {
@@ -165,7 +165,7 @@ extension StatTile where Detail == EmptyView {
 }
 
 /// Orange call-to-action strip shown when setup is incomplete.
-@MainActor struct Banner: View {
+struct Banner: View {
     let symbol: String
     let message: LocalizedStringResource
     let actionTitle: LocalizedStringResource
@@ -188,7 +188,7 @@ extension StatTile where Detail == EmptyView {
     }
 }
 
-@MainActor struct MeetingProcessingStatus: View {
+struct MeetingProcessingStatus: View {
     let app: AppModel
 
     var body: some View {

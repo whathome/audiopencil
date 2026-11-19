@@ -3,7 +3,7 @@ import APModels
 import SwiftUI
 
 /// Setup checklist (doubles as onboarding) and diagnostics for the dictation loop.
-@MainActor struct SetupView: View {
+struct SetupView: View {
     @Bindable var app: AppModel
     /// False inside Settings, which has its own title.
     var showsHeader = true
@@ -132,7 +132,7 @@ import SwiftUI
     }
 }
 
-@MainActor struct PermissionRow: View {
+struct PermissionRow: View {
     let title: LocalizedStringResource
     let detail: LocalizedStringResource
     let granted: Bool

@@ -1,8 +1,6 @@
 import APCore
 import APModels
-#if canImport(APPhonon)
 import APPhonon
-#endif
 import APTranscription
 import Foundation
 import UserNotifications
@@ -13,9 +11,7 @@ import UserNotifications
 extension AppModel {
     /// Which model is being prepared, for the person reading the status.
     func preparationTitle(_ preparation: ModelPreparation) -> String {
-        #if canImport(APPhonon)
         if preparation.variant == PhononEngine.variant { return String(localized: "Preparing Phonon-2 for this Mac") }
-        #endif
         let name = TranscriptionModelOption.option(for: preparation.variant)?.name ?? preparation.variant
         return String(localized: "Preparing Whisper \(name) for this Mac")
     }
@@ -23,7 +19,7 @@ extension AppModel {
     /// Hooks an engine's preparation progress up to the app. Call before loading it.
     func observePreparation(of engine: any DictationEngine) async {
         await engine.setPreparationHandler { [weak self] preparation in
-            Task { @MainActor [weak self] in self?.preparationChanged(preparation) }
+            Task { @MainActor in self?.preparationChanged(preparation) }
         }
     }
 

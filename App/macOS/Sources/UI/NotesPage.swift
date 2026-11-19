@@ -4,7 +4,7 @@ import AppKit
 import SwiftUI
 
 /// Minimal recent list (PRD: Obsidian is the library). Pending reviews, processing, and what was saved.
-@MainActor struct NotesPage: View {
+struct NotesPage: View {
     @Bindable var app: AppModel
     let notes: NoteMaker
     @State private var showingWalkthrough = false
@@ -177,7 +177,7 @@ import SwiftUI
 }
 
 /// PRD first run: a short tour of the review board.
-@MainActor private struct BoardWalkthrough: View {
+private struct BoardWalkthrough: View {
     let boardURL: URL?
     let guideURL: URL?
     @Environment(\.dismiss) private var dismiss

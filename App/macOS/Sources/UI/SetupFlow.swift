@@ -21,7 +21,7 @@ enum SetupStep: Int, CaseIterable {
 
 /// The guided setup window: six short steps. Models download and prepare in the background from the
 /// Permissions step on, so by the end English dictation is usually ready to try.
-@MainActor struct SetupFlow: View {
+struct SetupFlow: View {
     @Bindable var app: AppModel
     /// Closes the window; closing finishes setup and brings up the main window.
     let close: () -> Void
@@ -110,7 +110,7 @@ enum SetupStep: Int, CaseIterable {
 }
 
 /// Where you are: one short bar per step, filled up to the current one.
-@MainActor private struct StepTrack: View {
+private struct StepTrack: View {
     let step: SetupStep
 
     var body: some View {
@@ -130,7 +130,7 @@ enum SetupStep: Int, CaseIterable {
     }
 }
 
-@MainActor private struct StepHeader: View {
+private struct StepHeader: View {
     let title: LocalizedStringResource
     let subtitle: LocalizedStringResource
 
@@ -148,7 +148,7 @@ enum SetupStep: Int, CaseIterable {
 
 // MARK: 1. Welcome
 
-@MainActor private struct WelcomeStep: View {
+private struct WelcomeStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Image(nsImage: NSApp.applicationIconImage)
@@ -190,7 +190,7 @@ enum SetupStep: Int, CaseIterable {
 
 // MARK: 2. Permissions
 
-@MainActor private struct PermissionsStep: View {
+private struct PermissionsStep: View {
     @Bindable var app: AppModel
 
     var body: some View {
@@ -254,7 +254,7 @@ enum SetupStep: Int, CaseIterable {
 
 // MARK: 3. Languages
 
-@MainActor private struct LanguagesStep: View {
+private struct LanguagesStep: View {
     @Bindable var app: AppModel
     /// Shown as checkboxes: what's chosen, plus this Mac's own languages. Fixed while the step is open
     /// so unticking one doesn't make it vanish.
@@ -343,7 +343,7 @@ enum SetupStep: Int, CaseIterable {
 
 // MARK: 4. Storage
 
-@MainActor private struct StorageStep: View {
+private struct StorageStep: View {
     @Bindable var vault: VaultController
     @State private var found: [FoundVault] = []
     /// Nextcloud or WebDAV, once the user picks one of them here.
@@ -440,7 +440,7 @@ enum SetupStep: Int, CaseIterable {
     }
 }
 
-@MainActor private struct FoundVaultRow: View {
+private struct FoundVaultRow: View {
     let vault: FoundVault
     let selected: Bool
 
@@ -469,7 +469,7 @@ enum SetupStep: Int, CaseIterable {
 
 // MARK: 5. Models
 
-@MainActor private struct ModelsStep: View {
+private struct ModelsStep: View {
     let app: AppModel
     @Binding var wantsWriting: Bool
 
@@ -523,7 +523,7 @@ enum SetupStep: Int, CaseIterable {
 }
 
 /// One model: what it's for, its download size and how long it takes to prepare.
-@MainActor private struct ModelLine: View {
+private struct ModelLine: View {
     let model: SetupModel
 
     var body: some View {
@@ -549,7 +549,7 @@ enum SetupStep: Int, CaseIterable {
 
 // MARK: 6. Getting ready
 
-@MainActor private struct ReadyStep: View {
+private struct ReadyStep: View {
     @Bindable var app: AppModel
     let wantsWriting: Bool
 
@@ -575,7 +575,7 @@ enum SetupStep: Int, CaseIterable {
     }
 }
 
-@MainActor private struct ProgressLine: View {
+private struct ProgressLine: View {
     let model: SetupModel
     let status: SetupModelStatus
 

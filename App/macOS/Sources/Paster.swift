@@ -248,7 +248,7 @@ final class Paster: NSObject, NSPasteboardItemDataProvider {
 /// Reads the focused field's text off the main thread, with a short timeout. While an app pastes, it waits
 /// on Audio Pencil for the clipboard's text; asking that app about its field from the main thread at the
 /// same time would leave each waiting on the other until Accessibility gives up.
-struct FieldReader: @unchecked Sendable {
+nonisolated struct FieldReader: @unchecked Sendable {
     private let element: AXUIElement
 
     init(_ element: AXUIElement) {
@@ -271,7 +271,7 @@ struct FieldReader: @unchecked Sendable {
 }
 
 /// A copy of everything on the clipboard (every item, every type), held in memory only, to put back.
-@MainActor struct ClipboardSnapshot {
+struct ClipboardSnapshot {
     private let items: [[(type: NSPasteboard.PasteboardType, data: Data)]]
 
     /// Bigger clipboards (a large image, say) are left alone rather than copied.
@@ -280,9 +280,7 @@ struct FieldReader: @unchecked Sendable {
     /// Nil when the clipboard shouldn't or can't be kept: a password (concealed) or other short-lived
     /// content, macOS set to deny Audio Pencil clipboard access, or more than `limit` bytes.
     static func capture(_ pasteboard: NSPasteboard) -> ClipboardSnapshot? {
-        #if compiler(>=6.1)
         if #available(macOS 15.4, *), pasteboard.accessBehavior == .alwaysDeny { return nil }
-        #endif
         let types = pasteboard.types ?? []
         // Password managers clear these on a timer; putting one back would keep it around.
         if types.contains(Paster.concealedType) || types.contains(Paster.transientType) { return nil }

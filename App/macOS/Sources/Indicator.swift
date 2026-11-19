@@ -26,7 +26,7 @@ enum PushDestination: Equatable {
 }
 
 /// State shown by the floating indicator at the bottom centre of the screen.
-@MainActor @Observable
+@Observable
 final class IndicatorModel {
     enum Mode: Equatable {
         case hidden
@@ -221,7 +221,7 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
     }
 }
 
-@MainActor final class IndicatorPanelController: NSObject {
+final class IndicatorPanelController: NSObject {
     private let model: IndicatorModel
     private let panel: NSPanel
     private static let size = NSSize(width: 640, height: 140)
@@ -396,7 +396,7 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
             menu.addItem(deliveryHeader)
             let current = model.delivery()
             let choices: [(Delivery, String)] = [(.paste, String(localized: "Paste it")), (.note, String(localized: "Make a note")), (.meeting, String(localized: "Make a meeting note"))]
-            for (delivery, title) in choices where delivery != .meeting || SpeakerLabeler.isAvailable {
+            for (delivery, title) in choices {
                 let item = NSMenuItem(title: title, action: #selector(chooseDelivery(_:)), keyEquivalent: "")
                 item.target = self
                 item.representedObject = delivery.rawValue
@@ -497,7 +497,7 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
     }
 }
 
-@MainActor struct IndicatorView: View {
+struct IndicatorView: View {
     let model: IndicatorModel
 
     var body: some View {
@@ -646,7 +646,7 @@ extension IndicatorView {
 }
 
 /// An error or notice: up to two lines, so a fallback explanation isn't cut off mid-sentence.
-@MainActor private struct MessageText: View {
+private struct MessageText: View {
     let message: String
 
     var body: some View {
@@ -660,7 +660,7 @@ extension IndicatorView {
 }
 
 /// The recording's language, e.g. "FR". Only shown when more than one language is in use.
-@MainActor private struct LanguageBadge: View {
+private struct LanguageBadge: View {
     let language: SpokenLanguage
 
     var body: some View {
@@ -677,7 +677,7 @@ extension IndicatorView {
 }
 
 /// The current style, with its number key so the switch-while-talking shortcut is learnable at a glance.
-@MainActor private struct StyleChip: View {
+private struct StyleChip: View {
     let style: Style
 
     var body: some View {
@@ -714,7 +714,7 @@ extension IndicatorView {
 
 /// Paste, note or meeting: what stopping will do, and a click moves it on for this recording. Brighter once chosen,
 /// so an override is visible at a glance.
-@MainActor private struct DeliveryToggle: View {
+private struct DeliveryToggle: View {
     let delivery: Delivery
     let overridden: Bool
     /// A note from this recording will be linked in the daily note.
@@ -735,9 +735,7 @@ extension IndicatorView {
         .foregroundStyle(delivery == .paste ? .white : Color.accentColor)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(accessibility))
-        .accessibilityHint(SpeakerLabeler.isAvailable
-                           ? Text("Click to switch between paste, note and meeting for this recording.")
-                           : Text("Click to switch between paste and note for this recording."))
+        .accessibilityHint(Text("Click to switch between paste, note and meeting for this recording."))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -773,7 +771,7 @@ extension IndicatorView {
 
 /// Where push-to-talk's text goes: "Paste", or "Paste + Daily note" / "Paste + Inbox". Takes the place of
 /// the paste/note toggle, and is only shown when there's somewhere else to choose.
-@MainActor private struct DestinationBadge: View {
+private struct DestinationBadge: View {
     let destination: PushDestination?
 
     var body: some View {
@@ -798,7 +796,7 @@ extension IndicatorView {
 
 /// Elapsed time while recording, and a countdown before a long recording switches to a note.
 /// Quiet for short dictations, so the common case stays a bare meter.
-@MainActor private struct RecordingClock: View {
+private struct RecordingClock: View {
     let elapsed: TimeInterval
     let threshold: TimeInterval
     /// Chosen on the pill: the clock stops counting down to a note that won't happen (or already will).
@@ -832,7 +830,7 @@ extension IndicatorView {
 
 /// Ends a pill control that a click moves on to its next choice, so it doesn't read as a status label
 /// (the style chip's chevron does the same for its menu).
-@MainActor private struct CycleGlyph: View {
+private struct CycleGlyph: View {
     var body: some View {
         Image(systemName: "arrow.2.squarepath")
             .font(.system(size: 8, weight: .bold))
@@ -846,7 +844,7 @@ extension IndicatorView {
 private let controlEdge = Color.white.opacity(0.2)
 
 /// Reports a view's frame in the hosting view's coordinates.
-@MainActor private struct FrameReporter: View {
+private struct FrameReporter: View {
     let report: (CGRect) -> Void
 
     var body: some View {
@@ -859,7 +857,7 @@ private let controlEdge = Color.white.opacity(0.2)
 }
 
 /// Style choices after stop: number badges, the default highlighted, a shrinking countdown underline.
-@MainActor private struct PickerRow: View {
+private struct PickerRow: View {
     let picker: IndicatorModel.PickerState
     /// Each choice's frame, so a click can pick it.
     let reportFrame: (String, CGRect) -> Void
@@ -898,7 +896,7 @@ private let controlEdge = Color.white.opacity(0.2)
     }
 }
 
-@MainActor private struct LevelBars: View {
+private struct LevelBars: View {
     let levels: [Float]
 
     var body: some View {

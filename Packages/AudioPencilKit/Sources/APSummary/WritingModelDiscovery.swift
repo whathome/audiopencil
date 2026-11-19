@@ -40,7 +40,7 @@ public enum WritingModelDiscovery {
             let lower = model.id.lowercased()
             guard model.pipeline_tag == "text-generation", lower.contains("4bit"),
                   !known.contains(model.id), !excluded.contains(where: lower.contains),
-                  let type = model.config?.model_type, await supportsArchitecture(type)
+                  let type = model.config?.model_type, await LLMTypeRegistry.shared.contains(type)
             else { continue }
             plausible.append(model)
         }
@@ -76,20 +76,6 @@ public enum WritingModelDiscovery {
     /// Small models write noticeably worse; don't offer them as upgrades. 8 GB → 1.2 GB, 64 GB → ~5 GB.
     static func minimumSize(for machine: MachineProfile) -> UInt64 {
         max(1_200_000_000, machine.writingModelBudget / 4)
-    }
-
-    static func supportsArchitecture(_ type: String) async -> Bool {
-        #if AUDIOPENCIL_LEGACY_TOOLCHAIN
-        // MLXLM 2.25.4 predates registry introspection. Match its pinned LLMTypeRegistry.
-        let supported: Set<String> = [
-            "mistral", "llama", "phi", "phi3", "phimoe", "gemma", "gemma2",
-            "qwen2", "qwen3", "qwen3_moe", "starcoder2",
-            "cohere", "openelm", "internlm2", "granite", "mimo", "glm4",
-        ]
-        return supported.contains(type)
-        #else
-        return await LLMTypeRegistry.shared.contains(type)
-        #endif
     }
 
     static func search(_ query: String, session: URLSession) async throws -> [HubModel] {

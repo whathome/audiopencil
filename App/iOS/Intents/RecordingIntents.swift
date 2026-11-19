@@ -3,7 +3,7 @@ import AppIntents
 import Foundation
 
 /// The Lock Screen and Dynamic Island view of a recording. Shows only the clock and state, never the words.
-struct RecordingAttributes: ActivityAttributes {
+nonisolated struct RecordingAttributes: ActivityAttributes {
     struct ContentState: Codable, Hashable {
         /// When the clock would read 0:00 if there had been no pauses (now minus recorded time).
         var clockStart: Date
