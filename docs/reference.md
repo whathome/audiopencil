@@ -6,13 +6,13 @@ Detailed setup, usage and development notes. For a quick overview, see the [READ
 
 ## Install the Mac preview
 
-Download the DMG from the [preview release](https://github.com/whathome/audiopencil/releases/tag/v0.1.0-preview.1). It requires an Apple-silicon Mac (M1 or later) running macOS 15+; there is no Intel installer. Xcode is not needed to use the packaged app.
+Download the DMG from the [preview release](https://github.com/whathome/audiopencil/releases/tag/v0.1.0-preview.2). It requires an Apple-silicon Mac (M1 or later) running macOS 15+; there is no Intel installer. Xcode is not needed to use the packaged app.
 
 Quit an existing Audio Pencil before replacing it. Open the DMG, drag **Audio Pencil** into **Applications**, eject the image, then launch the installed app. Models download during first-run setup rather than shipping in the installer.
 
 The preview is ad-hoc signed and **not notarized by Apple**. If macOS blocks launch and you trust the download, try opening it, then choose **System Settings › Privacy & Security › Open Anyway** and confirm. Managed-device policies may prevent this. After replacing a differently signed build, recheck Microphone and Accessibility; remove an obsolete Accessibility entry and allow the new app if needed.
 
-The release includes a `.dmg.sha256` checksum file. Download it beside the DMG and run `shasum -a 256 -c Audio-Pencil-0.1.0-preview.1-arm64.dmg.sha256` from that folder. Selected-app video-call capture remains disabled in this Release build pending live-call acceptance.
+The release includes a `.dmg.sha256` checksum file. Download it beside the DMG and run `shasum -a 256 -c Audio-Pencil-0.1.0-preview.2-arm64.dmg.sha256` from that folder. Selected-app video-call capture remains disabled in this Release build pending live-call acceptance.
 
 ## Build and run
 

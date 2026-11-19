@@ -8,7 +8,7 @@ Talk instead of type. Private, on-device dictation and notes for Mac, iPhone and
 
 No cloud AI. Interface in English, French and Spanish.
 
-**Get started:** [Download the Mac preview](https://github.com/whathome/audiopencil/releases/tag/v0.1.0-preview.1) or [build from source](docs/reference.md#build-and-run).
+**Get started:** [Download the Mac preview](https://github.com/whathome/audiopencil/releases/tag/v0.1.0-preview.2) or [build from source](docs/reference.md#build-and-run).
 
 The download is unnotarized; see [installation instructions](docs/reference.md#install-the-mac-preview).
 
