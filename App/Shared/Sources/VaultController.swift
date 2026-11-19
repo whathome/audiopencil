@@ -8,7 +8,7 @@ import UIKit
 
 /// Connects to the vault: Nextcloud sign-in (browser or app password) or a local folder such as
 /// an Obsidian vault in iCloud Drive, plus choosing and checking the vault folder.
-@Observable
+@MainActor @Observable
 final class VaultController {
     enum Connection: Equatable {
         case signedOut

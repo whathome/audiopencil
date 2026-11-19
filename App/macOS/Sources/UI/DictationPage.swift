@@ -3,7 +3,7 @@ import APModels
 import SwiftUI
 
 /// Home page: how to dictate, what's listening, the last result, and local stats.
-struct DictationPage: View {
+@MainActor struct DictationPage: View {
     let app: AppModel
 
     var body: some View {
@@ -39,7 +39,7 @@ struct DictationPage: View {
     }
 }
 
-struct PageHeader: View {
+@MainActor struct PageHeader: View {
     let title: LocalizedStringResource
     let subtitle: LocalizedStringResource
 
@@ -51,7 +51,7 @@ struct PageHeader: View {
     }
 }
 
-private struct HotkeyCard: View {
+@MainActor private struct HotkeyCard: View {
     let app: AppModel
 
     private var key: GestureKey { app.settings.gestureKey }
@@ -111,7 +111,7 @@ private struct HotkeyCard: View {
 }
 
 /// A gesture: what it does (title, detail) on the left, its keycaps on the right.
-private struct GestureRow<Keys: View>: View {
+@MainActor private struct GestureRow<Keys: View>: View {
     let title: LocalizedStringResource
     let detail: LocalizedStringResource
     /// The keys in words, for VoiceOver (keycaps alone read as "fn fn").
@@ -136,7 +136,7 @@ private struct GestureRow<Keys: View>: View {
     }
 }
 
-private struct TranscriptionCard: View {
+@MainActor private struct TranscriptionCard: View {
     let app: AppModel
 
     var body: some View {
@@ -200,7 +200,7 @@ private struct TranscriptionCard: View {
 
 /// A place to dictate without leaving the app: the real flow (pill, style, language, rewrite, paste)
 /// lands in this box like in any other app. It also shows what a dictation will use right now.
-struct TryItCard: View {
+@MainActor struct TryItCard: View {
     @Bindable var app: AppModel
     @State private var text = ""
     @FocusState private var focused: Bool
@@ -275,7 +275,7 @@ struct TryItCard: View {
     }
 }
 
-private struct LastDictationCard: View {
+@MainActor private struct LastDictationCard: View {
     let app: AppModel
 
     var body: some View {
@@ -334,7 +334,7 @@ private struct LastDictationCard: View {
     }
 }
 
-private struct StatsColumn: View {
+@MainActor private struct StatsColumn: View {
     let stats: UsageStats
     var columns = 1
 

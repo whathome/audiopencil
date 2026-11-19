@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Where notes and settings live: Nextcloud, any WebDAV server, or a folder on this Mac (e.g. iCloud Drive).
 /// An Obsidian vault gets the extras (board, guide); any other folder gets plain Markdown.
-struct StorageSettingsView: View {
+@MainActor struct StorageSettingsView: View {
     @Bindable var app: AppModel
     var embedded = false
 
@@ -66,7 +66,7 @@ struct StorageSettingsView: View {
 }
 
 /// The account and folder cards for the chosen kind of storage: Settings and setup share them.
-struct StorageLocationCards: View {
+@MainActor struct StorageLocationCards: View {
     @Bindable var vault: VaultController
 
     var body: some View {
@@ -107,7 +107,7 @@ struct StorageLocationCards: View {
     }
 }
 
-private struct SyncCard: View {
+@MainActor private struct SyncCard: View {
     let sync: SyncController
     @State private var confirmingRepair = false
 
@@ -196,7 +196,7 @@ private struct SyncCard: View {
     }
 }
 
-private struct NextcloudAccountCard: View {
+@MainActor private struct NextcloudAccountCard: View {
     @Bindable var vault: VaultController
     @State private var useAppPassword = false
     @State private var user = ""
@@ -277,7 +277,7 @@ private struct NextcloudAccountCard: View {
     }
 }
 
-private struct WebDAVAccountCard: View {
+@MainActor private struct WebDAVAccountCard: View {
     let vault: VaultController
     @State private var address = ""
     @State private var user = ""
@@ -328,7 +328,7 @@ private struct WebDAVAccountCard: View {
     }
 }
 
-private struct LocationCard<Path: View>: View {
+@MainActor private struct LocationCard<Path: View>: View {
     let vault: VaultController
     @ViewBuilder var path: Path
     let choose: () -> Void
@@ -372,7 +372,7 @@ private struct LocationCard<Path: View>: View {
 }
 
 /// Folder browser for Nextcloud or a WebDAV server.
-private struct RemoteFolderBrowser: View {
+@MainActor private struct RemoteFolderBrowser: View {
     @Bindable var vault: VaultController
     @Environment(\.dismiss) private var dismiss
 

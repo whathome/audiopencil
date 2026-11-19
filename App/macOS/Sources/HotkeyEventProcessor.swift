@@ -3,7 +3,7 @@ import CoreGraphics
 import Foundation
 
 /// The synchronous input path: value-only decisions, without UI, audio, logging or model work.
-nonisolated struct HotkeyEventProcessor {
+struct HotkeyEventProcessor: Sendable {
     enum KeyEvent: Equatable, Sendable {
         case fnDown, fnUp, escape, returnKey, fallbackShortcut
         case digit(Int)

@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct AudioPencilApp: App {
+@MainActor struct AudioPencilApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {
@@ -38,7 +38,7 @@ struct AudioPencilApp: App {
     }
 }
 
-private struct MenuBarContent: View {
+@MainActor private struct MenuBarContent: View {
     let app: AppModel
     @Environment(\.openWindow) private var openWindow
 
@@ -90,7 +90,7 @@ private struct MenuBarContent: View {
     }
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
     let app = AppModel()
 
     func applicationDidFinishLaunching(_ notification: Notification) {

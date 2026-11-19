@@ -9,7 +9,7 @@ import Observation
 
 /// The iPhone app's state and wiring: settings and styles (shared with the Mac through the vault settings
 /// file), storage and sync, the Whisper and writing models, the recorder and notes.
-@Observable
+@MainActor @Observable
 final class PhoneModel: WritingHost {
     static let settingsKey = "dictationSettings"
     static let stylesKey = "styles"

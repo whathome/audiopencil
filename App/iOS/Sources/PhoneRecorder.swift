@@ -25,7 +25,7 @@ struct PhoneCapture: Identifiable {
 /// One recording at a time: the microphone, the live transcript, pause and resume, and stopping into a
 /// capture. Keeps going with the phone locked (background audio), shows a Live Activity, and can be driven
 /// from the Lock Screen, Control Centre, the Action Button, Siri and Shortcuts.
-@Observable
+@MainActor @Observable
 final class PhoneRecorder: RecordingControlling {
     enum Phase: Equatable {
         case idle

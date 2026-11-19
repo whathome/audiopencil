@@ -3,7 +3,7 @@ import ApplicationServices
 import AVFoundation
 import CoreGraphics
 
-@Observable
+@MainActor @Observable
 final class Permissions {
     enum MicrophoneStatus {
         case granted, denied, notDetermined

@@ -37,7 +37,7 @@ enum SettingsLayout {
 
 /// Focused settings categories, shared by the main page and the standalone Settings window.
 /// A page in the main window or the ⌘, window, with the same category buttons in both.
-struct SettingsView: View {
+@MainActor struct SettingsView: View {
     @Bindable var app: AppModel
     /// Shown as a page in the main window rather than the ⌘, Settings window.
     var embedded = false
@@ -77,7 +77,7 @@ struct SettingsView: View {
 }
 
 /// Page title and categories, aligned with the first form section.
-struct SettingsHeader: View {
+@MainActor struct SettingsHeader: View {
     @Bindable var app: AppModel
     var inForm = true
 
@@ -95,7 +95,7 @@ struct SettingsHeader: View {
     }
 }
 
-private struct SettingsCategoryControl: View {
+@MainActor private struct SettingsCategoryControl: View {
     @Binding var selection: SettingsTab
     let needsPermissions: Bool
     let needsStorage: Bool
@@ -163,7 +163,7 @@ extension View {
     }
 }
 
-private struct PageAlignedForm: ViewModifier {
+@MainActor private struct PageAlignedForm: ViewModifier {
     let enabled: Bool
     /// A grouped form caps its sections at about 600 pt and centres them in the space it gets. Give it just
     /// over that, so the sections (and the title in the first header) start at the other pages' 24 pt edge.
@@ -184,7 +184,7 @@ private struct PageAlignedForm: ViewModifier {
 
 /// Explanatory text under a form section: small, secondary and left-aligned, so it reads as a note
 /// on the rows above rather than another setting.
-private struct FormFooter: View {
+@MainActor private struct FormFooter: View {
     let text: LocalizedStringResource
     init(_ text: LocalizedStringResource) { self.text = text }
 
@@ -198,7 +198,7 @@ private struct FormFooter: View {
 }
 
 /// A section title, preceded by the Settings header when shown as a page.
-private struct FirstSectionHeader: View {
+@MainActor private struct FirstSectionHeader: View {
     let app: AppModel
     let embedded: Bool
     let title: LocalizedStringResource
@@ -211,7 +211,7 @@ private struct FirstSectionHeader: View {
     }
 }
 
-private struct GeneralSettings: View {
+@MainActor private struct GeneralSettings: View {
     @Bindable var app: AppModel
     var embedded = false
 
@@ -270,15 +270,17 @@ private struct GeneralSettings: View {
     }
 }
 
-private struct DictationSettingsView: View {
+@MainActor private struct DictationSettingsView: View {
     @Bindable var app: AppModel
     var embedded = false
     @State private var showsHotkeyOptions = false
 
     private var clipboardDetail: LocalizedStringResource {
+        #if compiler(>=6.1)
         if #available(macOS 15.4, *), NSPasteboard.general.accessBehavior == .alwaysDeny {
             return "macOS is set to deny Audio Pencil clipboard access (Privacy & Security › Paste from Other Apps), so dictations stay on the clipboard."
         }
+        #endif
         return app.settings.keepClipboard
             ? "Dictation pastes through the clipboard, then your clipboard goes back once the text is seen to arrive. If that can't be confirmed, the dictation stays on the clipboard so ⌘V pastes it. Passwords copied from a password manager aren't kept."
             : "Each dictation is left on the clipboard after pasting, replacing what was there."
@@ -409,7 +411,7 @@ private struct DictationSettingsView: View {
     }
 }
 
-private struct NoteSettings: View {
+@MainActor private struct NoteSettings: View {
     @Bindable var app: AppModel
     var embedded = false
 
@@ -451,7 +453,7 @@ private struct NoteSettings: View {
 }
 
 /// Languages offered in the recording pill, which one new apps start in, and whether styles work in each.
-private struct DictationLanguagesSection: View {
+@MainActor private struct DictationLanguagesSection: View {
     @Bindable var app: AppModel
 
     var body: some View {
@@ -519,7 +521,7 @@ private struct DictationLanguagesSection: View {
 }
 
 /// Linking new notes in Obsidian's daily note. Greyed out until the vault has Daily notes on.
-private struct DailyNoteSection: View {
+@MainActor private struct DailyNoteSection: View {
     @Bindable var app: AppModel
 
     private var available: Bool { app.sync.dailyNotes == .on }
@@ -551,7 +553,7 @@ private struct DailyNoteSection: View {
 }
 
 /// Push-to-talk only pastes; while holding the key, the pill can also send it to the daily note or a file.
-private struct PushToTalkSection: View {
+@MainActor private struct PushToTalkSection: View {
     @Bindable var app: AppModel
 
     var body: some View {
@@ -567,7 +569,7 @@ private struct PushToTalkSection: View {
 }
 
 /// Phrases that turn a dictation into an Obsidian task.
-private struct TaskKeywordsSection: View {
+@MainActor private struct TaskKeywordsSection: View {
     @Bindable var app: AppModel
     @State private var text = ""
 
@@ -590,7 +592,7 @@ private struct TaskKeywordsSection: View {
 }
 
 /// One list for every language, plus a list per language; a recording uses both.
-private struct VocabularySection: View {
+@MainActor private struct VocabularySection: View {
     @Bindable var app: AppModel
     /// "" edits the list for all languages; otherwise a Whisper code.
     @State private var list = ""
@@ -634,7 +636,7 @@ private struct VocabularySection: View {
     }
 }
 
-private struct ModelSettings: View {
+@MainActor private struct ModelSettings: View {
     @Bindable var app: AppModel
     var embedded = false
 
@@ -678,6 +680,7 @@ private struct ModelSettings: View {
                     }
                 }
                 .disabled(app.dictation.isActive || app.meetings.isProcessing || app.usesPhonon)
+                #if canImport(APPhonon)
                 Toggle(isOn: $app.phononTrial) {
                     Text("Try Phonon-2 for English")
                     if app.phononTrial, !app.usesPhonon {
@@ -687,6 +690,7 @@ private struct ModelSettings: View {
                     }
                 }
                 .disabled(app.dictation.isActive || app.meetings.isProcessing)
+                #endif
                 Picker("Other languages", selection: $app.settings.multilingualTranscriptionModel) {
                     ForEach(TranscriptionModelOption.multilingualCatalogue) { option in
                         Text("\(option.name) – \(option.note)").tag(option.id)
@@ -706,7 +710,7 @@ private struct ModelSettings: View {
 }
 
 /// Ordered list of preferred microphones; the first connected one is used.
-private struct MicrophonePriorityList: View {
+@MainActor private struct MicrophonePriorityList: View {
     @Bindable var app: AppModel
 
     var body: some View {
@@ -775,7 +779,7 @@ private struct MicrophonePriorityList: View {
 }
 
 /// Discovery results: what fits this machine, with Try / Switch / Dismiss.
-private struct ModelSuggestionsSection: View {
+@MainActor private struct ModelSuggestionsSection: View {
     let advisor: ModelAdvisor
     let modelChangesDisabled: Bool
 
@@ -818,7 +822,7 @@ private struct ModelSuggestionsSection: View {
     static func bytes(_ value: UInt64) -> String { ByteCountFormatter.string(fromByteCount: Int64(value), countStyle: .memory) }
 }
 
-private struct SuggestionRow: View {
+@MainActor private struct SuggestionRow: View {
     let advisor: ModelAdvisor
     let suggestion: ModelSuggestion
     let modelChangesDisabled: Bool

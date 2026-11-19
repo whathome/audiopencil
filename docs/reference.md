@@ -26,6 +26,34 @@ open AudioPencil.xcodeproj # then Run, or:
 xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencil -derivedDataPath build/DerivedData -allowProvisioningUpdates build
 ```
 
+### Xcode 15.3 / macOS Sonoma
+
+For an Apple-silicon Mac running macOS 14 (including 14.8.9), use the separate macOS-only legacy project with Xcode 15.3 and its Swift 5.10 compiler:
+
+```bash
+xcodegen generate --spec project-legacy.yml
+open AudioPencilLegacy.xcodeproj
+# Or build from the terminal with Xcode 15.3 selected:
+xcodebuild -project AudioPencilLegacy.xcodeproj -scheme AudioPencil \
+  -destination 'platform=macOS,arch=arm64' \
+  -derivedDataPath build/LegacyDerivedData -allowProvisioningUpdates build
+```
+
+Install Xcode's command-line tools and let its first-launch setup finish before building. Xcode 15.3 includes the Metal compiler; the separate Metal-toolchain download command above is for newer Xcode. Use `DEVELOPER_DIR=/Applications/Xcode_15.3.app/Contents/Developer` before `xcodebuild` if you keep multiple Xcode versions installed, adjusting the path to your installation. XcodeGen is needed only to generate the project; a colleague can generate and share the ignored `AudioPencilLegacy.xcodeproj` if installing XcodeGen on Sonoma is inconvenient.
+
+The legacy package manifest pins WhisperKit 0.14.1, the original MLX Swift Examples 2.25.4 language-model libraries, MLX Swift 0.25.4 and Swift Transformers 0.1.24. Swift 6.2+ automatically selects `Packages/AudioPencilKit/Package@swift-6.2.swift` instead, retaining the current dependencies and full feature set. Use the standard project on newer Xcode, not the legacy project.
+
+Legacy-only differences:
+
+- Writing uses Llama 3.2 3B by default; Qwen3 4B is also offered. SmolLM3 and Qwen3.5 require the modern build. If existing or synced settings select one of those newer models, choose a supported model in Settings; the legacy build does not overwrite that selection.
+- The Phonon-2 trial is unavailable; Whisper still handles dictation and transcription.
+- Automatic meeting speaker identification is unavailable. Meeting recording, transcription, summaries and audio recovery remain available through the Meetings page; the interface and saved meeting warnings explain the limitation. The dictation indicator offers Paste and Note, without its speaker-labelled meeting-note option.
+- The iOS app, widgets and Swift Testing suites remain on the modern project/toolchain.
+
+Both projects share the macOS target definition in `Config/MacApp.yml`, including version/build numbers and signing settings. The legacy and modern apps use the same bundle identifier and data folders; quit one before running the other. The published Preview 2 DMG is unchanged and still requires macOS 15+.
+
+Validation used Apple's Swift 5.10 compiler (`swiftlang-5.10.0.13`) and macOS 14.4 SDK to compile and link all legacy macOS sources in Debug and Release. The archive flush/recovery fallback and explicit errors for unsupported writing models were exercised in both configurations. A complete Xcode 15.3 IDE/Metal-resource build and a runtime check on macOS 14.8.9 still need confirmation on that environment.
+
 ### Signing (do this once)
 
 Quit the running development app before rebuilding into the same product path, then reopen the rebuilt app. Replacing a live app's signed executable can disrupt its existing keyboard event tap.
@@ -43,7 +71,7 @@ Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new
 The checked-in bundle identifiers use `com.weshopkins.audiopencil`. Selecting your own team may be enough, but if Xcode says an identifier **cannot be registered** or **is not available**, choose a unique bundle identifier for your team, especially for physical iPhone/iPad builds:
 
 1. Run `scripts/set-team.sh <YOUR_TEAM_ID>` with the new account's team ID. Pass it explicitly when you have certificates for multiple teams; automatic detection uses the first matching Apple Development certificate.
-2. In **`project.yml`**, replace `com.weshopkins` with your own unique reverse-DNS prefix everywhere it appears. This changes `options.bundleIdPrefix` **and** the explicit `PRODUCT_BUNDLE_IDENTIFIER` settings; changing the prefix option alone does not override those settings.
+2. In **`Config/MacApp.yml`** and **`project.yml`**, replace `com.weshopkins` with your own unique reverse-DNS prefix everywhere it appears. The shared file owns `options.bundleIdPrefix` and the Mac identifier; `project.yml` owns the iOS and test identifiers. Changing the prefix option alone does not override explicit `PRODUCT_BUNDLE_IDENTIFIER` settings.
 
    | Target | Example identifier |
    | --- | --- |
@@ -55,7 +83,7 @@ The checked-in bundle identifiers use `com.weshopkins.audiopencil`. Selecting yo
 3. Run `xcodegen generate` again, reopen the project, and build with automatic signing and `-allowProvisioningUpdates`. Select your physical device when running the phone scheme; Xcode may need to register that device and create new provisioning profiles.
 4. Recheck macOS privacy permissions after changing the signing team or bundle identifier; remove an obsolete Accessibility entry and allow the rebuilt app if needed.
 
-Keep the widget identifier prefixed by the iOS app's identifier. Do not set one shared `PRODUCT_BUNDLE_IDENTIFIER` in `Signing.local.xcconfig`: the app and embedded widget need distinct identifiers. Make identifier changes in `project.yml`, not just Xcode's generated project, or regeneration will discard them. These are personal signing changes; keep the prefix edit out of shared commits unless intentionally changing the project's identity.
+Keep the widget identifier prefixed by the iOS app's identifier. Do not set one shared `PRODUCT_BUNDLE_IDENTIFIER` in `Signing.local.xcconfig`: the app and embedded widget need distinct identifiers. Make identifier changes in the YAML definitions, not just Xcode's generated project, or regeneration will discard them. Regenerate the project you use (`xcodegen generate --spec project-legacy.yml` for Xcode 15.3). These are personal signing changes; keep the prefix edit out of shared commits unless intentionally changing the project's identity.
 
 Other `com.weshopkins.audiopencil` strings used for logs, debug notifications and control kinds are not provisioning identifiers and do not need changing to use another account. Never delete existing app data to resolve an identifier-registration error.
 

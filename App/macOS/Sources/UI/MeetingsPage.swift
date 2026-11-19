@@ -1,10 +1,11 @@
 import APAudio
 import APCore
+import APTranscription
 import AppKit
 import AVFoundation
 import SwiftUI
 
-struct MeetingsPage: View {
+@MainActor struct MeetingsPage: View {
     let app: AppModel
     @Bindable var meetings: MeetingController
     @State private var reviewSection = ReviewSection.summary
@@ -151,11 +152,17 @@ struct MeetingsPage: View {
                         ForEach(2...6, id: \.self) { Text("\($0)").tag(Optional($0)) }
                     }
                     .labelsHidden()
+                    .disabled(!SpeakerLabeler.isAvailable)
                 }
             }
             .padding(16)
             .background(.background.secondary, in: RoundedRectangle(cornerRadius: 12))
 
+            if !SpeakerLabeler.isAvailable {
+                Label(SpeakerLabelerError.unsupportedBuild.localizedDescription, systemImage: "info.circle")
+                    .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if !CallAudioCapture.isAvailable {
                 Label("Video-call recording is not available in this build while app-audio capture is being verified.", systemImage: "info.circle")
                     .font(.callout).foregroundStyle(.secondary)
@@ -523,7 +530,7 @@ struct MeetingsPage: View {
     }
 }
 
-private struct MeetingProse: View {
+@MainActor private struct MeetingProse: View {
     let text: String
 
     var body: some View {

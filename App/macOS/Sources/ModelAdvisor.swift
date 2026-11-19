@@ -7,7 +7,7 @@ import AppKit
 
 /// PRD "Model discovery": checks Hugging Face weekly for models that fit this machine, and lets the
 /// user try one against the current model before switching. Nothing switches by itself.
-@Observable
+@MainActor @Observable
 final class ModelAdvisor {
     struct TrialLine: Identifiable, Equatable {
         var id: String { label }

@@ -4,7 +4,7 @@ import AppKit
 import SwiftUI
 
 /// Styles: what each number key does while recording, editable prompts, and per-app defaults.
-struct StylesPage: View {
+@MainActor struct StylesPage: View {
     @Bindable var app: AppModel
     @State private var editing: Style?
 
@@ -74,7 +74,7 @@ struct StylesPage: View {
     }
 }
 
-private struct StyleCard: View {
+@MainActor private struct StyleCard: View {
     static let height: CGFloat = 158
 
     let style: Style
@@ -138,7 +138,7 @@ private struct StyleCard: View {
     }
 }
 
-private struct Tag: View {
+@MainActor private struct Tag: View {
     let text: LocalizedStringResource
     init(_ text: LocalizedStringResource) { self.text = text }
 
@@ -152,7 +152,7 @@ private struct Tag: View {
     }
 }
 
-private struct StyleEditor: View {
+@MainActor private struct StyleEditor: View {
     @State var style: Style
     let takenShortcuts: Set<Int>
     let isPreset: Bool
@@ -230,7 +230,7 @@ private struct StyleEditor: View {
 }
 
 /// Shows whether the writing model is on disk, with a download button.
-struct WritingModelBanner: View {
+@MainActor struct WritingModelBanner: View {
     let app: AppModel
 
     var body: some View {
@@ -260,7 +260,7 @@ struct WritingModelBanner: View {
     }
 }
 
-private struct PerAppDefaults: View {
+@MainActor private struct PerAppDefaults: View {
     @Bindable var app: AppModel
 
     var body: some View {

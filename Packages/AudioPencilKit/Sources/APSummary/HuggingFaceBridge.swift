@@ -1,3 +1,4 @@
+#if !AUDIOPENCIL_LEGACY_TOOLCHAIN
 import Foundation
 import HuggingFace
 import MLXLMCommon
@@ -79,3 +80,4 @@ private struct TokenizerBridge: MLXLMCommon.Tokenizer {
         }
     }
 }
+#endif

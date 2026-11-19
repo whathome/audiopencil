@@ -1,7 +1,18 @@
 import APModels
-import APSummary
+@testable import APSummary
 import Foundation
 import Testing
+
+struct WritingCompatibilityTests {
+    @Test func modernBuildRetainsCurrentArchitectures() async {
+        #expect(await WritingModelDiscovery.supportsArchitecture("llama"))
+        #expect(await WritingModelDiscovery.supportsArchitecture("qwen3"))
+        #expect(!(await WritingModelDiscovery.supportsArchitecture("not-a-model-architecture")))
+        #expect(await WritingModelDiscovery.supportsArchitecture("smollm3"))
+        #expect(await WritingModelDiscovery.supportsArchitecture("qwen3_5"))
+        #expect(WritingModelOption.option(for: "mlx-community/Qwen3.5-2B-4bit") != nil)
+    }
+}
 
 /// Opt-in: queries Hugging Face. TEST_RUNNER_AUDIOPENCIL_DISCOVERY=1 xcodebuild test … -only-testing:APSummaryTests
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["AUDIOPENCIL_DISCOVERY"] == "1"))

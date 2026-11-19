@@ -1,7 +1,11 @@
 import APCore
 import APModels
 import Foundation
+#if AUDIOPENCIL_LEGACY_TOOLCHAIN
+import Hub
+#else
 import HuggingFace
+#endif
 import MLX
 import MLXLLM
 import MLXLMCommon
@@ -10,11 +14,13 @@ import Tokenizers
 public enum SummaryEngineError: LocalizedError {
     case notDownloaded(String)
     case notLoaded
+    case unsupportedLegacyModel(String)
 
     public var errorDescription: String? {
         switch self {
         case .notDownloaded(let id): String(localized: "The writing model \(id) hasn't been downloaded.", bundle: .module)
         case .notLoaded: String(localized: "The writing model isn't loaded.", bundle: .module)
+        case .unsupportedLegacyModel(let id): String(localized: "The writing model \(id) requires the modern build. Choose Llama 3.2 3B or Qwen3 4B in Settings for this legacy build.", bundle: .module)
         }
     }
 }
@@ -58,10 +64,15 @@ public actor SummaryEngine: ManagedModel {
     /// Snapshot folder inside the Hugging Face cache layout: models--org--name/snapshots/<commit>.
     private nonisolated var snapshotDirectory: URL? {
         let repo = cacheDirectory.appending(path: "models--" + modelID.replacingOccurrences(of: "/", with: "--"))
-        guard let commit = try? String(contentsOf: repo.appending(path: "refs/main"), encoding: .utf8)
-            .trimmingCharacters(in: .whitespacesAndNewlines), !commit.isEmpty
-        else { return nil }
-        return repo.appending(path: "snapshots/\(commit)", directoryHint: .isDirectory)
+        if let commit = try? String(contentsOf: repo.appending(path: "refs/main"), encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines), !commit.isEmpty {
+            return repo.appending(path: "snapshots/\(commit)", directoryHint: .isDirectory)
+        }
+        #if AUDIOPENCIL_LEGACY_TOOLCHAIN
+        return HubApi(downloadBase: cacheDirectory).localRepoLocation(.init(id: modelID))
+        #else
+        return nil
+        #endif
     }
 
     /// Weights and tokenizer are on disk, so loading needs no network.
@@ -77,6 +88,16 @@ public actor SummaryEngine: ManagedModel {
     public func download(progress: @escaping @Sendable (Double) -> Void) async throws {
         try FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         Log.models.info("Downloading \(self.modelID, privacy: .public)")
+        #if AUDIOPENCIL_LEGACY_TOOLCHAIN
+        let hub = HubApi(downloadBase: cacheDirectory)
+        let configurationDirectory = try await hub.snapshot(from: modelID, matching: ["config.json"])
+        try await validateLegacyArchitecture(in: configurationDirectory)
+        _ = try await hub.snapshot(
+            from: modelID, matching: ["*.safetensors", "*.json", "*.jinja"]
+        ) { value in
+            progress(value.fractionCompleted)
+        }
+        #else
         let downloader = makeDownloader()
         _ = try await downloader.download(
             id: modelID, revision: "main",
@@ -85,6 +106,7 @@ public actor SummaryEngine: ManagedModel {
         ) { value in
             progress(value.fractionCompleted)
         }
+        #endif
     }
 
     public func load() async throws {
@@ -93,19 +115,25 @@ public actor SummaryEngine: ManagedModel {
             guard let snapshot = snapshotDirectory, isDownloaded else {
                 throw SummaryEngineError.notDownloaded(modelID)
             }
+            #if AUDIOPENCIL_LEGACY_TOOLCHAIN
+            try await validateLegacyArchitecture(in: snapshot)
+            GPU.set(cacheLimit: Self.gpuCacheLimit)
+            container = try await LLMModelFactory.shared.loadContainer(configuration: .init(directory: snapshot))
+            #else
             Memory.cacheLimit = Self.gpuCacheLimit
             // Load from the local snapshot: no network once downloaded.
             container = try await LLMModelFactory.shared.loadContainer(
                 from: snapshot,
                 using: TransformersTokenizerLoader()
             )
+            #endif
         }
     }
 
     public func unload() async {
         try? await lock.withLock {
             container = nil
-            Memory.clearCache()
+            Self.clearGPUCache()
         }
     }
 
@@ -150,13 +178,35 @@ public actor SummaryEngine: ManagedModel {
                     generationSeconds: info?.generateTime ?? 0
                 )
             }
-            Memory.clearCache()
+            Self.clearGPUCache()
             try Task.checkCancellation()
             return output
         }
     }
 
+    private static func clearGPUCache() {
+        #if AUDIOPENCIL_LEGACY_TOOLCHAIN
+        GPU.clearCache()
+        #else
+        Memory.clearCache()
+        #endif
+    }
+
+    #if AUDIOPENCIL_LEGACY_TOOLCHAIN
+    private func validateLegacyArchitecture(in directory: URL) async throws {
+        struct Configuration: Decodable { let model_type: String }
+        let configuration = try JSONDecoder().decode(
+            Configuration.self, from: Data(contentsOf: directory.appending(path: "config.json"))
+        )
+        guard await WritingModelDiscovery.supportsArchitecture(configuration.model_type) else {
+            throw SummaryEngineError.unsupportedLegacyModel(modelID)
+        }
+    }
+    #endif
+
+    #if !AUDIOPENCIL_LEGACY_TOOLCHAIN
     private func makeDownloader() -> any MLXLMCommon.Downloader {
         HubDownloader(hub: HubClient(host: URL(string: "https://huggingface.co")!, cache: HubCache(cacheDirectory: cacheDirectory)))
     }
+    #endif
 }

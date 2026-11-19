@@ -1,6 +1,8 @@
 import APCore
 import APModels
+#if canImport(APPhonon)
 import APPhonon
+#endif
 import APTranscription
 import Foundation
 
@@ -54,6 +56,7 @@ extension AppModel {
     /// Whisper as `SpeechModels` picks it, except English while trying Phonon-2 out and no vocabulary is set:
     /// Phonon-2 has no prompt to steer spelling, so Whisper keeps a vocabulary working.
     static func bestVariant(for language: SpokenLanguage, settings: DictationSettings) -> String {
+        #if canImport(APPhonon)
         var vocabularyAllows = settings.vocabulary(for: language).isEmpty
         #if DEBUG
         vocabularyAllows = vocabularyAllows || debugPhononIgnoresVocabulary
@@ -61,11 +64,15 @@ extension AppModel {
         if language.isEnglish, UserDefaults.standard.bool(forKey: phononTrialKey), vocabularyAllows {
             return PhononEngine.variant
         }
+        #endif
         return SpeechModels.bestVariant(for: language, settings: settings)
     }
 
     static func engine(for variant: String) -> any DictationEngine {
-        variant == PhononEngine.variant ? PhononEngine() : WhisperEngine(variant: variant)
+        #if canImport(APPhonon)
+        if variant == PhononEngine.variant { return PhononEngine() }
+        #endif
+        return WhisperEngine(variant: variant)
     }
 
     // MARK: Phonon-2 trial
@@ -84,21 +91,34 @@ extension AppModel {
             return UserDefaults.standard.bool(forKey: Self.phononTrialKey)
         }
         set {
+            #if canImport(APPhonon)
             withMutation(keyPath: \.phononTrial) { UserDefaults.standard.set(newValue, forKey: Self.phononTrialKey) }
             Log.models.notice("Phonon-2 trial \(newValue ? "on" : "off", privacy: .public)")
             if speech.variant != transcriptionVariant(for: activeLanguage) {
                 switchModel(to: transcriptionVariant(for: activeLanguage))
             }
+            #else
+            Log.models.error("Phonon-2 is unavailable in this legacy build")
+            #endif
         }
     }
 
     /// "Whisper Small (English)" or "Phonon-2", for status lines.
     func speechModelName(_ variant: String) -> String {
-        variant == PhononEngine.variant ? "Phonon-2" : "Whisper " + (TranscriptionModelOption.option(for: variant)?.name ?? variant)
+        #if canImport(APPhonon)
+        if variant == PhononEngine.variant { return "Phonon-2" }
+        #endif
+        return "Whisper " + (TranscriptionModelOption.option(for: variant)?.name ?? variant)
     }
 
     /// English is going through Phonon-2 right now.
-    var usesPhonon: Bool { transcriptionVariant(for: .english) == PhononEngine.variant }
+    var usesPhonon: Bool {
+        #if canImport(APPhonon)
+        transcriptionVariant(for: .english) == PhononEngine.variant
+        #else
+        false
+        #endif
+    }
 
     func transcriptionVariant(for language: SpokenLanguage) -> String {
         _ = phononTrial // observed, so what views show follows the trial switch

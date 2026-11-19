@@ -52,7 +52,7 @@ struct QuickCapture {
 }
 
 /// Quick-dictation loop: record → stream to the speech model → stop → (rewrite in a style) → paste.
-@Observable
+@MainActor @Observable
 final class DictationController {
     enum Phase {
         case idle
@@ -190,13 +190,17 @@ final class DictationController {
     func toggleDelivery() {
         switch indicator.delivery() {
         case .paste: setDelivery(.note)
-        case .note: setDelivery(.meeting)
+        case .note: setDelivery(SpeakerLabeler.isAvailable ? .meeting : .paste)
         case .meeting: setDelivery(.paste)
         }
     }
 
     func setDelivery(_ delivery: Delivery) {
         guard phase == .recording || phase == .starting, !indicator.isPushToTalk else { return }
+        guard delivery != .meeting || SpeakerLabeler.isAvailable else {
+            Log.dictation.error("\(SpeakerLabelerError.unsupportedBuild.localizedDescription, privacy: .public)")
+            return
+        }
         deliveryOverride = delivery
         indicator.deliveryOverride = delivery
         Log.dictation.notice("Delivery for this recording: \(delivery.rawValue, privacy: .public)")

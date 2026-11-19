@@ -35,12 +35,21 @@ public struct WritingModelOption: Identifiable, Hashable, Sendable {
     public let note: String
     public let approximateDownloadGB: Double
 
-    public static let catalogue: [WritingModelOption] = [
-        .init(id: "mlx-community/SmolLM3-3B-4bit", name: "SmolLM3 3B", note: String(localized: "Recommended: most faithful to what you said", bundle: .module), approximateDownloadGB: 1.7),
-        .init(id: "mlx-community/Qwen3.5-2B-4bit", name: "Qwen3.5 2B", note: String(localized: "Fastest and lightest; occasionally invents details", bundle: .module), approximateDownloadGB: 1.7),
+    public static let catalogue: [WritingModelOption] = newerModels + [
         .init(id: "mlx-community/Llama-3.2-3B-Instruct-4bit", name: "Llama 3.2 3B", note: String(localized: "Tends to add things you didn't say", bundle: .module), approximateDownloadGB: 1.8),
         .init(id: "mlx-community/Qwen3-4B-4bit", name: "Qwen3 4B", note: String(localized: "Slowest and heaviest on 8 GB", bundle: .module), approximateDownloadGB: 2.3),
     ]
+
+    private static var newerModels: [WritingModelOption] {
+        #if AUDIOPENCIL_LEGACY_TOOLCHAIN
+        []
+        #else
+        [
+            .init(id: "mlx-community/SmolLM3-3B-4bit", name: "SmolLM3 3B", note: String(localized: "Recommended: most faithful to what you said", bundle: .module), approximateDownloadGB: 1.7),
+            .init(id: "mlx-community/Qwen3.5-2B-4bit", name: "Qwen3.5 2B", note: String(localized: "Fastest and lightest; occasionally invents details", bundle: .module), approximateDownloadGB: 1.7),
+        ]
+        #endif
+    }
 
     public static func option(for id: String) -> WritingModelOption? {
         catalogue.first { $0.id == id }

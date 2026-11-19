@@ -1,10 +1,10 @@
 import AppKit
 import APCore
 import CoreGraphics
-import Synchronization
+import os
 
 /// Global keyboard input is serviced independently of the UI. Only completed decisions reach the main actor.
-final class HotkeyMonitor {
+@MainActor final class HotkeyMonitor {
     typealias KeyEvent = HotkeyEventProcessor.KeyEvent
     typealias Policy = HotkeyEventProcessor.Policy
     nonisolated static let syntheticMarker = HotkeyEventProcessor.syntheticMarker
@@ -72,8 +72,8 @@ final class HotkeyMonitor {
 }
 
 /// Mutable input decisions are mutex-protected; run-loop ownership is protected separately.
-nonisolated final class HotkeyTapContext: @unchecked Sendable {
-    private let processor: Mutex<HotkeyEventProcessor>
+final class HotkeyTapContext: @unchecked Sendable {
+    private let processor: OSAllocatedUnfairLock<HotkeyEventProcessor>
     private let deliver: @MainActor @Sendable (HotkeyEventProcessor.Decision, TimeInterval) -> Void
     private let lifecycle = NSLock()
     private var runLoop: CFRunLoop?
@@ -85,7 +85,7 @@ nonisolated final class HotkeyTapContext: @unchecked Sendable {
         processor: HotkeyEventProcessor,
         deliver: @escaping @MainActor @Sendable (HotkeyEventProcessor.Decision, TimeInterval) -> Void
     ) {
-        self.processor = Mutex(processor)
+        self.processor = OSAllocatedUnfairLock(initialState: processor)
         self.deliver = deliver
     }
 
@@ -175,11 +175,14 @@ nonisolated final class HotkeyTapContext: @unchecked Sendable {
             return false
         }
         let time = ProcessInfo.processInfo.systemUptime
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        let flags = event.flags
+        let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+        let isSynthetic = event.getIntegerValueField(.eventSourceUserData) == HotkeyEventProcessor.syntheticMarker
         let decision = processor.withLock {
             $0.process(
-                type: type, keyCode: event.getIntegerValueField(.keyboardEventKeycode), flags: event.flags,
-                isRepeat: event.getIntegerValueField(.keyboardEventAutorepeat) != 0,
-                isSynthetic: event.getIntegerValueField(.eventSourceUserData) == HotkeyEventProcessor.syntheticMarker,
+                type: type, keyCode: keyCode, flags: flags,
+                isRepeat: isRepeat, isSynthetic: isSynthetic,
                 at: time
             )
         }

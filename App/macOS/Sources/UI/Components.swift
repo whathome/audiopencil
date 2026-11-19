@@ -2,7 +2,7 @@ import APTranscription
 import SwiftUI
 
 /// Rounded card used across the main window.
-struct Card<Content: View>: View {
+@MainActor struct Card<Content: View>: View {
     var title: LocalizedStringResource?
     var trailing: LocalizedStringResource?
     @ViewBuilder var content: Content
@@ -28,7 +28,7 @@ struct Card<Content: View>: View {
 }
 
 /// Small uppercase section label, like a card heading.
-struct SectionLabel: View {
+@MainActor struct SectionLabel: View {
     let text: LocalizedStringResource
     init(_ text: LocalizedStringResource) { self.text = text }
 
@@ -41,7 +41,7 @@ struct SectionLabel: View {
 }
 
 /// A keyboard key, drawn like a keycap.
-struct KeyCap: View {
+@MainActor struct KeyCap: View {
     let label: LocalizedStringResource
     var symbol: String?
 
@@ -61,7 +61,7 @@ struct KeyCap: View {
 }
 
 /// Selectable chip, e.g. which hotkeys are active.
-struct Chip: View {
+@MainActor struct Chip: View {
     let label: LocalizedStringResource
     var symbol: String?
     var isOn: Bool
@@ -84,7 +84,7 @@ struct Chip: View {
 }
 
 /// Small coloured status pill.
-struct StatusBadge: View {
+@MainActor struct StatusBadge: View {
     let text: LocalizedStringResource
     let color: Color
     var showsProgress = false
@@ -107,7 +107,7 @@ struct StatusBadge: View {
 }
 
 /// Stat tile for the right-hand column.
-struct StatTile<Detail: View>: View {
+@MainActor struct StatTile<Detail: View>: View {
     let label: LocalizedStringResource
     let value: String
     var unit: LocalizedStringResource?
@@ -143,7 +143,7 @@ extension StatTile where Detail == EmptyView {
 }
 
 /// Five-week activity grid, a column per weekday.
-struct ActivityGrid: View {
+@MainActor struct ActivityGrid: View {
     let days: [(date: Date, count: Int)]
 
     var body: some View {
@@ -165,7 +165,7 @@ struct ActivityGrid: View {
 }
 
 /// Orange call-to-action strip shown when setup is incomplete.
-struct Banner: View {
+@MainActor struct Banner: View {
     let symbol: String
     let message: LocalizedStringResource
     let actionTitle: LocalizedStringResource
@@ -188,7 +188,7 @@ struct Banner: View {
     }
 }
 
-struct MeetingProcessingStatus: View {
+@MainActor struct MeetingProcessingStatus: View {
     let app: AppModel
 
     var body: some View {
