@@ -129,6 +129,22 @@
         }
       }
     },
+    "More options": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más opciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus d’options"
+          }
+        }
+      }
+    },
     "No running apps found": {
       "localizations": {
         "es": {
@@ -145,6 +161,22 @@
         }
       }
     },
+    "Number key %lld": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tecla numérica %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche numérique %lld"
+          }
+        }
+      }
+    },
     "Open Permissions": {
       "localizations": {
         "es": {
@@ -157,6 +189,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrir les autorisations"
+          }
+        }
+      }
+    },
+    "Press Tab to switch while you talk.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa Tab para cambiar mientras hablas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyez sur Tab pour changer pendant que vous parlez."
           }
         }
       }
@@ -8880,6 +8928,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ton"
+          }
+        }
+      }
+    },
+    "Transcribing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribiendo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription en cours"
           }
         }
       }

@@ -25,7 +25,6 @@ final class NoteMaker {
     @ObservationIgnored private let folder: URL
     @ObservationIgnored private let notifications = NotificationDelegate()
     /// Meeting mode's speaker labels (small models, loaded only while labelling).
-    @ObservationIgnored private let speakerLabeler = SpeakerLabeler()
 
     init(app: AppModel) {
         self.app = app
@@ -84,21 +83,7 @@ final class NoteMaker {
             let savedAudio = await Task.detached(priority: .userInitiated) { () -> Bool in
                 (try? AudioFileWriter.writeM4A(samples: samples, to: audioURL)) != nil
             }.value
-            // Meeting: who said what, before writing. If labelling fails, it's filed as a plain note.
-            var labelled: SpeakerTranscript?
-            if capture.meeting {
-                processing = String(localized: "Labelling the speakers…")
-                do {
-                    try await app.waitForSpeechModel()
-                    labelled = try await speakerLabeler.transcribe(capture.samples, with: app.speech, speakers: capture.speakers)
-                } catch {
-                    Log.dictation.error("Speaker labels failed: \(error.localizedDescription, privacy: .public)")
-                }
-                await speakerLabeler.unload()
-            }
-            let label = SpeakerTranscript.label
-            let transcript = labelled?.text(label: label) ?? capture.transcript
-            let result = await app.processLongForm(transcript: transcript, style: capture.style, language: capture.language, speakerLabel: labelled == nil ? nil : label, said: capture.recorded) { [weak self] status in
+            let result = await app.processLongForm(transcript: capture.transcript, style: capture.style, language: capture.language, speakerLabel: nil, said: capture.recorded) { [weak self] status in
                 self?.processing = status
             }
             // Suggested tags are used as they are; new ones join the vault's tag list.
@@ -111,15 +96,12 @@ final class NoteMaker {
                 status: .needsReview,
                 recorded: capture.recorded,
                 duration: capture.duration,
-                mode: labelled == nil ? .longForm : .meeting,
+                mode: .longForm,
                 tags: result.knownTags + added,
                 folder: folder(for: capture.style),
                 language: capture.language.code,
-                // A meeting note that wasn't written up (raw, or no writing model) is the labelled transcript;
-                // written ones keep it below.
-                body: labelled.map { result.body == transcript ? $0.markdown(label: label) : result.body } ?? result.body,
-                transcript: labelled.map { result.body == transcript ? nil : $0.markdown(label: label) } ?? (keepsTranscript(capture.style) ? capture.transcript : nil),
-                speakers: labelled?.speakerCount
+                body: result.body,
+                transcript: keepsTranscript(capture.style) ? capture.transcript : nil
             )
             processing = String(localized: "Filing the note…")
             if let path = await upload(note, audio: savedAudio ? audioURL : nil, styleName: capture.style.displayName) {

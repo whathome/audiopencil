@@ -7,7 +7,7 @@ import Testing
 nonisolated struct HotkeyMonitorTests {
     private func capturingProcessor() -> HotkeyEventProcessor {
         var processor = HotkeyEventProcessor()
-        processor.policy = .init(swallowEscape: true, swallowReturn: true, swallowDigits: true, swallowShortcut: true)
+        processor.policy = .init(swallowEscape: true, swallowReturn: true, swallowDigits: true, swallowTab: true, swallowShortcut: true)
         return processor
     }
 
@@ -23,7 +23,7 @@ nonisolated struct HotkeyMonitorTests {
 
     @Test func recordingControlsAndTheirMatchingReleasesAreSwallowed() {
         let controls: [(Int64, HotkeyEventProcessor.KeyEvent)] = [
-            (53, .escape), (36, .returnKey), (76, .returnKey), (18, .digit(1)), (82, .digit(0)),
+            (53, .escape), (36, .returnKey), (76, .returnKey), (18, .digit(1)), (82, .digit(0)), (48, .tab(backward: false)),
         ]
         for (keyCode, expected) in controls {
             var processor = capturingProcessor()
@@ -41,7 +41,7 @@ nonisolated struct HotkeyMonitorTests {
 
     @Test func idleControlsAndModifiedTypingPassThrough() {
         var processor = HotkeyEventProcessor()
-        for keyCode in [Int64(53), 36, 76, 18, 82] {
+        for keyCode in [Int64(53), 36, 76, 18, 82, 48] {
             let decision = processor.process(type: .keyDown, keyCode: keyCode, at: 1)
             #expect(!decision.swallow)
             #expect(decision.event == nil)
@@ -49,6 +49,14 @@ nonisolated struct HotkeyMonitorTests {
         processor = capturingProcessor()
         #expect(!processor.process(type: .keyDown, keyCode: 36, flags: .maskCommand, at: 2).swallow)
         #expect(!processor.process(type: .keyDown, keyCode: 18, flags: .maskControl, at: 2).swallow)
+        #expect(!processor.process(type: .keyDown, keyCode: 48, flags: .maskCommand, at: 2).swallow) // app switcher
+    }
+
+    @Test func shiftTabMovesDeliveryBack() {
+        var processor = capturingProcessor()
+        let down = processor.process(type: .keyDown, keyCode: 48, flags: .maskShift, at: 1)
+        #expect(down.event == .tab(backward: true))
+        #expect(down.swallow)
     }
 
     @Test func fallbackShortcutOnlyCapturesTheConfiguredModifiers() {
@@ -106,7 +114,7 @@ nonisolated struct HotkeyMonitorTests {
         #expect(processor.process(type: .tapDisabledByTimeout, keyCode: 0, at: 2).tapTimedOut)
         #expect(processor.hasTimedOut)
         #expect(!processor.process(type: .tapDisabledByTimeout, keyCode: 0, at: 3).tapTimedOut)
-        processor.policy = .init(swallowEscape: true, swallowReturn: true, swallowDigits: true, swallowShortcut: true)
+        processor.policy = .init(swallowEscape: true, swallowReturn: true, swallowDigits: true, swallowTab: true, swallowShortcut: true)
         processor.isPaused = false
         processor.gestureKey = .rightOption
         for type in [CGEventType.keyDown, .keyUp, .flagsChanged, .tapDisabledByUserInput] {

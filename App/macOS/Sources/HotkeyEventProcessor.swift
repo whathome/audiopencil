@@ -7,6 +7,8 @@ nonisolated struct HotkeyEventProcessor {
     enum KeyEvent: Equatable, Sendable {
         case fnDown, fnUp, escape, returnKey, fallbackShortcut
         case digit(Int)
+        /// Tab while recording: the next delivery (Shift-Tab: the previous one).
+        case tab(backward: Bool)
         case other
     }
 
@@ -15,6 +17,7 @@ nonisolated struct HotkeyEventProcessor {
         var swallowEscape = false
         var swallowReturn = false
         var swallowDigits = false
+        var swallowTab = false
         var swallowShortcut = false
     }
 
@@ -96,6 +99,9 @@ nonisolated struct HotkeyEventProcessor {
         } else if let digit = Self.digits[keyCode], flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
             event = .digit(digit)
             swallow = policy.swallowDigits
+        } else if keyCode == 48, flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
+            event = .tab(backward: flags.contains(.maskShift))
+            swallow = policy.swallowTab
         } else {
             return otherInput(at: time, diagnostic: "Key down near Fn (key code \(keyCode)) spoils the tap")
         }

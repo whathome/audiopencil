@@ -387,7 +387,7 @@ final class AppModel: WritingHost {
                 case "vault:sync": sync.syncSoon(after: .zero)
                 case "setup": showSetup(hidingMainWindow: false)
                 case "setup:close": setupWindow?.close()
-                case "delivery:toggle": dictation.toggleDelivery()
+                case "delivery:toggle": dictation.cycleDelivery()
                 case "push:cycle": dictation.cyclePushDestination()
                 case "daily:toggle": dictation.toggleDailyNote()
                 case let command where command.hasPrefix("paste:"):
@@ -592,7 +592,7 @@ final class AppModel: WritingHost {
         // The style menu is open: Return, Esc and number keys belong to it.
         if indicator.isMenuOpen {
             switch event {
-            case .escape, .returnKey, .digit: return false
+            case .escape, .returnKey, .digit, .tab: return false
             default: break
             }
         }
@@ -650,6 +650,10 @@ final class AppModel: WritingHost {
                 dictation.select(style)
             }
             return true // swallow digits while recording so they don't type into the field
+        case .tab(let backward):
+            guard dictation.phase == .recording || dictation.phase == .starting else { return false }
+            dictation.cycleDelivery(backward: backward)
+            return true
         case .fallbackShortcut:
             guard settings.fallbackShortcutEnabled else { return false }
             switch dictation.phase {
@@ -721,6 +725,7 @@ final class AppModel: WritingHost {
             swallowEscape: !menuOpen && dictation.isActive,
             swallowReturn: !menuOpen && (dictation.isPicking || (dictation.phase == .recording && settings.returnStops)),
             swallowDigits: !menuOpen && (dictation.isPicking || dictation.phase == .recording || dictation.phase == .starting),
+            swallowTab: !menuOpen && (dictation.phase == .recording || dictation.phase == .starting),
             swallowShortcut: settings.fallbackShortcutEnabled
         )
         if blocked {

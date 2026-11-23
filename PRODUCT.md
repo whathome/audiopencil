@@ -27,7 +27,7 @@ Everything runs on the device: Whisper for transcription and a small local LLM f
 
 ## Operating Context
 
-- Mac quick dictation: double-tap Fn starts, tap Fn or Return stops, Esc cancels. A floating pill sits at the bottom of the screen; tricorder-style beeps confirm start and stop. Number keys switch style while recording, and the pill's Paste / Note / Meeting toggle decides what stopping does for this recording.
+- Mac quick dictation: double-tap Fn starts, tap Fn or Return stops, Esc cancels. A floating pill sits at the bottom of the screen; tricorder-style beeps confirm start and stop. Number keys (or the style row that rises when the pointer rests on the pill) switch style while recording, and the pill's Paste / Note switch (or Tab) decides what stopping does for this recording.
 - Push-to-talk (hold Fn) pastes the raw text; while holding, its pill badge can also add the line to the Obsidian daily note or a chosen file.
 - Recordings longer than the long-form threshold (default 5 min) become notes, filed straight away as needs-review with suggested title and tags; review happens on the Obsidian board, not in the app. Notes can be linked in the day's daily note.
 - iPhone: a walk-and-talk recorder that keeps going with the phone locked in a pocket (Live Activity, Control Centre, Action Button, Siri). Transcription keeps up in the background, but the writing model needs the app on screen, so notes queue and are written while it's open. A recording can also be copied instead of filed and filed later.
