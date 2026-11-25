@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Couldn't request meeting audio access: %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo solicitar acceso al audio de reuniones: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de demander l’accès à l’audio des réunions : %@"
+          }
+        }
+      }
+    },
+    "If Audio Pencil isn't listed, use + under Screen & System Audio Recording to add it. Then quit and reopen Audio Pencil.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si Audio Pencil no aparece, usa + en Grabación de pantalla y audio del sistema para añadirlo. Después, cierra y vuelve a abrir Audio Pencil."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si Audio Pencil n’apparaît pas, utilisez + sous Enregistrement de l’écran et de l’audio système pour l’ajouter. Quittez ensuite Audio Pencil et rouvrez l’app."
+          }
+        }
+      }
+    },
     "Allow call audio in Settings › Permissions before starting a video meeting.": {
       "localizations": {
         "es": {

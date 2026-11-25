@@ -1,7 +1,8 @@
 // Code signing.
 //
 // Default: ad-hoc ("Sign to Run Locally"). Builds anywhere, but macOS treats every
-// rebuild as a new app, so Accessibility must be re-granted after each build.
+// rebuild as a new app, so Accessibility and screen/audio capture permissions may
+// need to be granted again after each build.
 //
 // For stable permissions, sign with your free Personal Team: add your Apple ID in
 // Xcode > Settings > Accounts, then create Config/Signing.local.xcconfig (gitignored):

@@ -30,7 +30,7 @@ xcodebuild -project AudioPencil.xcodeproj -scheme AudioPencil -derivedDataPath b
 
 Quit the running development app before rebuilding into the same product path, then reopen the rebuilt app. Replacing a live app's signed executable can disrupt its existing keyboard event tap.
 
-Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new app: you'd have to grant Accessibility again after each build. To fix that for free:
+Without a team the app is ad-hoc signed, and macOS treats every rebuild as a new app: Accessibility and screen/audio capture permissions may need to be granted again after each build. To use a stable signing identity for free:
 
 1. Xcode › Settings › Accounts › add your Apple ID (a free Personal Team is fine). If no "(Personal Team)" appears, accept the agreement at developer.apple.com/account, then sign out and back in.
 2. Open the project and pick the team under the AudioPencil target › Signing & Capabilities. Note the `DEVELOPMENT_TEAM` value Xcode writes into the project.
@@ -75,6 +75,8 @@ On a Mac that has never run Audio Pencil, a setup window opens instead of the ma
 Settings › General › **Run Setup Again…** walks through it again without resetting anything. A Mac that already has Audio Pencil settings counts as set up. Models go to `~/Library/Application Support/AudioPencil/Models`, and Core ML prepares each one for this Mac once (about 1.5 min for Small, about 12 min for Large v3 Turbo on an M1).
 
 Settings › Permissions offers **Allow…** for Microphone, Accessibility and **Online meeting audio**. Online meeting audio opens macOS's Screen & System Audio Recording permission for capturing the call app; it is optional for ordinary dictation. The active hotkey event tap uses Accessibility, not Input Monitoring.
+
+Online meeting audio requests access through ScreenCaptureKit without starting a recording, then opens System Settings if access is still missing. If macOS does not list Audio Pencil, click **+** under **Screen & System Audio Recording** (not **System Audio Recording Only**) and add the app. **Show in Finder** in Audio Pencil's Permissions page reveals the exact app copy to add. Enable it, then quit and reopen Audio Pencil. Switching from an ad-hoc build to a development-signed build may require a fresh grant once; subsequent local builds keep the same certificate-based identity. Do not reset unrelated apps' privacy permissions.
 
 ## Using it
 

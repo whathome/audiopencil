@@ -35,12 +35,31 @@ struct SetupView: View {
                         action: ("Keyboard Settings…", { app.permissions.openKeyboardSettings() })
                     )
                 }
-                PermissionRow(
-                    title: "Online meeting audio",
-                    detail: "To record the call app's audio. Optional for dictation.",
-                    granted: app.permissions.onlineMeetingAudio,
-                    action: ("Allow…", { app.permissions.requestOnlineMeetingAudio() })
-                )
+                VStack(alignment: .leading, spacing: 8) {
+                    PermissionRow(
+                        title: "Online meeting audio",
+                        detail: "To record the call app's audio. Optional for dictation.",
+                        granted: app.permissions.onlineMeetingAudio,
+                        action: ("Allow…", { Task { await app.permissions.requestOnlineMeetingAudio() } }),
+                        requesting: app.permissions.requestingOnlineMeetingAudio
+                    )
+                    if !app.permissions.onlineMeetingAudio {
+                        Text("If Audio Pencil isn't listed, use + under Screen & System Audio Recording to add it. Then quit and reopen Audio Pencil.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("Show in Finder") {
+                            NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+                        }
+                    }
+                    if let error = app.permissions.onlineMeetingAudioRequestError {
+                        Text(error)
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    }
+                }
             } header: {
                 VStack(alignment: .leading, spacing: 18) {
                     if settingsHeader {
@@ -137,6 +156,7 @@ struct PermissionRow: View {
     let detail: LocalizedStringResource
     let granted: Bool
     let action: (LocalizedStringResource, () -> Void)
+    var requesting = false
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -148,7 +168,9 @@ struct PermissionRow: View {
             }
             Spacer()
             if !granted {
+                if requesting { ProgressView().controlSize(.small) }
                 Button(action: action.1) { Text(action.0) }
+                    .disabled(requesting)
             }
         }
     }

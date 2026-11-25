@@ -1,7 +1,9 @@
+import APCore
 import AppKit
 import ApplicationServices
 import AVFoundation
 import CoreGraphics
+import ScreenCaptureKit
 
 @Observable
 final class Permissions {
@@ -13,9 +15,29 @@ final class Permissions {
     private(set) var accessibility = false
     /// Optional for dictation; ScreenCaptureKit needs this to capture the call app's audio.
     private(set) var onlineMeetingAudio = false
+    private(set) var requestingOnlineMeetingAudio = false
+    private(set) var onlineMeetingAudioRequestError: String?
     /// System Settings › Keyboard › "Press 🌐 key to": 0 Do Nothing, 1 Change Input Source,
     /// 2 Show Emoji & Symbols, 3 Start Dictation.
     private(set) var fnKeyAction: Int?
+
+    @ObservationIgnored private let screenCaptureAccess: () -> Bool
+    @ObservationIgnored private let requestScreenCaptureAccess: () async throws -> Void
+    @ObservationIgnored private let openScreenCaptureSettings: () -> Void
+
+    init(
+        screenCaptureAccess: @escaping () -> Bool = { CGPreflightScreenCaptureAccess() },
+        requestScreenCaptureAccess: @escaping () async throws -> Void = {
+            _ = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        },
+        openScreenCaptureSettings: @escaping () -> Void = {
+            Permissions.openSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+        }
+    ) {
+        self.screenCaptureAccess = screenCaptureAccess
+        self.requestScreenCaptureAccess = requestScreenCaptureAccess
+        self.openScreenCaptureSettings = openScreenCaptureSettings
+    }
 
     var allRequiredGranted: Bool { microphone == .granted && accessibility }
     var fnKeyIsFree: Bool { (fnKeyAction ?? 0) == 0 }
@@ -37,7 +59,8 @@ final class Permissions {
         default: microphone = .denied
         }
         accessibility = AXIsProcessTrusted()
-        onlineMeetingAudio = CGPreflightScreenCaptureAccess()
+        onlineMeetingAudio = screenCaptureAccess()
+        if onlineMeetingAudio { onlineMeetingAudioRequestError = nil }
         fnKeyAction = CFPreferencesCopyAppValue("AppleFnUsageType" as CFString, "com.apple.HIToolbox" as CFString) as? Int
     }
 
@@ -59,11 +82,28 @@ final class Permissions {
         refresh()
     }
 
-    func requestOnlineMeetingAudio() {
-        if !CGRequestScreenCaptureAccess() {
-            Self.openSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+    func requestOnlineMeetingAudio() async {
+        guard !requestingOnlineMeetingAudio else { return }
+        requestingOnlineMeetingAudio = true
+        onlineMeetingAudioRequestError = nil
+        defer {
+            refresh()
+            requestingOnlineMeetingAudio = false
         }
-        refresh()
+        guard !screenCaptureAccess() else { return }
+        do {
+            // Use the same authorization path as call-app discovery, without starting a recording.
+            try await requestScreenCaptureAccess()
+        } catch {
+            let failure = error as NSError
+            if failure.domain == SCStreamErrorDomain, failure.code == SCStreamError.Code.userDeclined.rawValue {
+                Log.audio.notice("ScreenCaptureKit permission was not granted; opening System Settings")
+            } else {
+                onlineMeetingAudioRequestError = String(localized: "Couldn't request meeting audio access: \(error.localizedDescription)")
+                Log.audio.error("ScreenCaptureKit permission request failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        if !screenCaptureAccess() { openScreenCaptureSettings() }
     }
 
     func openKeyboardSettings() {
