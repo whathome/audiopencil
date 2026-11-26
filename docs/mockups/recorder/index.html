@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Audio Pencil — Recorder concept</title>
+  <link rel="stylesheet" href="recorder.css">
+  <script src="recorder.js" defer></script>
+</head>
+<body>
+  <svg class="symbol-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="m5 16-1 4 4-1L20 7l-3-3Z M14 7l3 3"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 10v4m4-8v12m5-16v20m5-16v12m4-8v4"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2m-7 9v3m-4 0h8"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m1-17a3 3 0 0 1 0 6m2 5a5 5 0 0 1 3 5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 3h15v18H5a2 2 0 0 1 0-4h15M3 19V5a2 2 0 0 1 2-2m3 0v14"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="m9 3 1-2h4l1 2 2 1 3-.1 2 3-1 2v3l1 2-2 4-3-.1-2 1-1 3h-4l-1-3-2-1H4l-2-4 1-2V9L2 7l2-3 3 .1Z"/><circle cx="12" cy="11" r="3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8L8 20Z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14m8-14v14"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6Z m-5 9 3 3 6-7"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="m12 3 10 18H2Z M12 9v5m0 3v.1"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H5v20h14V7Zm0 0v6h5M8 12h8m-8 4h6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="14" rx="2"/><path d="M16 8V2H2v14h6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol>
+  </svg>
+
+  <div class="prototype-bar">
+    <span><strong>Interactive concept</strong><span class="prototype-detail"> · Sample content. Recording &amp; transcription are simulated.</span></span>
+    <div class="prototype-controls">
+      <label for="scenario">Preview</label>
+      <select id="scenario">
+        <option value="ready">Ready to record</option>
+        <option value="recording">Recording</option>
+        <option value="recovery">After a crash</option>
+        <option value="disk">Disk write failed</option>
+        <option value="permission">Microphone unavailable</option>
+        <option value="ptt">Push to talk</option>
+      </select>
+      <button id="theme" class="quiet">Light</button>
+      <button id="reset" class="quiet">Reset</button>
+    </div>
+  </div>
+
+  <div class="app-window">
+    <aside class="sidebar">
+      <div class="traffic" aria-hidden="true"><i></i><i></i><i></i><span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14"/></svg></span></div>
+      <div class="wordmark"><span class="app-icon"><svg><use href="#i-pencil"/></svg></span><span>Audio Pencil</span></div>
+      <nav aria-label="App navigation">
+        <button class="nav-item selected" data-page="Dictation" aria-current="page"><svg><use href="#i-keyboard"/></svg><span>Dictation</span><span id="nav-recording" class="nav-recording" hidden>REC</span></button>
+        <button class="nav-item" data-page="Meetings"><svg><use href="#i-people"/></svg><span>Meetings</span></button>
+        <button class="nav-item" data-page="Styles"><svg><use href="#i-pencil"/></svg><span>Styles</span></button>
+        <button class="nav-item" data-page="My writing"><svg><use href="#i-file"/></svg><span>My writing</span></button>
+        <button class="nav-item" data-page="Notes"><svg><use href="#i-book"/></svg><span>Notes</span></button>
+        <button class="nav-item settings-nav" data-page="Settings"><svg><use href="#i-gear"/></svg><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><svg><use href="#i-lock"/></svg><span>Private, on-device</span><small>Recorder concept</small></div>
+    </aside>
+
+    <main>
+      <div id="persistent-recording" class="persistent-recording" hidden>
+        <span class="record-dot"></span><strong id="persistent-label">Recording · 00:00</strong>
+        <span>MacBook Air Microphone</span><button id="back-to-recording" class="text-button">Show recording <svg><use href="#i-arrow"/></svg></button>
+      </div>
+      <div id="dictation-page" class="page">
+        <header class="page-header">
+          <div><h1>Dictation</h1><p>Capture a thought. Keep the audio. Make it your own.</p></div>
+          <button id="import-button"><svg><use href="#i-upload"/></svg>Import Audio…</button>
+          <input type="file" id="file-input" accept="audio/*,.m4a,.mp3,.wav,.aiff,.aif,.caf,.flac,.ogg,.opus" hidden>
+        </header>
+
+        <div id="notice" class="notice" role="status" hidden></div>
+        <section id="recovery-notice" class="recovery-notice" aria-label="Interrupted recording" hidden>
+          <svg><use href="#i-clock"/></svg>
+          <div><strong>A recording was interrupted.</strong><p><span id="recovery-length">00:19</span> of saved audio is ready to listen to or transcribe.</p></div>
+          <button id="review-recovery">Review Recording <svg><use href="#i-arrow"/></svg></button>
+        </section>
+
+        <section class="recorder-panel" aria-label="Voice recorder">
+          <div class="recorder-topline"><span id="capture-state" class="state-label"><span class="ready-dot"></span>Ready to record</span><span class="local-label"><svg><use href="#i-lock"/></svg>On this Mac</span></div>
+          <div class="recorder-focus">
+            <div class="clock-group"><div id="record-clock" class="record-clock" aria-label="Elapsed recording time">00:00<span>.0</span></div><p id="record-hint">A little space to think out loud.</p></div>
+            <div class="live-wave" id="live-wave" aria-hidden="true"></div>
+          </div>
+          <div class="input-line">
+            <label class="microphone-label"><svg><use href="#i-mic"/></svg><select id="microphone" aria-label="Microphone"><option>MacBook Air Microphone</option><option>Studio Display Microphone</option></select></label>
+            <div class="input-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <span id="input-state">Input ready</span>
+          </div>
+          <div class="recorder-bottom">
+            <div id="disk-status" class="disk-status"><svg><use href="#i-shield"/></svg><span>Audio saves to this Mac while you record.<small>Push-to-talk is temporary and isn’t saved.</small></span></div>
+            <div class="record-actions"><button id="pause-button" hidden><svg><use href="#i-pause"/></svg>Pause</button><button id="record-button" class="primary"><span class="button-record-dot"></span>Record</button></div>
+          </div>
+        </section>
+        <p class="recording-footnote" id="recording-footnote">Stop to keep the recording. Listen and transcribe whenever you’re ready.</p>
+
+        <section class="recordings-section" aria-labelledby="recordings-heading">
+          <div class="section-heading"><h2 id="recordings-heading">Recent recordings</h2><span class="muted">Audio stays on this Mac until you file a note.</span></div>
+          <div id="recording-list" class="recording-list"></div>
+          <div id="empty-list" class="empty-list" hidden><svg><use href="#i-wave"/></svg><h3>Your next thought starts here.</h3><p>Record above or import an audio file. You can listen before making a transcript.</p><button id="empty-import">Import Audio…</button></div>
+          <div id="recording-detail" class="recording-detail" hidden></div>
+        </section>
+
+        <section class="hotkey-strip" aria-label="Dictate anywhere">
+          <svg><use href="#i-keyboard"/></svg><div><strong>Still at home in any app.</strong><p>Double-tap <kbd>fn</kbd> to dictate where you’re typing. Hold <kbd>fn</kbd> for temporary push-to-talk.</p></div>
+        </section>
+        <footer class="page-footer"><svg><use href="#i-shield"/></svg><span>Recording, playback and transcription stay on-device. Imported audio is never uploaded.</span></footer>
+      </div>
+      <div id="other-page" class="page other-page" hidden><h1 id="other-page-title"></h1><p>This page is unchanged by the recorder concept.</p><button id="return-dictation"><svg><use href="#i-back"/></svg>Back to Dictation</button></div>
+    </main>
+  </div>
+
+  <dialog id="delete-dialog">
+    <form method="dialog"><h2>Delete this recording?</h2><p id="delete-description"></p><p>This removes the audio and transcript from this mockup’s session.</p><div class="dialog-actions"><button value="cancel">Cancel</button><button value="delete" class="destructive">Delete Recording</button></div></form>
+  </dialog>
+  <dialog id="filing-dialog">
+    <form method="dialog"><h2>Note ready to file</h2><p>This would use your existing note-filing workflow, with the original audio and selected style.</p><p class="muted">This is a mockup. No note or recording has been saved to your vault.</p><div class="dialog-actions"><button value="close" class="primary">Done</button></div></form>
+  </dialog>
+  <audio id="player" preload="metadata"></audio>
+</body>
+</html>

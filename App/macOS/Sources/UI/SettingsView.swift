@@ -47,6 +47,10 @@ struct SettingsView: View {
             content(app.settingsTab)
         } else {
             VStack(spacing: 0) {
+                if app.dictation.isActive || app.recordings.isProcessing {
+                    RecorderActivityStatus(app: app).padding(16)
+                    Divider()
+                }
                 if app.meetings.isProcessing {
                     MeetingProcessingStatus(app: app)
                         .padding(16)
@@ -230,7 +234,7 @@ private struct GeneralSettings: View {
                 }
                 LabeledContent {
                     Button("Run Setup Again…") { app.showSetup(hidingMainWindow: false) }
-                        .disabled(app.meetings.isProcessing)
+                        .disabled(app.isProcessingAudio)
                 } label: {
                     Text("Setup")
                     Text("Walks through the dictation key, permissions, languages, storage and models. Nothing is reset.")
@@ -465,7 +469,7 @@ private struct DictationLanguagesSection: View {
                 Text("Start new apps in")
                 Text("Each app starts in the language you last spoke there.")
             }
-            .disabled(app.meetings.isProcessing)
+            .disabled(app.isProcessingAudio)
             ForEach(app.offeredLanguages) { language in
                 HStack {
                     Text(language.name())
@@ -482,7 +486,7 @@ private struct DictationLanguagesSection: View {
                         Image(systemName: "minus.circle")
                     }
                     .buttonStyle(.borderless)
-                    .disabled(app.offeredLanguages.count == 1 || app.meetings.isProcessing)
+                    .disabled(app.offeredLanguages.count == 1 || app.isProcessingAudio)
                     .accessibilityLabel("Remove \(language.name())")
                 }
             }
@@ -497,7 +501,7 @@ private struct DictationLanguagesSection: View {
                 Text("Choose…").tag("")
                 ForEach(SpokenLanguage.all().filter { !app.offeredLanguages.contains($0) }) { Text($0.name()).tag($0.code) }
             }
-            .disabled(app.meetings.isProcessing)
+            .disabled(app.isProcessingAudio)
         } header: {
             Text("Dictation languages")
         } footer: {
@@ -608,7 +612,7 @@ private struct VocabularySection: View {
                 .font(.body)
                 .frame(minHeight: 70)
                 .onChange(of: text) { _, text in save(text) }
-                .disabled(app.meetings.isProcessing)
+                .disabled(app.isProcessingAudio)
         } header: {
             Text("Custom vocabulary")
         } footer: {
@@ -649,7 +653,7 @@ private struct ModelSettings: View {
                         Text("\(app.settings.writingModel.replacingOccurrences(of: "mlx-community/", with: "")) – from discovery").tag(app.settings.writingModel)
                     }
                 }
-                .disabled(app.dictation.isActive || app.meetings.isProcessing)
+                .disabled(app.dictation.isActive || app.isProcessingAudio)
                 LabeledContent("Status") {
                     switch app.writingModelState {
                     case .downloading(let fraction): ProgressView(value: fraction).frame(width: 160)
@@ -677,7 +681,7 @@ private struct ModelSettings: View {
                         Text("\(app.settings.transcriptionModel) – from discovery").tag(app.settings.transcriptionModel)
                     }
                 }
-                .disabled(app.dictation.isActive || app.meetings.isProcessing || app.usesPhonon)
+                .disabled(app.dictation.isActive || app.isProcessingAudio || app.usesPhonon)
                 Toggle(isOn: $app.phononTrial) {
                     Text("Try Phonon-2 for English")
                     if app.phononTrial, !app.usesPhonon {
@@ -686,7 +690,7 @@ private struct ModelSettings: View {
                         Text("Fewer mistakes and faster than Whisper Small in tests. English only. A 370 MB download, then about 5 minutes preparing for this Mac the first time.")
                     }
                 }
-                .disabled(app.dictation.isActive || app.meetings.isProcessing)
+                .disabled(app.dictation.isActive || app.isProcessingAudio)
                 Picker("Other languages", selection: $app.settings.multilingualTranscriptionModel) {
                     ForEach(TranscriptionModelOption.multilingualCatalogue) { option in
                         Text("\(option.name) – \(option.note)").tag(option.id)
@@ -695,10 +699,10 @@ private struct ModelSettings: View {
                         Text("\(app.settings.multilingualTranscriptionModel) – from discovery").tag(app.settings.multilingualTranscriptionModel)
                     }
                 }
-                .disabled(app.dictation.isActive || app.meetings.isProcessing)
+                .disabled(app.dictation.isActive || app.isProcessingAudio)
             }
 
-            ModelSuggestionsSection(advisor: app.advisor, modelChangesDisabled: app.dictation.isActive || app.meetings.isProcessing)
+            ModelSuggestionsSection(advisor: app.advisor, modelChangesDisabled: app.dictation.isActive || app.isProcessingAudio)
         }
         .formStyle(.grouped)
         .pageAligned(embedded)

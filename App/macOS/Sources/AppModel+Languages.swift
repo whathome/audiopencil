@@ -174,7 +174,9 @@ extension AppModel {
     /// After a better model becomes ready, move to it between recordings, never during one.
     func switchToBestModelWhenIdle() {
         Task {
-            while dictation.phase != .idle { try? await Task.sleep(for: .seconds(1)) }
+            while dictation.phase != .idle || isProcessingAudio || meetings.ownsCapture {
+                try? await Task.sleep(for: .seconds(1))
+            }
             let best = transcriptionVariant(for: activeLanguage)
             if speech.variant != best {
                 Log.models.notice("Switching to \(best, privacy: .public): ready for this Mac")

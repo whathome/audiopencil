@@ -184,6 +184,7 @@ targets:
       - App/macOS/Sources/SidebarWindowLayout.swift
       - App/macOS/Sources/CallApplication.swift
       - App/macOS/Sources/UI/CallApplicationPicker.swift
+      - App/Shared/Sources/NoteFiling.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.weshopkins.audiopencil.desktoptests
@@ -192,6 +193,10 @@ targets:
     dependencies:
       - package: AudioPencilKit
         product: APCore
+      - package: AudioPencilKit
+        product: APStorage
+      - package: AudioPencilKit
+        product: APSync
 
   AudioPencilMobileUITests:
     type: bundle.ui-testing

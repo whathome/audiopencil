@@ -159,6 +159,13 @@ extension AppModel {
     }
 
     func switchWritingModel(to id: String) {
+        if isProcessingAudio {
+            Task {
+                while isProcessingAudio { try? await Task.sleep(for: .seconds(1)) }
+                if settings.writingModel == id { switchWritingModel(to: id) }
+            }
+            return
+        }
         let old = writing
         writing = SummaryEngine(modelID: id)
         writingModelState = .idle

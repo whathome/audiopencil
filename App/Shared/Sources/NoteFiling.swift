@@ -40,7 +40,8 @@ enum NoteFiling {
     static func queue(_ note: Note, audio: URL?, outbox: Outbox, layout: NoteLayout) async throws -> (note: Note, path: String) {
         var note = note
         let base = NoteRenderer.baseName(for: note)
-        if let audio, let data = try? Data(contentsOf: audio) {
+        if let audio {
+            let data = try Data(contentsOf: audio)
             let path = StoragePath.join(recordingsFolder, base + ".m4a")
             note.audioPath = path
             try await outbox.enqueue(path: path, data: data)

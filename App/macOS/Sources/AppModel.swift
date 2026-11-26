@@ -19,6 +19,7 @@ final class AppModel: WritingHost {
     /// Page shown in the main window.
     var page: Page = .dictation
     var settingsTab: SettingsTab = .general
+    var isProcessingAudio: Bool { meetings?.isProcessing == true || recordings?.isProcessing == true }
 
     /// Settings › Permissions (what used to be the Setup page).
     func openPermissions() {
@@ -45,6 +46,7 @@ final class AppModel: WritingHost {
     let vault = VaultController()
     @ObservationIgnored private(set) var sync: SyncController!
     @ObservationIgnored private(set) var notes: NoteMaker!
+    @ObservationIgnored private(set) var recordings: RecorderController!
     @ObservationIgnored private(set) var meetings: MeetingController!
     @ObservationIgnored private(set) var advisor: ModelAdvisor!
     /// The user's writing for "Like me". Shared through the vault settings file.
@@ -196,6 +198,13 @@ final class AppModel: WritingHost {
         vault.onLayoutChanged = { [unowned self] in sync.layoutChanged() }
         notes = NoteMaker(app: self)
         meetings = MeetingController(app: self)
+        recordings = RecorderController(app: self)
+        dictation.recordings = recordings
+        indicator.onOpenRecorder = { [weak self] in
+            self?.page = .dictation
+            NSApp.activate()
+            NSApp.windows.first { $0.identifier?.rawValue == "main" }?.makeKeyAndOrderFront(nil)
+        }
         indicator.onOpenMeeting = { [weak self] in self?.openMeetings() }
         indicator.onPauseMeeting = { [weak self] in Task { await self?.meetings.togglePause() } }
         indicator.onStopMeeting = { [weak self] in Task { await self?.meetings.stop() } }
@@ -251,6 +260,13 @@ final class AppModel: WritingHost {
             Task { @MainActor [weak self] in self?.microphones = microphones }
         }
         applyAppPresence()
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["AUDIOPENCIL_TEST_ROOT"] != nil {
+            permissions.refresh()
+            listenForDebugCommands()
+            return
+        }
+        #endif
         prepareInBackground()
         sync.isHeld = isFirstLaunch
         sync.start()
@@ -277,7 +293,7 @@ final class AppModel: WritingHost {
     /// Debug builds only; dictations started this way never paste.
     private func listenForDebugCommands() {
         debugObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("com.weshopkins.audiopencil.debug"), object: nil, queue: .main
+            forName: Notification.Name(ProcessInfo.processInfo.environment["AUDIOPENCIL_DEBUG_NOTIFICATION"] ?? "com.weshopkins.audiopencil.debug"), object: nil, queue: .main
         ) { [unowned self] note in
             let command = note.object as? String ?? ""
             MainActor.assumeIsolated {
@@ -301,6 +317,51 @@ final class AppModel: WritingHost {
                     Self.debugPhononIgnoresVocabulary = command == "phonon:force"
                     phononTrial = command != "phonon:off"
                 case "snapshot": snapshotMainWindow()
+                case "recorder:show":
+                    page = .dictation
+                    NSApp.activate()
+                case let command where command.hasPrefix("recorder:import:"):
+                    page = .dictation
+                    recordings.importAudio(URL(filePath: String(command.dropFirst("recorder:import:".count))))
+                case "recorder:review":
+                    recordings.selectedID = recordings.recordings.first?.id
+                case let command where command.hasPrefix("recorder:select:"):
+                    recordings.selectedID = UUID(uuidString: String(command.dropFirst("recorder:select:".count)))
+                case "recorder:play":
+                    if let id = recordings.selectedID { recordings.play(id) }
+                case "recorder:stop-playback": recordings.stopPlayback()
+                case "recorder:pause": dictation.togglePause()
+                case "recorder:start-fixture", "recorder:ptt-fixture", "recorder:dictation-fixture":
+                    guard ProcessInfo.processInfo.environment["AUDIOPENCIL_TEST_ROOT"] != nil,
+                          ProcessInfo.processInfo.environment["AUDIOPENCIL_TEST_AUDIO"] != nil else { return }
+                    page = .dictation
+                    dictation.dryRun = true
+                    dictation.setSounds(theme: .tricorder, volume: 0)
+                    recordings.stopPlayback()
+                    dictation.start(microphoneGranted: true, deviceID: nil, style: .raw, targetApp: nil,
+                                    remembersStyle: command != "recorder:ptt-fixture",
+                                    recorderOnly: command == "recorder:start-fixture")
+                case "recorder:transcribe":
+                    if let id = recordings.selectedID { recordings.transcribe(id, style: .raw, language: .english) }
+                case "recorder:file":
+                    if let id = recordings.selectedID { recordings.fileNote(id) }
+                case "recorder:cancel": recordings.cancelProcessing()
+                case "recorder:report":
+                    do {
+                        let folder = ModelLocations.root.deletingLastPathComponent().appending(path: "Debug")
+                        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                        let state: [String: Any] = [
+                            "recordings": try JSONSerialization.jsonObject(with: JSONEncoder().encode(recordings.recordings)),
+                            "working": recordings.isWorking,
+                            "progress": recordings.progress ?? "",
+                            "error": recordings.error ?? "",
+                            "playing": recordings.player?.isPlaying == true,
+                            "phase": String(describing: dictation.phase),
+                            "paused": dictation.isPaused,
+                            "writtenSeconds": dictation.recordedSeconds
+                        ]
+                        try JSONSerialization.data(withJSONObject: state, options: .prettyPrinted).write(to: folder.appending(path: "recorder-state.json"), options: .atomic)
+                    } catch { recordings.report(error.localizedDescription) }
                 case let command where command.hasPrefix("settings:"):
                     if let tab = SettingsTab(rawValue: String(command.dropFirst("settings:".count))) {
                         settingsTab = tab
@@ -532,7 +593,7 @@ final class AppModel: WritingHost {
     /// Loads the current speech model; `old` (a model being switched away from) is unloaded first.
     /// `modelTask` is replaced right away, so anything waiting for a model waits for this one.
     func prepareModel(unloading old: (any DictationEngine)? = nil) {
-        guard meetings?.isProcessing != true else { return }
+        guard meetings?.isProcessing != true, recordings?.isProcessing != true else { return }
         let engine = speech
         let vocabulary = settings.vocabulary(for: activeLanguage)
         let language = activeLanguage
@@ -573,6 +634,13 @@ final class AppModel: WritingHost {
     }
 
     func switchModel(to variant: String) {
+        if isProcessingAudio {
+            Task {
+                while isProcessingAudio { try? await Task.sleep(for: .seconds(1)) }
+                switchToBestModelWhenIdle()
+            }
+            return
+        }
         let old = speech
         speech = Self.engine(for: variant)
         modelState = .idle
@@ -583,7 +651,7 @@ final class AppModel: WritingHost {
 
     /// Returns true to swallow the key event.
     private func handle(_ event: HotkeyMonitor.KeyEvent, at time: TimeInterval) -> Bool {
-        if meetings.ownsCapture || meetings.isProcessing {
+        if meetings.ownsCapture || meetings.isProcessing || recordings.isProcessing {
             holdTask?.cancel()
             holdRecording = false
             detector.reset()
@@ -718,7 +786,7 @@ final class AppModel: WritingHost {
     }
 
     private func updateHotkeyPolicy() {
-        let blocked = meetings.ownsCapture || meetings.isProcessing
+        let blocked = meetings.ownsCapture || meetings.isProcessing || recordings.isProcessing
         let menuOpen = indicator.isMenuOpen
         hotkeys.policy = HotkeyMonitor.Policy(
             isEnabled: !blocked,
@@ -792,9 +860,14 @@ final class AppModel: WritingHost {
     }
 
     /// `raw`: push-to-talk. Otherwise the style remembered for the frontmost app.
-    private func startDictation(dryRun: Bool = false, raw: Bool = false) {
-        guard dictation.phase == .idle, !meetings.ownsCapture, !meetings.isProcessing else { return }
+    func startRecording() {
+        startDictation(recorderOnly: true)
+    }
+
+    private func startDictation(dryRun: Bool = false, raw: Bool = false, recorderOnly: Bool = false) {
+        guard dictation.phase == .idle, !meetings.ownsCapture, !meetings.isProcessing, !recordings.isProcessing else { return }
         meetings.endPreview()
+        recordings.stopPlayback()
         #if DEBUG
         dictation.dryRun = dryRun || Date() < debugDryRunUntil
         #else
@@ -804,7 +877,7 @@ final class AppModel: WritingHost {
         let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         let style = raw ? Style.raw : styleMemory.defaultStyle(forApp: app, among: styles)
         let language = languageMemory.language(forApp: app)
-        if language != activeLanguage || speech.variant != transcriptionVariant(for: language) {
+        if !recorderOnly && (language != activeLanguage || speech.variant != transcriptionVariant(for: language)) {
             useLanguage(language) // the mic starts meanwhile; transcription catches up once the model is in
         }
         indicator.languageChoices = offeredLanguages
@@ -826,7 +899,8 @@ final class AppModel: WritingHost {
             style: style,
             language: language,
             targetApp: app,
-            remembersStyle: !raw
+            remembersStyle: !raw,
+            recorderOnly: recorderOnly
         )
     }
 

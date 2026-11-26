@@ -114,6 +114,23 @@ final class NoteMaker {
 
     // MARK: Upload
 
+    func fileRecording(_ recording: SavedRecording, audio: URL) async throws -> String {
+        guard let body = recording.body else { throw CocoaError(.fileReadCorruptFile) }
+        let style = app.styles.first { $0.id == recording.styleID } ?? .raw
+        let tags = recording.tags ?? []
+        let added = tags.filter { !app.tags.contains($0) }
+        if !added.isEmpty { app.tags += added }
+        let note = Note(id: recording.id, title: recording.title, styleID: recording.styleID,
+                        status: .needsReview, recorded: recording.recorded, duration: recording.duration,
+                        mode: .longForm, tags: tags, folder: folder(for: style), language: recording.language,
+                        body: body, transcript: body != recording.transcript ? recording.transcript : nil)
+        guard let path = await upload(note, audio: audio, styleName: style.displayName) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        notifyFiled(note, path: path)
+        return path
+    }
+
     @discardableResult
     private func upload(_ note: Note, audio: URL?, styleName: String) async -> String? {
         do {

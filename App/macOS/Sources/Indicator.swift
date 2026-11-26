@@ -48,6 +48,10 @@ final class IndicatorModel {
     private(set) var levels = [Float](repeating: 0, count: barCount)
     private(set) var noAudio = false
     var liveText = ""
+    var recorderOnly = false
+    var recorderPaused = false
+    var recorderElapsed: Double = 0
+    @ObservationIgnored var onOpenRecorder: (() -> Void)?
     var meetingStatus: String?
     var meetingPaused = false
     @ObservationIgnored var onOpenMeeting: (() -> Void)?
@@ -95,7 +99,7 @@ final class IndicatorModel {
     /// Opened by clicking the chip: stays until a style is chosen or the chip is clicked again.
     @ObservationIgnored var shelfPinned = false
     /// Styles to choose from, and somewhere to put them. Push-to-talk starts raw but can pick a style too.
-    var offersShelf: Bool { mode == .listening && meetingStatus == nil && styleChoices.count > 1 }
+    var offersShelf: Bool { mode == .listening && !recorderOnly && meetingStatus == nil && styleChoices.count > 1 }
     /// Push-to-talk pasting: the badge for also adding the text to the daily note or a file is on show.
     var offersPushDestination: Bool { isPushToTalk && !pushChoices.isEmpty && delivery() == .paste }
     /// A note from this recording is linked in that day's daily note: the setting, unless changed here.
@@ -210,7 +214,9 @@ private final class IndicatorHostingView: NSHostingView<IndicatorView> {
         guard let model else { return super.mouseDown(with: event) }
         let local = convert(event.locationInWindow, from: nil)
         let point = isFlipped ? local : CGPoint(x: local.x, y: bounds.height - local.y)
-        if model.meetingStatus != nil {
+        if model.recorderOnly {
+            model.onOpenRecorder?()
+        } else if model.meetingStatus != nil {
             model.showStyleMenu?()
         } else if case .error = model.mode {
             let action = model.errorAction
@@ -366,7 +372,7 @@ final class IndicatorPanelController: NSObject {
 
     /// What a click does something to in the current state (see IndicatorHostingView.mouseDown).
     private var clickableFrames: [CGRect] {
-        if model.meetingStatus != nil { return [model.pillFrame] }
+        if model.meetingStatus != nil || model.recorderOnly { return [model.pillFrame] }
         return switch model.mode {
         case .listening:
             // Frames linger after their control goes, so only the ones on show now.
@@ -607,7 +613,12 @@ struct IndicatorView: View {
             case .hidden:
                 EmptyView()
             case .listening:
-                if let started = model.recordingStartedAt {
+                if model.recorderOnly {
+                    Image(systemName: model.recorderPaused ? "pause.fill" : "record.circle")
+                    Text(model.recorderPaused ? "Paused" : "Recording")
+                    Text(Duration.seconds(model.recorderElapsed).formatted(.time(pattern: .minuteSecond)))
+                        .monospacedDigit()
+                } else if let started = model.recordingStartedAt {
                     TimelineView(.periodic(from: started, by: 1)) { context in
                         RecordingClock(elapsed: context.date.timeIntervalSince(started), threshold: model.longFormThreshold, override: model.deliveryOverride)
                     }
@@ -626,12 +637,12 @@ struct IndicatorView: View {
                         }
                     }
                 }
-                if model.showsLanguage, let language = model.currentLanguage {
+                if !model.recorderOnly, model.showsLanguage, let language = model.currentLanguage {
                     // Clicked via IndicatorHostingView (opens the menu at its Language section).
                     LanguageBadge(language: language)
                         .background(FrameReporter { model.languageFrame = $0 })
                 }
-                if let style = model.currentStyle {
+                if !model.recorderOnly, let style = model.currentStyle {
                     // Clicked via IndicatorHostingView (opens the style menu).
                     StyleChip(style: style)
                         .background(FrameReporter { model.chipFrame = $0 })

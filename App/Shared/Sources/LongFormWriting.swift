@@ -24,6 +24,7 @@ struct ProcessedLongForm {
     var knownTags: [String]
     /// Suggested tags that would be new (need approval in the review).
     var newTags: [String]
+    var warning: String?
 }
 
 /// Where a model is: shared by the speech and writing models on both platforms.
@@ -80,15 +81,20 @@ extension WritingHost {
         progress: @escaping @MainActor (Double) -> Void = { _ in },
         status: @escaping @MainActor (String) -> Void
     ) async -> ProcessedLongForm {
-        let fallback = ProcessedLongForm(body: transcript, title: nil, knownTags: [], newTags: [])
+        var fallback = ProcessedLongForm(body: transcript, title: nil, knownTags: [], newTags: [])
         let engine = writing
         guard engine.isDownloaded else {
             Log.dictation.notice("Long-form: writing model not downloaded; keeping the transcript")
+            if !style.isRaw { fallback.warning = String(localized: "The writing model isn't downloaded. The original transcript was kept; download a model in Settings to apply this style.") }
             return fallback
         }
-        guard memoryPressure != .critical else { return fallback }
+        guard memoryPressure != .critical else {
+            fallback.warning = String(localized: "Memory is low. The original transcript was kept; try processing it again later.")
+            return fallback
+        }
         guard canStyle(in: language) else {
             Log.dictation.notice("Long-form: \(self.writing.modelID, privacy: .public) can't write \(language.code, privacy: .public); keeping the transcript")
+            if !style.isRaw { fallback.warning = RewriteError.languageUnsupported(language: language.name(), model: writing.modelID).localizedDescription }
             return fallback
         }
         defer { restoreWhisper() }
@@ -146,6 +152,7 @@ extension WritingHost {
             )
         } catch {
             Log.dictation.error("Long-form processing failed: \(error.localizedDescription, privacy: .public)")
+            fallback.warning = String(localized: "The writing step couldn't finish. The original transcript and audio were kept.") + "\n" + error.localizedDescription
             return fallback
         }
     }

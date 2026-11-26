@@ -60,6 +60,12 @@ final class DictationController {
     }
 
     private(set) var phase: Phase = .idle
+    @ObservationIgnored weak var recordings: RecorderController?
+    private(set) var recorderOnly = false
+    private(set) var isPaused = false
+    private(set) var microphoneLevel: Float = 0
+    var recordedSeconds: Double { diskRecording?.duration ?? Double(recorder.samples.count) / AudioRecorder.sampleRate }
+    @ObservationIgnored private var diskRecording: RecordingWriter?
     private(set) var lastReport: DictationReport?
     /// The last delivered dictation in full, for "Copy Last Dictation". Memory only.
     private(set) var lastText: String?
@@ -134,6 +140,7 @@ final class DictationController {
     /// Bumped on every warm-up so only the latest one turns the mic back off.
     private var warmGeneration = 0
     private var stopWhenStarted = false
+    private var interruptedWhenStarted = false
 
     init(
         indicator: IndicatorModel,
@@ -206,7 +213,7 @@ final class DictationController {
     }
 
     /// `remembersStyle`: false for push-to-talk, which is always raw and shouldn't change per-app defaults.
-    func start(microphoneGranted: Bool, deviceID: UInt32?, style: Style, language: SpokenLanguage = .english, targetApp: String?, remembersStyle: Bool = true) {
+    func start(microphoneGranted: Bool, deviceID: UInt32?, style: Style, language: SpokenLanguage = .english, targetApp: String?, remembersStyle: Bool = true, recorderOnly: Bool = false) {
         guard phase == .idle else { return }
         guard microphoneGranted else {
             lastIssue = .microphonePermission
@@ -221,28 +228,71 @@ final class DictationController {
         generation += 1
         let generation = self.generation
         stopWhenStarted = false
+        interruptedWhenStarted = false
         self.style = style
         self.language = language
         self.targetApp = targetApp
         self.remembersStyle = remembersStyle
+        self.recorderOnly = recorderOnly
+        isPaused = false
+        if remembersStyle {
+            do {
+                guard let recordings else { throw CocoaError(.fileWriteUnknown) }
+                diskRecording = try recordings.beginCapture(style: style, language: language, recorderOnly: recorderOnly)
+            } catch {
+                fail(.microphone(String(localized: "Couldn't create a recording file. Recording hasn't started.") + "\n" + error.localizedDescription))
+                return
+            }
+        }
         // Push-to-talk always pastes, however long it's held; its pill offers where else the text goes.
         deliveryOverride = remembersStyle ? nil : .paste
         indicator.deliveryOverride = deliveryOverride
         indicator.dailyNoteOverride = nil
         indicator.pushDestination = nil
         indicator.isPushToTalk = !remembersStyle // push-to-talk is the raw, unremembered recording
+        indicator.recorderOnly = recorderOnly
+        indicator.recorderPaused = false
+        indicator.recorderElapsed = 0
         indicator.currentStyle = style
         indicator.currentLanguage = language
         phase = .starting
         let requestedAt = ContinuousClock.now
         let indicator = self.indicator
+        let diskRecording = self.diskRecording
+        let onSamples: (@Sendable ([Float], Double) -> Void)?
+        if let writer = diskRecording {
+            onSamples = { [weak self] samples, _ in
+                do { try writer.append(samples) }
+                catch {
+                    let message = error.localizedDescription
+                    Task { @MainActor in
+                        guard let self, generation == self.generation, self.phase == .recording || self.phase == .starting else { return }
+                        self.recordings?.report(String(localized: "Audio couldn't be written. Recording stopped; saved audio is kept for recovery.") + "\n" + message)
+                        self.stop(interrupted: true)
+                    }
+                }
+            }
+        } else {
+            onSamples = nil
+        }
 
-        Task {
+        Task { [self] in
+            guard generation == self.generation else { return }
             do {
                 try await recorder.beginRecording(
                     deviceID: deviceID,
-                    onLevel: { level in Task { @MainActor in indicator.push(level) } },
-                    onInterruption: { Task { @MainActor [weak self] in self?.stop() } }
+                    onLevel: { [weak self] level in Task { @MainActor in
+                        guard let self, generation == self.generation, self.phase == .recording || self.phase == .starting else { return }
+                        indicator.push(level)
+                        self.microphoneLevel = level
+                        indicator.recorderElapsed = self.recordedSeconds
+                    } },
+                    onInterruption: { [weak self] in Task { @MainActor in
+                        guard let self, generation == self.generation else { return }
+                        self.stop(interrupted: true)
+                    } },
+                    keepsSamples: !recorderOnly,
+                    onSamples: onSamples
                 )
             } catch {
                 if generation == self.generation {
@@ -250,7 +300,10 @@ final class DictationController {
                 }
                 return
             }
-            guard generation == self.generation else { return } // cancelled while the mic came on
+            guard generation == self.generation else {
+                if phase == .idle { recorder.stop() }
+                return
+            }
 
             phase = .recording
             recordingStartedAt = Date()
@@ -259,15 +312,16 @@ final class DictationController {
             indicator.recordingStartedAt = recordingStartedAt
             indicator.longFormThreshold = longFormThreshold
             indicator.show(.listening)
-            markLongForm(after: longFormThreshold, generation: generation)
-
-            let streamer = makeStreamer()
-            self.streamer = streamer
-            await streamer.start()
+            if !recorderOnly {
+                markLongForm(after: longFormThreshold, generation: generation)
+                let streamer = makeStreamer()
+                self.streamer = streamer
+                await streamer.start()
+            }
             Log.dictation.notice("Recording started \(ContinuousClock.now - requestedAt, privacy: .public) after the request")
             if stopWhenStarted {
                 stopWhenStarted = false
-                stop()
+                stop(interrupted: interruptedWhenStarted)
             }
         }
     }
@@ -292,7 +346,7 @@ final class DictationController {
     /// Language chosen in the pill while recording. One language per recording, so what's been said
     /// so far is transcribed again from the start in the new language.
     func select(_ language: SpokenLanguage) {
-        guard phase == .recording || phase == .starting, language != self.language else { return }
+        guard !recorderOnly, phase == .recording || phase == .starting, language != self.language else { return }
         self.language = language
         indicator.currentLanguage = language
         onLanguageSelected?(language) // may swap the Whisper model
@@ -339,17 +393,44 @@ final class DictationController {
         }
     }
 
-    func stop() {
+    func togglePause() {
+        guard recorderOnly, phase == .recording else { return }
+        isPaused.toggle()
+        recorder.setPaused(isPaused)
+        indicator.recorderPaused = isPaused
+    }
+
+    func stop(interrupted: Bool = false) {
         if phase == .starting {
             // Released before the mic came on (a very short hold): stop as soon as it does.
             stopWhenStarted = true
+            interruptedWhenStarted = interruptedWhenStarted || interrupted
             return
         }
-        guard phase == .recording, let streamer else { return }
+        guard phase == .recording else { return }
         let stoppedAt = ContinuousClock.now
         phase = .finishing
         recorder.stop()
+        isPaused = false
+        let recordingID = diskRecording?.id
+        var saved = true
+        if let diskRecording {
+            saved = recordings?.finishCapture(diskRecording, interrupted: interrupted) == true
+            self.diskRecording = nil
+        }
         cues.play(.stop)
+        if recorderOnly {
+            phase = .idle
+            indicator.recorderOnly = false
+            indicator.currentStyle = nil
+            if saved {
+                indicator.flash(.notice(String(localized: "Recording saved on this Mac")), seconds: 2.5)
+            } else {
+                indicator.showError(String(localized: "Saving failed. Open Dictation to review recovered audio."))
+            }
+            return
+        }
+        guard let streamer else { fail(.transcription(String(localized: "The recording was saved, but transcription couldn't start."))); return }
         indicator.show(.processing)
         let audioSeconds = Double(recorder.samples.count) / AudioRecorder.sampleRate
         let peak = recorder.samples.samples(from: 0).reduce(Float(0)) { max($0, abs($1)) }
@@ -362,7 +443,7 @@ final class DictationController {
         let recorded = recordingStartedAt
 
         if deliveryOverride.map({ $0 != .paste }) ?? (audioSeconds >= longFormThreshold) {
-            finishLongForm(streamer: streamer, audioSeconds: audioSeconds, recorded: recorded, generation: generation)
+            finishLongForm(streamer: streamer, audioSeconds: audioSeconds, recorded: recorded, generation: generation, recordingID: recordingID)
             return
         }
 
@@ -397,6 +478,9 @@ final class DictationController {
                 if !(await engine.isLoaded) { indicator.show(.preparingModel(firstTime: engine.needsFirstTimePreparation)) }
                 let heard = try await transcription.value
                 let transcript = TranscriptCleaner.hasSpeech(heard) ? heard : ""
+                if let recordingID, !transcript.isEmpty {
+                    recordings?.rememberText(id: recordingID, transcript: transcript, body: transcript, style: .raw, language: language)
+                }
                 if transcript.isEmpty { Log.dictation.notice("Nothing heard: raw transcript \(heard.count) characters [\(heard, privacy: .private)]") }
                 let textReady = ContinuousClock.now
                 guard generation == self.generation else { return } // cancelled while finishing
@@ -459,6 +543,9 @@ final class DictationController {
                     onPushToTalkText?(text, destination, recorded)
                 }
                 if !text.isEmpty, remembersStyle { onStyleUsed?(style, targetApp) }
+                if let recordingID, !text.isEmpty {
+                    recordings?.rememberText(id: recordingID, transcript: transcript, body: text, style: style, language: language)
+                }
                 if !text.isEmpty { onLanguageUsed?(language, targetApp) }
                 if text.isEmpty || dryRun { delivered = .now }
                 lastReport = DictationReport(
@@ -497,7 +584,7 @@ final class DictationController {
     #endif
 
     /// Long recording: no paste. Finish the transcript, hand the recording off, and say so.
-    private func finishLongForm(streamer: StreamingTranscriber, audioSeconds: Double, recorded: Date, generation: Int) {
+    private func finishLongForm(streamer: StreamingTranscriber, audioSeconds: Double, recorded: Date, generation: Int, recordingID: UUID?) {
         let samples = recorder.samples.samples(from: 0)
         let style = self.style
         let language = self.language
@@ -512,6 +599,9 @@ final class DictationController {
                 }
                 let transcript = try await streamer.finish()
                 guard generation == self.generation else { return }
+                if let recordingID, TranscriptCleaner.hasSpeech(transcript) {
+                    recordings?.rememberText(id: recordingID, transcript: transcript, body: transcript, style: .raw, language: language)
+                }
                 if !TranscriptCleaner.hasSpeech(transcript) {
                     // Nothing to summarise: a stray "." must not become a note written by the model.
                     indicator.flash(.nothingHeard)
@@ -561,6 +651,11 @@ final class DictationController {
         if isPicking { pick(nil) }
         indicator.currentStyle = nil
         recorder.stop()
+        if let diskRecording {
+            _ = recordings?.finishCapture(diskRecording)
+            self.diskRecording = nil
+        }
+        indicator.recorderOnly = false
         if let streamer { Task { await streamer.cancel() } }
         streamer = nil
         phase = .idle
@@ -575,6 +670,12 @@ final class DictationController {
         let message = issue.message
         indicator.currentStyle = nil
         recorder.stop()
+        if let diskRecording {
+            _ = recordings?.finishCapture(diskRecording, interrupted: true)
+            self.diskRecording = nil
+        }
+        indicator.recorderOnly = false
+        if let streamer { Task { await streamer.cancel() } }
         streamer = nil
         phase = .idle
         lastIssue = issue

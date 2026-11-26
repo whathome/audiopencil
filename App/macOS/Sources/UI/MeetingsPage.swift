@@ -208,6 +208,7 @@ struct MeetingsPage: View {
 
     private var startBlocker: LocalizedStringResource? {
         if meetings.isProcessing { return "Wait for meeting processing to finish." }
+        if app.recordings.isProcessing { return "Wait for recording processing to finish." }
         if app.dictation.isActive { return "Finish dictation first." }
         if meetings.previewStarting { return "Wait for the microphone test to start." }
         if meetings.resolvedMicrophone == nil { return "Connect a microphone to start a meeting." }

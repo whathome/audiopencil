@@ -44,15 +44,15 @@ private struct MenuBarContent: View {
 
     var body: some View {
         Text(statusText)
-        Button(app.dictation.phase == .recording ? String(localized: "Stop Dictation") : String(localized: "Start Dictation")) {
+        Button(dictationActionTitle) {
             app.toggleDictation()
         }
-        .disabled(app.dictation.phase == .starting || app.dictation.phase == .finishing || app.meetings.ownsCapture || app.meetings.isProcessing)
+        .disabled(app.dictation.phase == .starting || app.dictation.phase == .finishing || app.meetings.ownsCapture || app.isProcessingAudio)
         Button("Record a Meeting") {
             openWindow(id: "main")
             app.startMeeting()
         }
-            .disabled(app.dictation.phase != .idle)
+            .disabled(app.dictation.phase != .idle || app.recordings.isProcessing)
         if app.meetings.ownsCapture {
             Button(app.meetings.capture == .paused ? "Resume Meeting" : "Pause Meeting") {
                 Task { await app.meetings.togglePause() }
@@ -60,6 +60,9 @@ private struct MenuBarContent: View {
             .disabled(app.meetings.capture != .recording && app.meetings.capture != .paused)
             Button("Stop Meeting") { Task { await app.meetings.stop() } }
                 .disabled(app.meetings.capture != .recording && app.meetings.capture != .paused)
+        }
+        if app.dictation.phase == .recording, app.dictation.recorderOnly {
+            Button(app.dictation.isPaused ? "Resume Recording" : "Pause Recording") { app.dictation.togglePause() }
         }
         Button("Copy Last Dictation") {
             if let text = app.dictation.lastText { app.dictation.paster.copy(text) }
@@ -75,6 +78,11 @@ private struct MenuBarContent: View {
         Button("Quit Audio Pencil") { NSApp.terminate(nil) }
     }
 
+    private var dictationActionTitle: String {
+        guard app.dictation.phase == .recording else { return String(localized: "Start Dictation") }
+        return app.dictation.recorderOnly ? String(localized: "Stop & Keep Recording") : String(localized: "Stop Dictation")
+    }
+
     private var statusText: LocalizedStringResource {
         if app.hotkeyTimedOut && app.dictation.phase == .idle && !app.meetings.ownsCapture {
             return "Keyboard shortcuts paused"
@@ -83,7 +91,7 @@ private struct MenuBarContent: View {
             return app.meetings.capture == .paused ? "Meeting paused" : "Recording a meeting"
         }
         return switch app.dictation.phase {
-        case .recording: "Recording…"
+        case .recording: app.dictation.isPaused ? "Recording paused" : "Recording…"
         case .starting, .finishing: "Working…"
         case .idle: app.hotkeyActive ? "Ready: \(app.startHint)" : "Needs Accessibility permission"
         }
@@ -109,6 +117,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if app.dictation.isActive, !app.indicator.isPushToTalk {
+            let alert = NSAlert()
+            alert.messageText = String(localized: "Stop and save the recording before quitting?")
+            alert.informativeText = String(localized: "Saved audio stays on this Mac. You can listen to it and transcribe it next time you open Audio Pencil.")
+            alert.addButton(withTitle: String(localized: "Stop, Save and Quit"))
+            alert.addButton(withTitle: String(localized: "Keep Recording"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            app.dictation.cancel()
+        }
         guard app.meetings.ownsCapture else { return .terminateNow }
         let alert = NSAlert()
         alert.messageText = String(localized: "Stop and save the meeting before quitting?")

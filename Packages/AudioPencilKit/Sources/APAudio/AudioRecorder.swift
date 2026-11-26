@@ -73,6 +73,10 @@ public final class AudioRecorder: @unchecked Sendable {
         var keepsSamples = true
     }
     private let tapState = OSAllocatedUnfairLock(initialState: TapState())
+    private let tapWork = OSAllocatedUnfairLock(initialState: ())
+    #if DEBUG
+    private var fixtureTimer: DispatchSourceTimer?
+    #endif
 
     public init() {}
 
@@ -93,7 +97,36 @@ public final class AudioRecorder: @unchecked Sendable {
         keepsSamples: Bool = true,
         onSamples: (@Sendable ([Float], Double) -> Void)? = nil
     ) async throws {
-        try await onQueue {
+        try await onQueue { [self] in
+            #if DEBUG
+            if ProcessInfo.processInfo.environment["AUDIOPENCIL_TEST_ROOT"] != nil,
+               let path = ProcessInfo.processInfo.environment["AUDIOPENCIL_TEST_AUDIO"] {
+                let fixture = try AudioFileReader.readMono(URL(filePath: path))
+                guard !fixture.isEmpty else { throw RecordingStorageError.empty }
+                self.samples.removeAll()
+                self.tapState.withLock {
+                    $0 = TapState(capturing: true, muteSamples: 0, onLevel: onLevel, onSamples: onSamples, keepsSamples: keepsSamples)
+                }
+                let position = OSAllocatedUnfairLock(initialState: 0)
+                let timer = DispatchSource.makeTimerSource(queue: self.queue)
+                timer.schedule(deadline: .now(), repeating: .milliseconds(100))
+                timer.setEventHandler { [weak self] in
+                    guard let self else { return }
+                    let chunk = position.withLock { offset in
+                        let end = min(offset + 1_600, fixture.count)
+                        let chunk = Array(fixture[offset..<end])
+                        offset = end == fixture.count ? 0 : end
+                        return chunk
+                    }
+                    self.tapWork.withLock { _ in
+                        self.deliver(chunk, time: ProcessInfo.processInfo.systemUptime)
+                    }
+                }
+                self.fixtureTimer = timer
+                timer.resume()
+                return
+            }
+            #endif
             try self.ensureRunning(deviceID: deviceID)
             self.onInterruption = onInterruption
             self.samples.removeAll()
@@ -116,9 +149,11 @@ public final class AudioRecorder: @unchecked Sendable {
     /// Pauses or resumes a recording: the microphone stays on, and nothing is kept while paused, so the
     /// recording continues where it left off.
     public func setPaused(_ paused: Bool) {
-        tapState.withLock { state in
-            guard state.onLevel != nil else { return } // not recording
-            state.capturing = !paused
+        tapWork.withLock { _ in
+            tapState.withLock { state in
+                guard state.onLevel != nil else { return } // not recording
+                state.capturing = !paused
+            }
         }
     }
 
@@ -130,7 +165,11 @@ public final class AudioRecorder: @unchecked Sendable {
     /// Stops capturing and turns the microphone off. Keeps the engine object for a faster next start.
     public func stop() {
         queue.sync {
-            tapState.withLock { $0 = TapState() }
+            #if DEBUG
+            fixtureTimer?.cancel()
+            fixtureTimer = nil
+            #endif
+            tapWork.withLock { _ in tapState.withLock { $0 = TapState() } }
             onInterruption = nil
             guard let engine, engineRunning else { return }
             engine.stop()
@@ -205,24 +244,28 @@ public final class AudioRecorder: @unchecked Sendable {
             throw AudioRecorderError.noInputDevice
         }
         let resampler = try Resampler(from: inputFormat)
-        let store = samples
-        let tapState = self.tapState
-        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { buffer, time in
-            var chunk = resampler.convert(buffer)
-            let count = chunk.count
-            guard count > 0 else { return }
-            let (capturing, mute, onLevel, onSamples, keepsSamples) = tapState.withLock { state in
-                let mute = min(state.muteSamples, count)
-                state.muteSamples -= mute
-                return (state.capturing, mute, state.onLevel, state.onSamples, state.keepsSamples)
+        let tapWork = self.tapWork
+        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, time in
+            tapWork.withLockUnchecked { _ in
+                self?.deliver(resampler.convert(buffer), time: AVAudioTime.seconds(forHostTime: time.hostTime))
             }
-            guard capturing else { return } // warmed up, not recording yet
-            for index in 0..<mute { chunk[index] = 0 }
-            if keepsSamples { store.append(chunk) }
-            onSamples?(chunk, AVAudioTime.seconds(forHostTime: time.hostTime))
-            onLevel?(Self.level(of: chunk))
         }
         Log.audio.info("Capturing input at \(inputFormat.sampleRate, privacy: .public) Hz, \(inputFormat.channelCount, privacy: .public) ch")
+    }
+
+    private func deliver(_ samples: [Float], time: Double) {
+        guard !samples.isEmpty else { return }
+        let (capturing, mute, onLevel, onSamples, keepsSamples) = tapState.withLock { state in
+            let mute = min(state.muteSamples, samples.count)
+            state.muteSamples -= mute
+            return (state.capturing, mute, state.onLevel, state.onSamples, state.keepsSamples)
+        }
+        guard capturing else { return }
+        var chunk = samples
+        for index in 0..<mute { chunk[index] = 0 }
+        onSamples?(chunk, time)
+        if keepsSamples { self.samples.append(chunk) }
+        onLevel?(Self.level(of: chunk))
     }
 
     private func observeConfigurationChanges(of engine: AVAudioEngine) {
@@ -242,10 +285,11 @@ public final class AudioRecorder: @unchecked Sendable {
         let now = Date()
         recentRestarts = recentRestarts.filter { now.timeIntervalSince($0) < 2 } + [now]
         let capturing = tapState.withLock { $0.capturing }
+        let hasSession = tapState.withLock { $0.onLevel != nil }
         guard recentRestarts.count <= 3 else {
             Log.audio.error("Audio route keeps changing; giving up on this engine")
             teardown()
-            if capturing { onInterruption?() }
+            if hasSession { onInterruption?() }
             return
         }
         Log.audio.notice("Audio route changed (\(capturing ? "recording" : "idle", privacy: .public)); restarting the input")
@@ -260,7 +304,7 @@ public final class AudioRecorder: @unchecked Sendable {
         } catch {
             Log.audio.error("Couldn't restart capture: \(error.localizedDescription, privacy: .public)")
             teardown()
-            if capturing { onInterruption?() }
+            if hasSession { onInterruption?() }
         }
     }
 

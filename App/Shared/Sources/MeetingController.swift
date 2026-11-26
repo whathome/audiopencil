@@ -100,7 +100,7 @@ final class MeetingController {
     var recent: [MeetingSession] { Array(sessions.prefix(50)) }
     private var dictationActive: Bool {
         #if os(macOS)
-        app.dictation.isActive
+        app.dictation.isActive || app.recordings.isProcessing
         #else
         app.recorder.isActive
         #endif
@@ -266,6 +266,7 @@ final class MeetingController {
             report(MeetingCaptureError.unavailable(String(localized: "Allow call audio in Settings › Permissions before starting a video meeting.")))
             return
         }
+        app.recordings.stopPlayback()
         endPreview()
         #endif
         capture = .starting

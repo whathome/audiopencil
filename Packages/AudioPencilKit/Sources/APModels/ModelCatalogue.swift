@@ -69,6 +69,11 @@ public enum ModelLocations {
 
     /// ~/Library/Application Support/AudioPencil/Models
     public static var root: URL {
+        #if DEBUG
+        if let root = ProcessInfo.processInfo.environment["AUDIOPENCIL_TEST_ROOT"] {
+            return URL(filePath: root, directoryHint: .isDirectory).appending(path: "Models", directoryHint: .isDirectory)
+        }
+        #endif
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return base.appending(path: "AudioPencil/Models", directoryHint: .isDirectory)
     }

@@ -51,6 +51,11 @@ struct MainWindow: View {
                     .background(SidebarMaterial().ignoresSafeArea())
                 Divider().ignoresSafeArea()
                 VStack(spacing: 0) {
+                    if app.page != .dictation, app.dictation.isActive || app.recordings.isProcessing {
+                        RecorderActivityStatus(app: app)
+                            .padding(.horizontal, 24).padding(.vertical, 12)
+                        Divider()
+                    }
                     if app.hotkeyTimedOut {
                         Label("Keyboard shortcuts were paused to protect typing. Quit and reopen Audio Pencil to restore them. You can still dictate from the menu bar.", systemImage: "exclamationmark.triangle")
                             .font(.callout)
@@ -229,6 +234,7 @@ private struct Sidebar: View {
     /// What the badge or rail dot says, in words, for VoiceOver.
     private func attentionDescription(_ page: Page) -> LocalizedStringResource? {
         switch page {
+        case .dictation where app.dictation.isActive: dictationStatus
         case .meetings where app.meetings.ownsCapture: app.meetings.capture == .paused ? "Meeting paused" : "Meeting recording"
         case .settings where app.needsSetup: "Permissions need attention"
         case .settings where !app.vault.settings.isConfigured: "Not set up"
@@ -238,7 +244,9 @@ private struct Sidebar: View {
 
     @ViewBuilder
     private func badge(_ page: Page) -> some View {
-        if page == .meetings, app.meetings.ownsCapture {
+        if page == .dictation, app.dictation.isActive {
+            Text(dictationStatus).font(.caption2.weight(.medium)).foregroundStyle(selectedColor(page))
+        } else if page == .meetings, app.meetings.ownsCapture {
             Text(app.meetings.capture == .paused ? "Paused" : "Recording").font(.caption2.weight(.medium)).foregroundStyle(selectedColor(page))
         } else if page == .settings, app.needsSetup || !app.vault.settings.isConfigured {
             Image(systemName: "exclamationmark.circle.fill")
@@ -249,10 +257,20 @@ private struct Sidebar: View {
         }
     }
 
+    private var dictationStatus: LocalizedStringResource {
+        switch app.dictation.phase {
+        case .recording: app.dictation.isPaused ? "Paused" : "Recording"
+        case .starting: "Starting"
+        case .finishing: "Finishing"
+        case .idle: "Ready"
+        }
+    }
+
     /// Rails have no room for text: a dot says something needs attention.
     @ViewBuilder
     private func railBadge(_ page: Page) -> some View {
         let needsAttention = (page == .settings && (app.needsSetup || !app.vault.settings.isConfigured))
+            || (page == .dictation && app.dictation.isActive)
             || (page == .meetings && app.meetings.ownsCapture)
         if needsAttention {
             Circle()

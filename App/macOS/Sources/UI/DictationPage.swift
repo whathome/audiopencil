@@ -7,25 +7,51 @@ struct DictationPage: View {
     let app: AppModel
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Dictation", subtitle: "Talk anywhere. Text lands where you're typing, transcribed on this Mac.")
-
-                // Side by side when there's room; stats move underneath, in a grid, when narrow.
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .top, spacing: 16) {
-                        cards.frame(minWidth: 460, maxWidth: .infinity)
-                        StatsColumn(stats: app.stats).frame(width: 210)
+        ScrollViewReader { reader in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack {
+                            PageHeader(title: "Dictation", subtitle: "Capture a thought. Keep the audio. Make it your own.")
+                            Spacer()
+                            importButton
+                        }
+                        VStack(alignment: .leading, spacing: 12) {
+                            PageHeader(title: "Dictation", subtitle: "Capture a thought. Keep the audio. Make it your own.")
+                            importButton
+                        }
                     }
-                    VStack(spacing: 16) {
-                        cards
-                        StatsColumn(stats: app.stats, columns: 2)
+                    RecorderWorkspace(app: app)
+
+                    // Side by side when there's room; stats move underneath, in a grid, when narrow.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .top, spacing: 16) {
+                            cards.frame(minWidth: 460, maxWidth: .infinity)
+                            StatsColumn(stats: app.stats).frame(width: 210)
+                        }
+
+                        VStack(spacing: 16) {
+                            cards
+                            StatsColumn(stats: app.stats, columns: 2)
+                        }
                     }
                 }
+                .padding(24)
+                .frame(maxWidth: 980, alignment: .leading)
             }
-            .padding(24)
-            .frame(maxWidth: 980, alignment: .leading)
+            .onChange(of: app.recordings.selectedID) { _, selected in
+                if selected != nil, app.recordings.error == nil { reader.scrollTo("recordingReview", anchor: .top) }
+            }
+            .onChange(of: app.recordings.error) { _, error in
+                if error != nil { reader.scrollTo("recordingError", anchor: .top) }
+            }
         }
+    }
+
+    private var importButton: some View {
+        Button("Import Audio…", systemImage: "square.and.arrow.up") { app.recordings.chooseImport() }
+            .disabled(app.dictation.isActive || app.recordings.isWorking || app.meetings.ownsCapture || app.meetings.isProcessing || app.notes.processing != nil)
+            .accessibilityIdentifier("importRecording")
     }
 
     private var cards: some View {

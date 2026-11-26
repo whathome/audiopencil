@@ -110,6 +110,20 @@ Settings (⌘,) also has:
 - **Try Phonon-2 for English** (trial, this Mac only, not synced): English goes through [Phonon-2](https://huggingface.co/FermionResearch/Phonon-2) instead of Whisper, using [FluidAudio](https://github.com/FluidInference/FluidAudio) on the Neural Engine. This only happens while no custom vocabulary is set: Phonon-2 can't take spelling hints, so Whisper stays on whenever there is one. The live text works as before, and at stop the whole recording is transcribed again in one pass, which takes under 2 s for 5 minutes. On the first use it downloads 375 MB and prepares for this Mac, about 3–5 min on an M1. In tests it made fewer errors than Whisper Small (English) and was 5–6× faster; it hasn't been tested yet on a real dictation. See [the benchmark](benchmarks/phonon-2-vs-whisper-small.md).
 - **Menu bar only** (hides the Dock icon) and **Launch at login**.
 
+### Mac voice recorder, recovery and imported audio
+
+Open **Dictation** and choose **Record** to capture audio without transcribing or pasting. The timer shows audio written to disk, the input meter confirms microphone activity, and **Pause / Resume** excludes the pause from the saved audio. **Stop & Keep** leaves the recording in **Recent recordings**, selected for review. Closing the window does not stop capture; the floating recording indicator and menu-bar controls remain available.
+
+Play or seek through a recording, choose playback speed, or export an M4A. Choose a language and writing style, then **Transcribe** to use the same local speech and long-form writing models as live dictation. Nothing is transcribed automatically in this workspace. The result can be copied or filed as a note with its audio in your configured storage. **Import Audio…** (or dropping one local audio file onto the workspace) copies and converts an existing recording into this same workflow; it does not change the source file. Supported formats depend on macOS's installed audio decoders.
+
+Ordinary hotkey dictation retains its existing automatic transcription, paste and long-form filing behavior, but now also writes a recoverable local audio copy while speaking. **Push-to-talk is excluded** and remains temporary. Cancelling a non-push-to-talk dictation suppresses delivery but keeps its audio.
+
+After an app crash or interrupted input, open Dictation and choose **Review Recording** in the recovery notice to play or transcribe the audio already written. On an ordinary quit during capture, Audio Pencil asks to stop and save first. If storage fails, capture stops and reports the failure instead of claiming the recording was saved.
+
+Recovery files live in `~/Library/Application Support/AudioPencil/Recordings/<UUID>/`: atomic `session.json` metadata and append-only, headerless `audio.f32` (16 kHz mono Float32). Completed writes survive an **application crash** without needing to finalize an audio container. This cannot recover audio not yet received by the app, failed writes, or guarantee survival of power loss, disk failure or deletion. A partial trailing sample is ignored on recovery. Use **Show in Finder** if a damaged entry cannot be loaded.
+
+Local audio is retained until you explicitly **Delete Recording**, which moves its directory and transcript to the Trash. Filing a note does not remove this recovery copy, and vault retention rules do not delete it. Budget about **230 MB per hour** for raw recovery audio, plus any generated playback/export copies. Transcription still needs enough memory for the selected local model and recording.
+
 ### Tasks
 
 Notes and dictations become [Obsidian tasks](https://help.obsidian.md/syntax#Task+lists) in the [Tasks plugin](https://publish.obsidian.md/tasks/) format, with dates taken from what was said and worked out from when it was said:
